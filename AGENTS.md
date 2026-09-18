@@ -1,0 +1,74 @@
+# Projektové instrukce: studijní materiály v R a Quarto
+
+## Cíl projektu
+Převáděj dodané skripty v R do odborně správných, srozumitelných a reprodukovatelných studijních materiálů v češtině ve formátu Quarto (.qmd). Výsledkem má být souvislý výukový text, který vysvětluje účel postupu, jeho provedení a interpretaci výsledků.
+
+## Cílová skupina a didaktické zaměření
+Materiály jsou určeny studentům psychologie ve volitelném předmětu „R101: Praktický úvod pro používání statistického programu R“. Předpokládej znalost základů statistiky a metodologie. Nepředpokládej předchozí zkušenost s R ani programováním.
+
+- Zaměř výklad na praktické osvojení R při práci s daty z psychologického výzkumu: od načtení a kontroly dat přes jejich úpravu a vizualizaci až po analýzu a interpretaci.
+- Nové programovací pojmy a konstrukce vysvětluj při prvním použití na konkrétním příkladu. Postupuj po malých krocích a nezaváděj více nových principů současně, pokud to není nutné.
+- Základní statistické pojmy stručně připomínej tam, kde jsou potřebné pro pochopení postupu. Podrobněji vysvětluj jejich provedení v R, čtení výstupů a omezení interpretace.
+- Preferuj příklady z psychologie, například dotazníková data, experimentální podmínky nebo opakovaná měření. U simulovaných dat výslovně uveď, že jsou vytvořena pro výuku.
+- Upřednostňuj čitelný a názorný kód před stručnými, ale obtížně srozumitelnými řešeními. Zpočátku nabídni jeden hlavní postup; alternativy přidávej, jen pokud mají jasný didaktický přínos.
+- Upozorňuj na typické začátečnické chyby a vysvětluj, jak je rozpoznat a opravit. Veď studenty k průběžné kontrole dat a výsledků.
+- Úlohy odstupňuj od úpravy předvedeného příkladu k samostatnému řešení. Zařazuj také otázky na interpretaci výstupů a vhodnost postupu, nejen na zápis kódu.
+- Rozsah a obtížnost drž na úrovni úvodního kurzu. Pokročilá témata zařazuj pouze tehdy, když jsou nezbytná pro probíraný problém, nebo je označ jako nepovinná.
+
+## Jazyk a výklad
+- Piš odbornou, přirozenou češtinou. Používej jednotnou terminologii; při prvním výskytu podle potřeby uveď anglický ekvivalent.
+- Vysvětluj nejen co kód dělá, ale také proč je daný postup vhodný a kdy vhodný není.
+- Nové pojmy vysvětli před jejich použitím. Rozsah výkladu přizpůsob obtížnosti tématu.
+- Upřednostňuj souvislý výklad. Výčty, tabulky a zvýrazněné bloky používej tam, kde podporují porozumění.
+
+## Samostatný studijní text a poznámky pro autora
+- Piš pro studenta, který má k dispozici pouze výsledné HTML a postupuje samostatně. Nepředpokládej přístup k původním skriptům, autorskému projektu ani znalost zadání a historie tvorby materiálu.
+- Do výukového textu nevkládej zprávy o jeho vzniku, převodu a úpravách: například „základem je dodaný skript“, „oproti původnímu skriptu jsme opravili“ nebo zdůvodnění zachování příkladu kvůli návaznosti na podklad. Správný postup vysvětli přímo, bez srovnávání s materiálem, který student nevidí.
+- Technické podrobnosti přípravy dokumentu (například `_quarto.yml`, `execute-dir`, renderování, testovací prostředí a umístění autorských souborů) uváděj pouze tehdy, jsou-li samy probíraným tématem a student je potřebuje k vlastnímu úkolu. V úvodních lekcích R je nahraď konkrétními pokyny pro práci studenta.
+- Informace o podkladech, provedených opravách, změnách analytických rozhodnutí a technickém ověření zaznamenávej odděleně do dokumentace pro autora, například `quarto/README.md`. Neumisťuj je ani do rozbalovacích bloků studentské lekce.
+- Zachovej informace, které student potřebuje: původ a povahu dat, označení simulovaných příkladů, předpoklady a omezení metod, vysvětlení chyb, potřebné balíčky, datové vstupy a praktické cesty používané ve cvičeních. Zachovej odborné citace i stručné označení inspirace či převzetí zadání; nesupluj jimi zprávu o tvorbě lekce.
+- Při závěrečné redakci posuď každý odstavec z hlediska samostudia: pomáhá pochopit látku, provést krok nebo interpretovat výsledek bez autorského kontextu? Pokud slouží pouze autorovi, přesuň jej do autorské dokumentace nebo odstraň.
+
+## Struktura kapitoly
+Obvykle zařaď cíle učení, předpokládané znalosti, vysvětlení problému, komentovaný postup v R, interpretaci výsledků, průběžná cvičení, časté chyby a shrnutí. Na závěr lze přidat souhrnné úlohy. Strukturu přizpůsob tématu; nevytvářej prázdné nebo samoúčelné oddíly.
+
+## Průběžná cvičení a řešení
+- Výklad pravidelně prokládej krátkými cvičeními bezprostředně po vysvětlení nového postupu, aby si jej studenti mohli sami vyzkoušet. Procvičování nesoustřeď pouze na konec kapitoly.
+- Zadání musí být srozumitelné, uvádět potřebná data a navazovat na dosud vysvětlené funkce a pojmy. Střídej úpravy předvedeného kódu, samostatné úkoly a otázky na interpretaci výsledků.
+- Ke každému cvičení, včetně závěrečných a interpretačních úloh, připoj vzorové řešení s vysvětlením postupu a podle potřeby také interpretací výstupu. Samotný kód bez vysvětlení nestačí.
+- Zadání zobraz vždy. Celé řešení včetně kódu, výstupů, grafů a vysvětlení umísti bezprostředně pod zadání do bloku, který je ve výchozím stavu sbalený a rozbalí se až po kliknutí na „Ukázat řešení“.
+- V HTML výstupu Quarto používej rozbalovací callout s atributy `.callout-note collapse="true" title="Ukázat řešení"`. Pouhé skrytí kódu pomocí `code-fold` nestačí, protože by zůstaly viditelné ostatní části řešení. Viz [dokumentace rozbalovacích bloků Quarto](https://quarto.org/docs/authoring/callouts.html).
+
+## Výchozí zdroj a styl kódu
+- Cvičení vycházejí primárně z knihy [R for Data Science (2. vydání)](https://r4ds.hadley.nz/) od Hadleyho Wickhama, Mine Çetinkaya-Rundel a Garretta Grolemunda. Výběr témat a obtížnost přizpůsob úvodnímu kurzu a podle vhodnosti používej příklady z psychologie.
+- U cvičení vycházejících z knihy uveď odkaz na konkrétní kapitolu nebo cvičení a rozlišuj vlastní zadání inspirované knihou od převzatého zadání.
+- Výukový kód orientuj primárně na tidyverse, zejména při načítání, úpravách a vizualizaci dat. Základní R a další balíčky používej tam, kde mají věcný nebo didaktický přínos; případný přechod vysvětli.
+
+## Zacházení s původními skripty
+- Původní skripty zachovej jako podklady. Upravené výukové verze vytvářej samostatně.
+- Zachovej analytický záměr. Zjištěné chyby a jejich opravy výslovně zaznamenej v dokumentaci pro autora. Studentům vysvětli správný postup a relevantní typické chyby bez odkazování na chyby původního skriptu.
+- Změny metody, výběru dat, zacházení s chybějícími hodnotami a dalších rozhodnutí ovlivňujících výsledky zdůvodni v dokumentaci pro autora. Ve výukovém textu samostatně vysvětli použitou metodu a rozhodnutí důležitá pro porozumění výsledkům.
+- Zachovej styl a balíčky původního kódu, pokud není věcný nebo didaktický důvod ke změně. Sjednocení výukové verze s tidyverse je takovým důvodem; změnu zdokumentuj pro autora a ověř zachování analytického záměru a výsledků.
+
+## R a Quarto
+- Rozděl kód do logických, přiměřeně krátkých spustitelných bloků a propoj je výkladem.
+- Všechny blokové ukázky kódu, včetně kódu v zadáních a rozbalených řešeních, musí být kopírovatelné pomocí trvale viditelného tlačítka „Zkopírovat“. Kód zapisuj jako text, nikoli jako obrázek, a nepřidávej do kopírovaného kódu konzolové prompty ani výstupy.
+- Pro HTML nastav `format: html: code-copy: true` (v YAML jako vnořené položky), aby se tlačítko zobrazovalo trvale, nikoli pouze při najetí myší. Zajisti český popisek „Zkopírovat“; pokud výchozí tlačítko obsahuje jen ikonu, doplň i viditelný text. Viz [dokumentace kopírování kódu Quarto](https://quarto.org/docs/output-formats/html-code.html#copy-button).
+- Rozbalování řešení a tlačítka pro kopírování ověřuj v HTML výstupu se standardním motivem Quarto podporujícím tyto funkce. U případných statických exportů (například PDF) počítej s tím, že tyto interaktivní prvky nejsou dostupné.
+- Používej relativní cesty a výslovně uveď potřebné balíčky a datové vstupy.
+- Materiál nemá záviset na objektech z dřívější interaktivní relace R. U náhodných postupů nastav seed.
+- Instalaci balíčků odděl od běžného vykreslení dokumentu.
+- Tabulky a grafy opatři srozumitelnými českými popisky, jednotkami a věcnou interpretací.
+
+## Odborná správnost
+- Rozlišuj popis dat, statistickou inferenci a kauzální závěry.
+- U metod vysvětli relevantní předpoklady a omezení. Nezaměňuj statistickou významnost za praktickou důležitost.
+- Nevymýšlej výsledky, zdroje ani citace. Ilustrační nebo simulovaná data jasně označ.
+- Odborná tvrzení, která vyžadují oporu, podlož ověřenými zdroji; preferuj odbornou literaturu a oficiální dokumentaci.
+
+## Kontrola a pracovní postup
+- Nejprve vytvoř jednu reprezentativní ukázkovou kapitolu, podle níž sjednotíme další materiály.
+- Před dokončením ověř spuštění kódu a vykreslení dokumentu, pokud to dostupné prostředí umožňuje.
+- Zkontroluj shodu mezi kódem, výsledky a slovní interpretací.
+- Ověř také kód všech vzorových řešení. Ve vykresleném HTML zkontroluj, že řešení jsou zpočátku skrytá, kliknutí na „Ukázat řešení“ odkryje jejich celý obsah a tlačítko „Zkopírovat“ funguje u všech ukázek kódu včetně řešení.
+- Pokud ověření nelze provést, přesně uveď, co zůstalo neověřené a proč.

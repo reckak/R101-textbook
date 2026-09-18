@@ -1,0 +1,99 @@
+::R a RStudio::Které tvrzení správně popisuje rozdíl mezi R a RStudiem?
+ :r1 R je editor skriptů a RStudio je jazyk, který provádí statistické výpočty.
+ :r2 R provádí výpočty a RStudio poskytuje prostředí pro psaní kódu, prohlížení výsledků a organizaci práce.
+ :r3 R slouží k výpočtům a RStudio slouží pouze k instalaci balíčků.
+ :r4 R a RStudio jsou dva názvy pro stejný program.
+:r1 0 Role jsou zaměněné. R je programovací jazyk a výpočetní prostředí; editor skriptů je součástí RStudia.
+:r2 ok Výpočty provádí R. RStudio práci usnadňuje například editorem, konzolí a kartami Environment, Plots a Help.
+:r3 0 RStudio umožňuje také psát a spouštět skripty, prohlížet grafy, pracovat se soubory a používat nápovědu.
+:r4 0 Jde o odlišné nástroje. R lze používat i bez RStudia.
+--
+::Projekt a relativní cesta::Pracovním adresářem je hlavní složka vašeho projektu. Který zápis je relativní cestou k souboru dotaznik.csv ve složce raw uvnitř složky data?
+ :r1 C:/Users/Student/r101/data/raw/dotaznik.csv
+ :r2 data/dotaznik.csv/raw
+ :r3 dotaznik.csv
+ :r4 data/raw/dotaznik.csv
+:r1 0 Tato cesta je absolutní: začíná konkrétním diskem a závisí na umístění projektu v počítači.
+:r2 0 Nejprve uvádíme složky v pořadí, v jakém do nich vstupujeme, a teprve na konci název souboru.
+:r3 0 Tento zápis by hledal soubor přímo v pracovním adresáři. Chybějí v něm složky data a raw.
+:r4 ok Cesta vede z pracovního adresáře do data, potom do raw a nakonec k souboru. Při zachování struktury projektu ji lze použít i na jiném počítači.
+--
+::Skript a reprodukovatelnost::Chcete ověřit, že vaše analýza nepotřebuje objekty vytvořené dříve pouze v konzoli. Který postup je nejvhodnější?
+ :r1 Uložit skript, restartovat R bez obnovení uloženého workspace a spustit celý skript od začátku.
+ :r2 Uložit skript a zkontrolovat, že zůstal otevřený v editoru.
+ :r3 Ponechat objekty v Environment a znovu spustit pouze poslední řádek skriptu.
+ :r4 Uložit obrázek grafu z karty Plots a zavřít RStudio.
+:r1 ok Spuštění v čisté relaci ověří, zda skript obsahuje potřebné kroky ve správném pořadí a znovu vytvoří výsledky z dostupných vstupů.
+:r2 0 Otevřený a uložený skript ještě nemusí být spustitelný. Je třeba skutečně provést jeho příkazy v čisté relaci.
+:r3 0 Poslední řádek může využívat dříve vytvořené objekty. Takto závislost na předchozí práci neodhalíte.
+:r4 0 Obrázek uchovává výsledek, ale neověřuje, zda jej lze znovu vytvořit uloženým postupem.
+--
+::Přiřazení, mocnina a komentář::Spustíte příkaz vysledek <- 2^3 # výpočet mocniny. Jaká hodnota bude poté uložená v objektu vysledek?
+ :r1 Číslo 6.
+ :r2 Text „výpočet mocniny“.
+ :r3 Číslo 8.
+ :r4 Číslo 9.
+:r1 0 Číslo 6 by vzniklo násobením 2 * 3. Znak ^ označuje umocňování.
+:r2 0 Text za znakem # je zde komentář. R jej neprovádí ani jej nepřiřadí do objektu.
+:r3 ok Výraz 2^3 znamená dvě na třetí, tedy 8. Operátor <- výsledek přiřadí jménu vysledek a část za # je komentář.
+:r4 0 Číslo 9 by vzniklo jako 3^2. V zápisu 2^3 je základem mocniny číslo 2 a exponentem číslo 3.
+--
+::Vektor a průměr::Objekt skory obsahuje tři fiktivní dotazníkové skóry a byl vytvořen příkazem skory <- c(10, 14, 18). Co vrátí mean(skory)?
+ :r1 Číslo 3, tedy počet hodnot.
+ :r2 Číslo 14, tedy aritmetický průměr hodnot.
+ :r3 Číslo 42, tedy součet hodnot.
+ :r4 Číslo 18, tedy nejvyšší hodnotu.
+:r1 0 Vektor sice obsahuje tři hodnoty, ale mean() nepočítá jejich počet.
+:r2 ok Funkce c() spojila tři hodnoty do vektoru. Funkce mean() vypočítá jejich součet dělený počtem: (10 + 14 + 18) / 3 = 14.
+:r3 0 Součet je 42, ale pro výpočet průměru jej ještě dělíme počtem hodnot, tedy třemi.
+:r4 0 Hodnota 18 je maximum. Funkce mean() vrací aritmetický průměr všech tří hodnot.
+--
+::Argumenty funkce::Co vrátí příkaz seq(from = 0, to = 6, by = 2)?
+ :r1 Posloupnost 0, 2, 4, 6.
+ :r2 Posloupnost 0, 1, 2, 3, 4, 5, 6.
+ :r3 Posloupnost 0, 6.
+ :r4 Posloupnost 2, 4, 6.
+:r1 ok Argument from určuje začátek, to horní mez a by krok. Začínáme nulou a přičítáme dvě až do šestky včetně.
+:r2 0 Tato posloupnost má krok 1. V zadání je krok by = 2.
+:r3 0 Argument by = 2 určuje velikost kroku, nikoli požadovaný počet hodnot.
+:r4 0 Posloupnost začíná hodnotou from = 0. Hodnota by = 2 určuje krok, ne začátek.
+--
+::Instalace a připojení balíčku::Balíček tidyverse jste již nainstalovali do knihovny dostupné používané verzi R. Nyní jste restartovali R a chcete jeho funkce používat bez uvádění názvu balíčku. Který příkaz běžně patří na začátek skriptu?
+ :r1 install.packages("tidyverse")
+ :r2 help(tidyverse)
+ :r3 getwd()
+ :r4 library(tidyverse)
+:r1 0 Tento příkaz instaluje balíček na disk. Samotný restart R není důvodem k opakované instalaci již dostupného balíčku.
+:r2 0 Funkce help() slouží k otevření dokumentace, nikoli k připojení balíčku.
+:r3 0 Funkce getwd() vypíše pracovní adresář. Balíček nepřipojí.
+:r4 ok Funkce library() připojí balíček pro aktuální relaci. Instalace na disku zůstává zachována, ale připojení po restartu provedeme znovu.
+--
+::Chybějící hodnoty::Ve sloupci body_mass_g v tabulce penguins je u jednoho tučňáka uvedeno NA. Co tato značka znamená?
+ :r1 Hmotnost tohoto tučňáka je nulová.
+ :r2 Hmotnost tohoto tučňáka je rovna průměru ostatních.
+ :r3 Údaj o hmotnosti tohoto tučňáka chybí.
+ :r4 Hmotnost tohoto tučňáka je záporná.
+:r1 0 Nula je konkrétní číselná hodnota. NA označuje chybějící údaj a nelze je automaticky zaměnit za nulu.
+:r2 0 R chybějící hodnotu automaticky nenahrazuje průměrem. NA zůstává značkou chybění.
+:r3 ok NA označuje chybějící hodnotu. Bod bez potřebné souřadnice nelze v bodovém grafu vykreslit; nastavení na.rm = TRUE chybějící údaj nedoplní.
+:r4 0 Záporné číslo by bylo zapsáno jako konkrétní hodnota se znaménkem minus. NA nevyjadřuje velikost ani znaménko hmotnosti.
+--
+::Mapování v grafu::V bodovém grafu z tabulky penguins používáte aes(x = flipper_length_mm, y = body_mass_g, color = species) a vrstvu geom_point(). Co určuje barvu jednotlivých bodů?
+ :r1 Druh tučňáka uvedený ve sloupci species.
+ :r2 Pořadí řádků v tabulce penguins.
+ :r3 Hmotnost tučňáka uvedená ve sloupci body_mass_g.
+ :r4 Barevný motiv editoru v RStudiu.
+:r1 ok Zápis color = species uvnitř aes() mapuje druh tučňáka na barvu bodu. Jeden bod představuje měření jednoho tučňáka s dostupnými souřadnicemi.
+:r2 0 Barva se řídí výslovně uvedeným sloupcem species, nikoli pořadím řádků.
+:r3 0 Hmotnost je zde mapována na svislou osu y. Barvu určuje species.
+:r4 0 Motiv editoru mění vzhled pracovního prostředí, nikoli mapování barev v grafu. Hotový graf lze uložit do obrázkového souboru funkcí ggsave().
+--
+::Interpretace souvislosti::V bodovém grafu mají tučňáci s delšími ploutvemi obecně vyšší hmotnost. Který závěr je na základě samotného grafu přiměřený?
+ :r1 Delší ploutve způsobují vyšší hmotnost tučňáků.
+ :r2 V zobrazených datech délka ploutve souvisí s hmotností; graf sám neprokazuje příčinný vztah.
+ :r3 Každý tučňák s delší ploutví je těžší než kterýkoli tučňák s kratší ploutví.
+ :r4 Pokud body obarvíme podle druhu, statisticky tím odstraníme vliv druhu na vztah.
+:r1 0 Pozorovaná souvislost sama o sobě neprokazuje příčinu. S tělesnými rozměry může souviset například také druh nebo pohlaví.
+:r2 ok Jde o popis souvislosti v pozorovaných datech. Pro kauzální závěr samotný bodový graf nestačí.
+:r3 0 Obecný trend neznamená, že vztah platí bez výjimky pro každou dvojici jedinců. Body mohou být kolem trendu rozptýlené.
+:r4 0 Barva pomáhá skupiny rozlišit při prohlížení grafu. Sama o sobě nepředstavuje statistickou kontrolu druhu.

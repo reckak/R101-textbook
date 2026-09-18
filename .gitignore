@@ -1,0 +1,18 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Generated Quarto output and local verification artifacts
+/.quarto/
+/_book/
+/output/
+/quarto/*.html
+/quarto/*_files/
+/quarto/_verification/*.log
+/quarto/_verification/*.png
+/quarto/_verification/html-check.json
+/quarto/_verification/standalone-solution.R
+/node_modules/
+
+**/*.quarto_ipynb

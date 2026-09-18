@@ -1,0 +1,35 @@
+:root { --lesson-accent: #176b73; }
+body { line-height: 1.7; }
+h1, h2, h3 { color: #174650; }
+h2 { margin-top: 2.5rem; }
+.subtitle { color: #536770; }
+.quarto-title { border-bottom: 3px solid var(--lesson-accent); padding-bottom: 1rem; }
+figure img { border: 1px solid #d7dfe2; border-radius: 6px; }
+figcaption { line-height: 1.5; }
+div.sourceCode { position: relative; }
+div.sourceCode pre { padding-top: 2.7rem; }
+.code-copy-button {
+  opacity: 1 !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: .35rem;
+  width: auto !important;
+  height: auto !important;
+  padding: .25rem .55rem !important;
+  color: #174650 !important;
+  background: #f4f8fa !important;
+  border: 1px solid #b6c8ce !important;
+  border-radius: 4px;
+  font: 600 .78rem/1.35 system-ui, sans-serif;
+}
+.code-copy-button::after { content: "Zkopírovat"; }
+.code-copy-button-checked::after { content: "Zkopírováno"; }
+.code-copy-button:focus-visible { outline: 3px solid #238892; outline-offset: 2px; }
+.callout-collapse { border-top: 1px solid #e1e7ea; }
+.exercise { margin-top: 1.7rem; padding-top: .4rem; }
+.keyboard-table { max-width: 100%; overflow-x: auto; }
+.keyboard-table table { min-width: 680px; }
+@media (max-width: 600px) {
+  body { font-size: 1rem; }
+  h1 { font-size: 1.9rem; }
+}

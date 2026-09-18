@@ -1,0 +1,15 @@
+# Úvod {.unnumbered}
+
+Tato učebnice vás provede prvními kroky v R při práci s daty. Je určena především studentům psychologie, kteří znají základy statistiky a metodologie, ale dosud neprogramovali.
+
+## Jak s učebnicí pracovat
+
+Postupujte po kapitolách a ukázky průběžně spouštějte ve vlastním RStudiu. Kód můžete přenést do skriptu tlačítkem **Zkopírovat**. Po spuštění porovnejte výsledek s výkladem a zkuste vysvětlit, co jednotlivé příkazy provedly.
+
+Krátká cvičení navazují přímo na vysvětlený postup. Nejprve je zkuste vyřešit samostatně, potom rozbalte **Ukázat řešení** a porovnejte svůj postup se vzorovým řešením. Když se výsledek liší, vraťte se k zadání a zkontrolujte názvy objektů, argumenty funkcí a použité hodnoty.
+
+## Kde začít
+
+V [první kapitole](quarto/lekce_01.qmd) si připravíte pracovní prostředí, vyzkoušíte základní příkazy a vytvoříte první graf. Potřebujete nainstalované R a RStudio Desktop; instalaci dalších balíčků vysvětluje kapitola.
+
+Učebnice se průběžně rozšiřuje. Aktuálně obsahuje úvod a první kapitolu.

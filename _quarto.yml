@@ -1,0 +1,34 @@
+project:
+  type: book
+  output-dir: _book
+  execute-dir: project
+book:
+  title: "R101: Praktický úvod do R"
+  chapters:
+    - index.qmd
+    - quarto/lekce_01.qmd
+lang: cs
+language:
+  code-copy-button-tooltip: "Zkopírovat"
+  code-copy-button-title: "Zkopírovat"
+  code-copy-button-success: "Zkopírováno"
+format:
+  html:
+    theme: cosmo
+    css: quarto/lesson.css
+    toc: true
+    toc-title: "Na této stránce"
+    toc-depth: 2
+    number-sections: true
+    code-copy: true
+    code-fold: false
+    code-overflow: scroll
+    fig-width: 7
+    fig-height: 4.6
+    fig-dpi: 120
+execute:
+  echo: true
+  warning: true
+  message: false
+  error: false
+  cache: false
