@@ -49,8 +49,13 @@ Zařazuj také otázky na interpretaci výstupů a vhodnost postupu, nejen na z�
 pouze tehdy, když jsou nezbytná pro probíraný problém, nebo je označ jako nepovinná.
 
 ## Jazyk a výklad
-- Piš odbornou, přirozenou češtinou. Používej jednotnou terminologii;
-při prvním výskytu podle potřeby uveď anglický ekvivalent.
+- Piš odbornou, přirozenou češtinou. Preferuj ustálené a přirozeně znějící
+české odborné termíny. Pokud vhodný český ekvivalent chybí nebo by doslovný
+překlad působil nepřirozeně či zavádějícím dojmem, použij anglický termín
+nebo jeho běžnou počeštěnou podobu; například „pipe operátor“ místo
+„operátor roury“. Zvolenou terminologii používej jednotně v celé učebnici.
+Při prvním výskytu termín srozumitelně vysvětli česky a podle potřeby uveď
+také anglický ekvivalent pro orientaci v dokumentaci.
 - Vysvětluj nejen co kód dělá, ale také proč je daný postup vhodný
 a kdy vhodný není.
 - Nové pojmy vysvětli před jejich použitím.
