@@ -35,10 +35,11 @@ jobs:
             any::ggthemes
             any::knitr
             any::rmarkdown
-      - name: Check R calculations
-        run: Rscript --vanilla quarto/_verification/check-r.R
       - name: Render complete book
         run: quarto render
+      # The R checks also verify files exported while rendering the chapters.
+      - name: Check R calculations
+        run: Rscript --vanilla quarto/_verification/check-r.R
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

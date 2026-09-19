@@ -72,6 +72,12 @@ node quarto/_verification/check-html.cjs
 
 Pomocná kontrola HTML používá Playwright a Chromium; instalaci nebo nastavení proměnných PLAYWRIGHT_MODULE a CHROME_PATH popisuje kořenový README.md. Tyto závislosti nejsou potřeba ke čtení ani k vykreslení lekce.
 
+## Oprava pořadí publikačních kroků 19. 9. 2026
+
+První běh na GitHubu selhal při kontrole existence `output/figures/tucnaci.png`: soubor vzniká v bloku `export-grafu` při vykreslení druhé kapitoly, ale kontrola R byla ve workflow zařazena před render. Lokální ověření tuto závislost neodhalilo, protože render a kontrola byly spuštěny souběžně. Workflow nyní nejprve vykreslí celou knihu a poté spustí kontroly R a HTML, v souladu s pořadím v kořenovém README. Kontroly ani podmínky publikování se neoslabují; obsah kapitol a výpočty zůstávají beze změny.
+
+Oprava byla lokálně ověřena v nové pracovní kopii bez předchozích výstupů: postupně prošlo vykreslení celé knihy, kontrola R a kontrola HTML (23 řešení, 87 kopírovacích tlačítek, obě kapitoly bez mobilního přetékání). Veřejné nasazení vyžaduje sloučení opravy.
+
 ## Publikační postup 19. 9. 2026
 
 Přidán `.github/workflows/publish.yml`: sestavení a existující kontroly R a HTML při pull requestu do `main`, publikování pouze z `main` po úspěšných kontrolách. Provozní návod je v kořenovém `README.md`. Obsah kapitol ani výpočty se neměnily.
