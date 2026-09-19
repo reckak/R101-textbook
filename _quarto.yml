@@ -7,6 +7,7 @@ book:
   chapters:
     - index.qmd
     - quarto/lekce_01.qmd
+    - quarto/lekce_02.qmd
 lang: cs
 language:
   code-copy-button-tooltip: "Zkopírovat"
@@ -17,8 +18,10 @@ format:
     theme: cosmo
     css: quarto/lesson.css
     toc: true
-    toc-title: "Na této stránce"
-    toc-depth: 2
+    toc-location: right
+    toc-title: "Obsah kapitoly"
+    toc-depth: 3
+    toc-expand: 1
     number-sections: true
     code-copy: true
     code-fold: false

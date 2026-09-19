@@ -1,4 +1,5 @@
-lines <- readLines("quarto/lekce_01.qmd", encoding = "UTF-8")
+lines <- c(readLines("quarto/lekce_01.qmd", encoding = "UTF-8"),
+           readLines("quarto/lekce_02.qmd", encoding = "UTF-8"))
 starts <- which(grepl("^```\\{r\\}", lines))
 chunks <- lapply(starts, function(start) {
   end <- start + which(lines[(start + 1):length(lines)] == "```")[1]
@@ -9,15 +10,17 @@ chunks <- lapply(starts, function(start) {
 names(chunks) <- vapply(chunks, function(chunk) chunk$label, character(1))
 
 # A separate R process verifies that the final answer has no lesson-state dependency.
-standalone <- "quarto/_verification/standalone-solution.R"
-writeLines(enc2utf8(c("grDevices::pdf(file = NULL)",
-                     chunks[["fig-reseni-samostatne"]]$code,
-                     "grDevices::dev.off()")), standalone, useBytes = TRUE)
-status <- system2(file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript"),
-                  c("--vanilla", standalone),
-                  stdout = "quarto/_verification/standalone.log",
-                  stderr = "quarto/_verification/standalone-errors.log")
-stopifnot(status == 0L)
+for (solution_label in c("reseni-samostatny-skript", "fig-reseni-samostatne")) {
+  standalone <- "quarto/_verification/standalone-solution.R"
+  writeLines(enc2utf8(c("grDevices::pdf(file = NULL)",
+                       chunks[[solution_label]]$code,
+                       "grDevices::dev.off()")), standalone, useBytes = TRUE)
+  status <- system2(file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript"),
+                    c("--vanilla", standalone),
+                    stdout = "quarto/_verification/standalone.log",
+                    stderr = "quarto/_verification/standalone-errors.log")
+  stopifnot(status == 0L)
+}
 
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(palmerpenguins))
@@ -53,5 +56,33 @@ for (label in c("pracovni-adresar", "napoveda-seq", "napoveda-penguins")) {
   eval(parse(text = chunks[[label]]$code))
 }
 cat("PASS: numerical interpretations, 342 usable rows, unchanged final plot data and model,\n")
-cat("standalone final solution in Rscript --vanilla, interactive help and working directory.\n")
+cat("both standalone final solutions in Rscript --vanilla, interactive help and working directory.\n")
+# Check the numbers described in the new chapter against the actual dataset.
+stopifnot(identical(as.integer(table(penguins$species)), c(152L, 68L, 124L)))
+stopifnot(identical(as.integer(table(penguins$island)), c(168L, 124L, 52L)))
+stopifnot(sum(is.na(penguins$sex)) == 11L)
+stopifnot(identical(range(penguins$body_mass_g, na.rm = TRUE), c(2700L, 6300L)))
+medians <- tapply(penguins$body_mass_g, penguins$species, median, na.rm = TRUE)
+stopifnot(identical(as.numeric(medians), c(3700, 3700, 5000)))
+print(table(penguins$island, penguins$species))
+print(medians)
+# Validate computed graphical summaries, not only source syntax.
+plot_from <- function(label) eval(parse(text = chunks[[label]]$code))
+histogram <- ggplot_build(plot_from("fig-histogram"))$data[[1]]
+stopifnot(sum(histogram$count) == 342L)
+box <- ggplot_build(plot_from("fig-boxplot"))$data[[1]]
+stopifnot(isTRUE(all.equal(box$middle, as.numeric(medians))))
+counts <- ggplot_build(plot_from("fig-ostrovy-pocty"))$data[[1]]
+stopifnot(sum(counts$count) == 344L)
+proportions <- ggplot_build(plot_from("fig-ostrovy-podily"))$data[[1]]
+stopifnot(all(tapply(proportions$ymax, proportions$x, max) == 1))
+separate <- ggplot_build(plot_from("fig-primky-druhy"))$data[[2]]
+stopifnot(length(unique(separate$group)) == 3L)
+panels <- ggplot_build(plot_from("fig-panely"))$layout$layout
+stopifnot(nrow(panels) == 3L)
+# Every within-species fitted slope is positive, as described in the panel solution.
+slopes <- sapply(split(penguins, penguins$species), function(d) coef(lm(body_mass_g ~ flipper_length_mm, data = d))[2])
+stopifnot(all(slopes > 0))
+cat("PASS: new chapter counts, medians, histogram total, proportions, grouped trends and facets.\n")
+print(slopes)
 print(sessionInfo())
