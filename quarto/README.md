@@ -72,6 +72,14 @@ node quarto/_verification/check-html.cjs
 
 Pomocná kontrola HTML používá Playwright a Chromium; instalaci nebo nastavení proměnných PLAYWRIGHT_MODULE a CHROME_PATH popisuje kořenový README.md. Tyto závislosti nejsou potřeba ke čtení ani k vykreslení lekce.
 
+## Publikační postup 19. 9. 2026
+
+Přidán `.github/workflows/publish.yml`: sestavení a existující kontroly R a HTML při pull requestu do `main`, publikování pouze z `main` po úspěšných kontrolách. Provozní návod je v kořenovém `README.md`. Obsah kapitol ani výpočty se neměnily.
+
+V oddělené pracovní kopii z aktuálního `main` prošlo vykreslení celé knihy v Quarto 1.9.38, kontrola výpočtů v R 4.5.1 a kontrola HTML: 23 skrytých a rozbalitelných řešení, 87 ověřených kopírovacích tlačítek, 35 obrázků, vnitřní odkazy a obě kapitoly bez přetékání při šířce 390 px; žádné chyby JavaScriptu. Ověřena syntaxe YAML a rozdíly souborů. Prostředí Windows hlásilo varování o locale a balíčcích sestavených pod R 4.5.3; kontroly přesto úspěšně skončily.
+
+Toto lokální ověření neověřuje instalaci závislostí na linuxovém runneru GitHubu ani veřejné nasazení. První část ověří běh pull requestu; nasazení a veřejnou cestu je nutné ověřit po zapnutí Pages a sloučení.
+
 ## Podklady a odborné úpravy při přípravě lekce
 
 Podkladem je `scripts/week_01.R` a sedm dodaných snímků ve složce `screenshots`. Postupy byly při přípravě porovnány s oficiální dokumentací dne 12. 9. 2026. Příklad s tučňáky a jeho analytický záměr zůstaly zachovány. Následující poznámky dokumentují převod pro autora; studentům jsou příslušné principy vysvětleny přímo v jednotlivých oddílech.
