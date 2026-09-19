@@ -1,22 +1,44 @@
-# První lekce R101
+# Autorská dokumentace učebnice R101
 
-`lekce_01.qmd` je zdroj první kapitoly knihy. Aktuální výstup je `_book/quarto/lekce_01.html`; pro přenos knihy je třeba celá složka `_book/`. Starší samostatné HTML je ponecháno pouze lokálně. Pro čtení knihy není třeba instalovat R.
+## Aktuální uspořádání
 
-## Úpravy a nové vykreslení
+`lekce_01.qmd` obsahuje základy R a RStudia, práci s projektem, skriptem, objekty, funkcemi, vektory a balíčky. `lekce_02.qmd` obsahuje základy ggplot2 včetně interpretací a samostatné přípravy všech dat a balíčků. Výstupy jsou `_book/quarto/lekce_01.html` a `_book/quarto/lekce_02.html`; pro čtení knihy není třeba instalovat R. Instalační a provozní postupy popisuje kořenový `README.md`.
 
-Otevřete projekt `R101-textbook.Rproj`, potom `quarto/lekce_01.qmd` a použijte **Render** v RStudiu. Alternativně z kořene projektu spusťte v terminálu:
+Každá kapitola má vlastní spuštění kódu; instalační příkazy a interaktivní prohlížení dat či nápovědy mají `eval: false`. Všechna výpočetní řešení se při renderování spouštějí. Řešení jsou v HTML zpočátku sbalená. V první kapitole zůstává lokálně povolená demonstrační chyba ve jménu objektu. U prvního bodového grafu ve druhé kapitole je záměrně viditelné varování o dvou chybějících souřadnicích; další grafy stejných proměnných používají vysvětlené `na.rm = TRUE`. Neočekávaná varování se globálně nepotlačují.
 
-```sh
-quarto render
-```
+Exporty druhé kapitoly vznikají v `output/figures/tucnaci.png` a `output/figures/tucnaci_samostatne.png`. Opakované spuštění aktualizuje pouze tyto odvozené soubory. Starší samostatné HTML mimo `_book/` není aktuálním výstupem knihy.
 
-Je třeba mít R, Quarto a balíčky `tidyverse`, `palmerpenguins`, `ggthemes`, `knitr` a `rmarkdown`. Jednorázová instalace je oddělená v `scripts/00_instalace_balicku.R`. Zdrojový skript `scripts/week_01.R` zůstal beze změny.
+## Rozdělení kapitol a nová kapitola o grafech, 19. 9. 2026
 
-Projektová konfigurace `_quarto.yml` určuje kořen projektu jako pracovní adresář kódu. Relativní cesty k obrázkům v textu se vztahují k umístění `.qmd`. Pro nové vykreslení uchovejte celou strukturu projektu, zejména složku `screenshots` a `quarto/lesson.css`. Samotné `.qmd` nestačí.
+Výklad od původního oddílu „První graf: od dat k otázce“ byl přesunut do druhé kapitoly. Závěrečná úloha byla rozdělena: fiktivní dotazníkové skóry zůstaly v první kapitole, samostatný graf tučňáků přešel do druhé. Obě řešení nyní používají explicitní `print()`, aby fungovalo zobrazení výsledků také při spuštění skriptu přes Source. Cíle, předpoklady, shrnutí, časté potíže a úvod knihy byly přizpůsobeny novému členění. Přesunuté grafy zachovávají původní štítky pro odkazy a kontrolu shody výsledků. Nové mezi-kapitolové odkazy používají stabilní identifikátory oddílů.
 
-Při renderování se spouštějí také všechna řešení. V HTML jsou jejich celé obsahy ve výchozím stavu sbalené. Záměrně chybné názvy objektů mají lokálně povoleno zobrazení chyby; ostatní neočekávané chyby render zastaví. Instalace a interaktivní otevření nápovědy nejsou součástí renderu. Běžná informační hlášení balíčků jsou skryta; varování o dvou vynechaných řádcích je u prvního bodového grafu záměrně viditelné.
+Novým podkladem je uživatelem dodaný `scripts/week_02.R`, zachovaný beze změny. Z jeho grafické části byly doplněny kratší zápisy, pipe operátor, četnosti a řazení kategorií, histogramy, hustoty, boxploty, podíly, panely a práce s exportem. Opakující se varianty jsou sloučeny do výkladu a cvičení. Legenda pro více trendových čar je nepovinná. Část `Data Transformation` s `flights` zůstává podkladem pro další kapitolu; nespadá do současného tématu. Pro budoucí zpracování: tvrzení skriptu, že tidyverse automaticky načte `nycflights13`, je nesprávné a bude nutné doplnit samostatné připojení datového balíčku.
 
-Render vytváří také `output/figures/tucnaci.png` a `output/figures/tucnaci_samostatne.png`. Opakovaný render tyto odvozené soubory aktualizuje.
+### Opravy a didaktická rozhodnutí
+
+- V první kapitole bylo „freewarový software“ nahrazeno přesnějším označením svobodného softwaru s otevřeným zdrojovým kódem podle R Project. Odstraněno bylo lokální potlačení všech varování při připojení balíčků; varování o sestavení balíčků v jiné verzi R zůstávají viditelná.
+- V přesunutém výkladu byly opraveny překlepy a porušené věty u `aes()`, popisu Gentoo, `geom_smooth()` a mapování tvaru. Doplněny konkrétní interpretace bodů, skupinových křivek i přímek. Analytický postup ani vstupní hodnoty přesunutých grafů se nezměnily.
+- V návaznosti na podklad rozlišujeme varování o chybějících hodnotách od chyby. Kontrola `NA` předchází jejich vynechávání. Počty druhů využívají všech 344 řádků; grafy hmotnosti nebo hmotnosti a ploutve využívají 342 dostupných měření. Žádná nová imputace ani plošné odstranění neúplných řádků nebyly provedeny.
+- Histogramy mají pro srovnávání šířek explicitní `boundary = 0`. Tím je oproti výchozímu nastavení ve skriptu určeno umístění hranic, které může změnit četnosti konkrétních intervalů; původní hodnoty a celkový počet měření zůstávají stejné. Z mnoha variant ve skriptu zůstávají šířky 200, 20 a 2000 g, další možnost `bins` je vysvětlena stručně.
+- Hustota je vysvětlena jako hustota, nikoli četnost nebo procento. Boxplot dostal vysvětlení kvartilů a vousů; podílové sloupce výslovně určují jmenovatel. Interpretace zohledňují provázanost druhu a ostrova a nevyvozují kauzální účinky.
+- Nepovinné porovnání lineární a loess čáry používá pojmenované ruční škály a modrou/oranžovou paletu. Vazba názvu čáry na barvu je tak explicitní, nezávislá na pořadí kategorií; samotné odhady zůstávají stejné.
+- Export vytváří cílovou složku a vždy uvádí `plot =`. Původní obecné spojení 72 dpi s vhodností pro prezentaci bylo nahrazeno vysvětlením fyzických rozměrů, pixelů a čitelnosti. `View()` a úplný výpis tabulky jsou ukázky pro interaktivní práci, nejsou spouštěny při renderu.
+- Výklad a vlastní cvičení navazují na R4DS, kapitolu Data visualization; konkrétní funkce byly ověřeny v dokumentaci ggplot2, forcats a palmerpenguins. Závěrečné interpretační scénáře používají psychologické otázky a nepředstírají existenci naměřených dat.
+
+### Osnova a ověření
+
+Společná konfigurace výslovně nastavuje `toc-location: right`, český nadpis „Obsah kapitoly“, hloubku tři a počáteční rozbalení jedné úrovně. Hlavní oddíly jsou viditelné a pododdíly se rozvíjejí při čtení podobně jako v R4DS. Na úzké obrazovce standardní motiv pravý panel skrývá. Chování odpovídá [dokumentaci Quarto](https://quarto.org/docs/output-formats/html-basics.html#table-of-contents).
+
+Kontroly byly rozšířeny na obě kapitoly. `check-r.R` ověřuje obě závěrečná řešení v samostatných čistých procesech, původní číselné příklady, shodu přesunutého grafu s `week_01.R`, nové četnosti, mediány, součty v histogramu, podíly, počet skupinových přímek a panelů. `check-html.cjs` odvozuje počet řešení ze zdroje místo pevného počtu, prochází všechny ukázky v obou kapitolách a ověřuje také pravou osnovu a cíle odkazů napříč knihou. Generuje snímky stránek a přehled všech grafů pro vizuální posouzení.
+
+Úspěšně vykreslena celá kniha v R 4.5.1 a Quarto 1.9.38, včetně všech spustitelných řešení. Numerické a grafické kontroly prošly. R upozornilo na sestavení tibble, purrr a stringr pod R 4.5.3; nevedlo to k selhání. Automatická kontrola neotvírá interaktivní prohlížeč dat RStudia ani neprovádí instalace balíčků.
+
+HTML kontrola ověřila v první kapitole 10 sbalených řešení, 47 kopírovatelných ukázek a 8 obrázků; ve druhé 13 řešení, 40 ukázek a 27 grafů. Všech 87 ukázek bylo skutečně zkopírováno do schránky, všechna řešení šla rozbalit včetně textu a obrázků. Ověřena navigace i místní odkazy, pravá osnova na desktopu, nulové chyby JavaScriptu a žádné vodorovné přetékání při šířce 390 px. Grafy byly vizuálně prohlédnuty a porovnány s interpretacemi, včetně českých popisků a legend.
+
+## Historické záznamy
+
+Následující záznamy popisují tehdejší podobu první lekce před tematickým rozdělením; jejich počty a umístění grafů nejsou popisem současného stavu.
+
 
 ## Kontrola
 
