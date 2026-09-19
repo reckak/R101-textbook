@@ -63,6 +63,21 @@ Rozsah výkladu přizpůsob obtížnosti tématu.
 - Upřednostňuj souvislý výklad. Výčty, tabulky a zvýrazněné bloky používej tam,
 kde podporují porozumění.
 
+## Výstupy a jejich interpretace
+- U každého výukově podstatného výstupu připoj stručný komentář přímo
+u něj: čeho si má student všimnout, co výsledek znamená v kontextu příkladu
+a jak souvisí s řešenou otázkou. Nestačí vysvětlit pouze kód nebo obecně
+popsat, co daná funkce vrací. U jednoduchých pomocných výpisů stačí krátké
+vysvětlení v okolním textu; rozsah komentáře přizpůsob významu výstupu.
+- U grafů upozorni na hlavní patrný vzorec, rozdíly či neobvyklé hodnoty,
+pokud jsou pro otázku relevantní. U tabulek a statistických modelů vyber
+podstatné hodnoty a vysvětli jejich význam; například u regrese interpretuj
+směr a velikost relevantních koeficientů vzhledem k jednotkám a kódování
+proměnných a podle cíle výkladu také nejistotu odhadů a omezení závěrů.
+Neomezuj interpretaci na statistickou významnost ani nepřepisuj celý výstup.
+- Stejné pravidlo platí pro vzorová řešení cvičení; jejich komentář ponech
+uvnitř sbaleného bloku „Ukázat řešení“.
+
 ## Samostatný studijní text a poznámky pro autora
 - Piš pro studenta, který má k dispozici pouze výsledné HTML a postupuje
 samostatně. Nepředpokládej přístup k původním skriptům, autorskému projektu
@@ -207,7 +222,13 @@ vykresli celou knihu a ověř dotčené stránky, navigaci a odkazy mezi kapitol
 - Používej kontroly popsané v `README.md`, ale ověř jejich skutečný rozsah.
 Kontroly v `quarto/_verification/` původně pokrývají první kapitolu; s novým
 obsahem je přiměřeně rozšiřuj. Pevné počty prvků nejsou normou pro další kapitoly.
-- Zkontroluj shodu mezi kódem, výsledky a slovní interpretací.
+- Před dokončením konkrétní interpretace spusť příslušný kód a prohlédni
+si skutečně vygenerované výstupy; grafy zkontroluj i vizuálně. Komentář
+opři o tyto výsledky, nikoli pouze o očekávání podle kódu. Po změně kódu
+nebo dat znovu ověř všechny dotčené výstupy a navazující interpretace.
+Pokud spuštění nebo prohlédnutí výstupu není možné, konkrétní výsledky
+neodhaduj; neověřenou interpretaci nepovažuj za dokončenou a omezení uveď
+v autorské dokumentaci i ve zprávě uživateli.
 - Ověř také kód všech vzorových řešení. Ve vykresleném HTML zkontroluj,
 že řešení jsou zpočátku skrytá, kliknutí na „Ukázat řešení“ odkryje jejich
 celý obsah a tlačítko „Zkopírovat“ funguje u všech ukázek kódu včetně řešení.
