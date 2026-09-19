@@ -41,4 +41,23 @@ Po změně vykreslete celou knihu. Kontrolu výpočtů spusťte příkazem `Rscr
 
 Kontrola R ověřuje samostatná závěrečná řešení obou kapitol, číselné interpretace a vybrané grafické výpočty. Kontrola HTML prochází obě kapitoly: ověřuje navigaci knihy, pravou osnovu, skrytí a rozbalení všech řešení, skutečné kopírování všech ukázek kódu, obrázky, odkazy uvnitř knihy a mobilní rozložení. Vytváří také snímky stránek a přehledy grafů ve `quarto/_verification/` pro vizuální kontrolu. Na úzkých obrazovkách se pravá osnova standardně skrývá, aby zůstal prostor pro text. Generované výstupy a lokální pracovní soubory se do Gitu neukládají.
 
-Další větší změny připravujte v samostatné větvi a před sloučením kontrolujte rozdíly a vykreslený výsledek. Repozitář je propojený s GitHubem; automatické publikování přes GitHub Pages zatím není nastavené.
+Další větší změny připravujte v samostatné větvi a před sloučením kontrolujte rozdíly a vykreslený výsledek.
+
+## Publikování na GitHub Pages
+
+Postup v `.github/workflows/publish.yml` při pull requestu do `main` sestaví celou knihu a spustí kontroly R a HTML popsané výše. Po změně `main` navíc zveřejní ověřený obsah `_book/` na GitHub Pages. Neúspěšná kontrola zabrání publikování. Generované soubory se neukládají do zdrojové větve a není potřeba větev `gh-pages` ani osobní přístupový token.
+
+Při prvním zprovoznění:
+
+1. V repozitáři na GitHubu otevřete **Settings → Pages**.
+2. V části **Build and deployment → Source** vyberte **GitHub Actions**. Nevytvářejte další nabízený workflow; projekt již vlastní obsahuje.
+3. Slučte pull request s publikačním postupem do `main`.
+4. Na kartě **Actions** sledujte postup **Build and publish textbook**. Po úspěšném dokončení bude učebnice dostupná na <https://reckak.github.io/R101-textbook/>.
+
+Pokud jste Pages zapnuli až po sloučení, spusťte na kartě **Actions → Build and publish textbook → Run workflow** běh pro větev `main`. Ruční běh na jiné větvi pouze ověří sestavení a nepublikuje web. V nastavení repozitáře musí být povolené GitHub Actions a použité akce; dostupnost Pages pro soukromý repozitář závisí na plánu GitHubu.
+
+Pro sestavení se používá R 4.5.1 a Quarto 1.9.38. Seznam R balíčků v kroku `setup-r-dependencies` odpovídá `scripts/00_instalace_balicku.R`; při přidání závislostí aktualizujte obě místa. Verze balíčků nejsou uzamčené, takže jejich aktualizace mohou vyžadovat úpravu příkladů nebo kontrol. Instalace probíhá samostatně před vykreslením. Na web se odesílá pouze `_book/`.
+
+Po prvním nasazení zkontrolujte také veřejnou adresu, přechody mezi kapitolami a načítání obrázků. Lokální kontrola HTML sama neověřuje nastavení GitHub Pages ani chování pod veřejnou cestou `/R101-textbook/`.
+
+Dokumentace: [GitHub Pages a vlastní workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), [Quarto v GitHub Actions](https://github.com/quarto-dev/quarto-actions).
