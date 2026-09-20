@@ -85,4 +85,31 @@ slopes <- sapply(split(penguins, penguins$species), function(d) coef(lm(body_mas
 stopifnot(all(slopes > 0))
 cat("PASS: new chapter counts, medians, histogram total, proportions, grouped trends and facets.\n")
 print(slopes)
+# Verify the alternative implementations and the explanation of default bins.
+eval(parse(text = chunks[["cetnosti-tabulka"]]$code))
+bars <- ggplot_build(plot_from("fig-cetnosti"))$data[[1]]
+columns <- ggplot_build(plot_from("fig-cetnosti-col"))$data[[1]]
+stopifnot(isTRUE(all.equal(bars[c("x", "y")], columns[c("x", "y")])) )
+counted_rows <- ggplot_build(ggplot(cetnosti_druhu, aes(x = species)) + geom_bar())$data[[1]]
+stopifnot(all(counted_rows$count == 1))
+default_hist <- ggplot_build(ggplot(penguins, aes(x = body_mass_g)) +
+                                geom_histogram(na.rm = TRUE))$data[[1]]
+stopifnot(nrow(default_hist) == 30L, sum(default_hist$count) == 342L,
+          all(abs((default_hist$xmax - default_hist$xmin) - 3600 / 29) < 1e-8))
+for (label in c("fig-panely", "fig-reseni-panely")) {
+  modern <- plot_from(label)
+  variable <- if (label == "fig-panely") "island" else "species"
+  legacy <- modern + facet_wrap(as.formula(paste("~", variable)), ncol = 2)
+  stopifnot(isTRUE(all.equal(ggplot_build(modern)$layout$layout,
+                            ggplot_build(legacy)$layout$layout)))
+}
+plain <- ggplot_build(plot_from("fig-modely-bez-legendy"))
+named <- ggplot_build(plot_from("fig-legenda-modelu"))
+for (layer in 2:3) {
+  fields <- c("x", "y", "ymin", "ymax")
+  stopifnot(isTRUE(all.equal(plain$data[[layer]][fields], named$data[[layer]][fields])))
+}
+stopifnot(is.null(plain$plot$scales$get_scales("colour")),
+          setequal(named$plot$scales$get_scales("colour")$get_limits(), c("Lineární", "Loess")))
+cat("PASS: equivalent bar heights, default histogram bins, facet syntax and model curves.\n")
 print(sessionInfo())

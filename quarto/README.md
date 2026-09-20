@@ -106,3 +106,16 @@ Projekt nyní používá Quarto Book s nečíslovaným úvodem a první kapitolo
 V novém adresáři úspěšně proběhlo vykreslení celé knihy a kontrola výpočtů v R 4.5.1 včetně samostatného závěrečného řešení a shody grafu s původním skriptem. R upozornilo, že balíčky tibble, purrr a stringr byly sestaveny pod R 4.5.3; kontroly přesto prošly.
 
 Kontrola výsledného HTML potvrdila navigaci z úvodu do kapitoly, správné číslo kapitoly 1, 12 zpočátku skrytých a rozbalitelných řešení, skutečné kopírování všech 62 ukázek, 16 načtených obrázků, vnitřní odkazy a nulové chyby JavaScriptu. Při šířce 390 px stránka nepřetékala. Kontrola HTML nyní používá výstup `_book/` a umožňuje nastavit Playwright a prohlížeč proměnnými prostředí místo pevných osobních cest.
+
+## Doplnění kapitoly 2 dne 20. 9. 2026
+
+- V oddílu dokončeného grafu vysvětleno, že podporované vizuální vlastnosti závisejí na geomu: `shape` patří k bodům, zatímco čáry lze odlišovat například pomocí `linetype`. Mapování tvaru zůstává lokální v `geom_point()`.
+- Při prvním výkladu pipe operátoru doplněna zkratka Ctrl + Shift + M (macOS Cmd + Shift + M) a nastavení RStudia pro vkládání `|>`.
+- U četností přidány tabulka z `count(species)`, graf `geom_col()` s explicitním `y = n` a krátká interpretační úloha. Nový postup dává stejné četnosti 152, 68 a 124 jako původní `geom_bar()`.
+- U histogramu vysvětleno výchozí `bins = 30`, které nepoužívá datově řízený výběr počtu intervalů. Výpočet šířky pro běžné nastavení byl ověřen v instalovaném ggplot2 4.0.0 i proti aktuálnímu zdrojovému kódu: rozsah 3600 g dělený 29 dává přibližně 124,14 g. Původní výukový histogram s šířkou 200 g se nezměnil.
+- V obou příkladech panelů použit `facets = vars(...)`; starší zápis s formulí zůstává vysvětlen jako platná alternativa. Shoda rozdělení a pořadí panelů ověřena výpočtem.
+- Před grafem s vlastní legendou přidán spustitelný příklad pevných barev bez legendy a komentář k jeho omezení. Lineární i loess odhady včetně intervalů zůstávají shodné; mění se pouze barvy a legenda.
+
+Odborné zdroje jsou uvedeny přímo u doplnění: oficiální dokumentace ggplot2, jeho zdrojový soubor `R/bin.R` a dokumentace zkratek Posit. Nejde o změnu analytické metody ani vstupních dat.
+
+Ověření: úspěšný render celé knihy; kontrola R v čisté relaci včetně samostatných závěrečných řešení a nových porovnání; kontrola HTML obou kapitol. Kapitola 2 obsahuje 14 zpočátku sbalených a funkčních řešení, 43 skutečně zkopírovaných ukázek a 29 načtených obrázků. Odkazy i mobilní šířka 390 px prošly, bez chyb JavaScriptu. Nový sloupcový graf a obě verze modelových čar byly prohlédnuty i vizuálně. R upozornilo na některé balíčky sestavené pod R 4.5.3 při běhu R 4.5.1; kontroly prošly. Render zahrnoval také již rozpracované místní redakční změny autora; ty zůstávají zachovány mimo commit tohoto doplnění.
