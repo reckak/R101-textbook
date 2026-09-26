@@ -35,7 +35,7 @@ Případné upozornění `package ... was built under R version ...` se týká v
 
 ## Nejdříve porozumějte tabulce {#sec-upravy-data}
 
-Tabulka `flights` obsahuje záznamy vnitrostátních letů z newyorských letišť EWR, JFK a LGA v roce 2013. Jeden řádek je záznam jednoho letu, nikoli jednoho letadla nebo jednoho dne. Některé záznamy nemají skutečný čas odletu či příletu, a proto nelze počet řádků automaticky označit za počet dokončených letů. Význam sloupců popisuje [dokumentace dat flights](https://nycflights13.tidyverse.org/reference/flights.html).
+Tabulka `flights` obsahuje záznamy vnitrostátních letů ze tří letišť newyorské metropolitní oblasti v roce 2013: **Newark Liberty International Airport (EWR)**, **John F. Kennedy International Airport (JFK)** a **LaGuardia Airport (LGA)**. Jeden řádek je záznam jednoho letu, nikoli jednoho letadla nebo jednoho dne. Některé záznamy nemají skutečný čas odletu či příletu, a proto nelze počet řádků automaticky označit za počet dokončených letů. Význam sloupců popisuje [dokumentace dat flights](https://nycflights13.tidyverse.org/reference/flights.html).
 
 ```{r}
 #| label: l03-nahled
@@ -69,9 +69,11 @@ Zpoždění odletu chybí v 8 255 záznamech a zpoždění příletu v 9 430. Do
 ```{r}
 #| label: l03-napoveda
 #| eval: false
-View(flights)
+view(flights)
 ?flights
 ```
+
+`view()` s malým `v` pochází z balíčku **tibble**, který jsme načetli společně s tidyverse. V interaktivní relaci otevře prohlížeč dat pomocí `View()` a předanou tabulku zároveň neviditelně vrátí, takže může být i součástí řetězce kroků. R rozlišuje velká a malá písmena: jde o dvě různé funkce, nikoli o volně zaměnitelné zápisy téhož názvu. [Dokumentace view()](https://tibble.tidyverse.org/reference/view.html)
 
 ## Jak navazují kroky za sebou {#sec-upravy-pipe}
 
@@ -99,6 +101,33 @@ nrow(flights)
 ```
 
 `nrow()` vrací počet řádků. První výsledek je 9 723, druhý stále 336 776: přiřazení vytvořilo `zpozdene_lety`, ale nezměnilo `flights`. Pipe čteme přibližně jako „vezmi data a potom…“. `|>` ponecháváme na konci řádku, podobně jako `+` při skládání grafu; oba znaky ovšem slouží k jinému účelu.
+
+### Dva pipe operátory a nastavení RStudia
+
+V R se běžně setkáte se dvěma pipe operátory. Starší **`%>%`** pochází z balíčku **magrittr** a je dostupný také po načtení tidyverse. Novější **`|>`** je od **R 4.1.0** součástí základního R (*base R*), takže pro samotný operátor nemusíte načítat žádný další balíček. Funkce, kterým předáváte data, ale své balíčky stále potřebují: například pro `filter()` v této lekci načítáme dplyr prostřednictvím tidyverse.
+
+V běžných řetězcích funkcí dplyr fungují oba operátory podobně. Tato varianta vrátí stejných 9 723 záznamů jako předchozí ukázka s `|>`:
+
+```{r}
+#| label: l03-pipe-magrittr
+flights %>%
+  filter(dep_delay > 120) %>%
+  nrow()
+```
+
+Nejsou však zaměnitelné ve všech zápisech. Například `%>%` dovoluje označit předaná data tečkou `.`. V zápisu `.$dep_delay` tedy tečka zastupuje tabulku a `$` z ní vybírá sloupec. Nativní `|>` tuto tečku nepoužívá. Pro stejný výběr sloupce podporuje **od R 4.3.0** zápis `_$dep_delay`, kde vstup zastupuje podtržítko:
+
+```{r}
+#| label: l03-pipe-sloupec
+flights %>% .$dep_delay %>% head(n = 5)
+flights |> _$dep_delay |> head(n = 5)
+```
+
+Oba výstupy obsahují prvních pět zpoždění odletu: 2, 4, 2, −1 a −6 minut. V R 4.1 nebo 4.2 druhý zápis ještě nefunguje; sloupec lze vybrat přímo jako `flights$dep_delay`. Při převodu cizího kódu proto nestačí vždy jen nahradit `%>%` znakem `|>`. V této učebnici používáme převážně nativní `|>`. [Dokumentace nativního pipe operátoru](https://stat.ethz.ch/R-manual/R-devel/library/base/html/pipeOp.html) a [operátoru z magrittr](https://magrittr.tidyverse.org/reference/pipe.html).
+
+V RStudiu vložíte pipe operátor zkratkou **Ctrl + Shift + M** (na macOS **Cmd + Shift + M**). V **Tools → Global Options → Code → Editing** lze zvolit, který operátor má zkratka vkládat: při zaškrtnutí **Use native pipe operator, |>** vloží `|>`, při vypnutí `%>%` (@fig-l03-pipe-nastaveni). Toto nastavení mění vkládání zkratkou, nikoli již napsaný kód.
+
+![Nastavení pipe operátoru vkládaného klávesovou zkratkou v RStudiu.](../screenshots/pipe.png){#fig-l03-pipe-nastaveni fig-alt="Nastavení RStudia, Code → Editing, se zaškrtnutou volbou Use native pipe operator, |> (requires R 4.1+)." width=720}
 
 ## Výběr řádků pomocí `filter()` {#sec-upravy-filter}
 
@@ -193,7 +222,7 @@ ukazka |>
   filter(zpozdeni > 120 | is.na(zpozdeni))
 ```
 
-První výstup má jediný řádek s hodnotou 130. Druhý zachová také `NA`. Chybění testujeme funkcí `is.na()`, nikoli `== NA`. Ve výzkumu analogicky rozlišujeme účastníka, který nesplňuje věkovou hranici, a účastníka, jehož věk neznáme. Rozhodnutí, zda jej vyřadit, závisí na účelu analýzy. [Podrobnosti k chování filter()](https://dplyr.tidyverse.org/reference/filter.html)
+První výstup má jediný řádek s hodnotou 130. Druhý zachová také `NA`. Chybění testujeme funkcí `is.na()`, nikoli `== NA`. Porovnání `zpozdeni == NA` by pro každou hodnotu vrátilo `NA`: ptáme se totiž, zda je zpoždění rovno hodnotě, kterou sami neznáme. Odpověď proto nemůže být ani `TRUE`, ani `FALSE`. Ani `NA == NA` nepotvrdí rovnost, protože dvě neznámé hodnoty nemusí být stejné. Ve výzkumu analogicky rozlišujeme účastníka, který nesplňuje věkovou hranici, a účastníka, jehož věk neznáme. Rozhodnutí, zda jej vyřadit, závisí na účelu analýzy. [Podrobnosti k chování filter()](https://dplyr.tidyverse.org/reference/filter.html)
 
 ## Řazení, různé hodnoty a četnosti {#sec-upravy-radky}
 
@@ -210,11 +239,11 @@ flights |>
 
 Na prvním místě je zpoždění odletu 1 301 minut. Pět zobrazených řádků vzniklo až krokem `head()`; samotné řazení žádný záznam nevynechalo. Chybějící hodnoty se v těchto lokálních tabulkách řadí na konec, a to i při použití `desc()`.
 
-Více sloupců znamená postupné rozhodování při shodě. `arrange(year, month, day, dep_time)` nejprve řadí podle roku, potom v rámci roku podle měsíce atd. Naproti tomu `arrange(dep_time)` porovnává pouze čas na hodinách napříč všemi dny. Nejde o stejnou otázku; časům kolem půlnoci se věnuje @sec-upravy-cas. [Dokumentace arrange()](https://dplyr.tidyverse.org/reference/arrange.html)
+Při řazení podle více sloupců rozhoduje další sloupec tehdy, když mají řádky v předchozích sloupcích shodné hodnoty. Zápis `arrange(year, month, day, dep_time)` nejprve seřadí lety podle roku. V této tabulce má ale `year` všude hodnotu 2013, takže o pořadí rozhodne měsíc. Při shodném roce i měsíci se řádky seřadí podle dne a při shodném datu nakonec podle času odletu `dep_time`. Pokud se shodují hodnoty ve všech čtyřech sloupcích, zachová `arrange()` u zde používané lokální tabulky jejich pořadí ze vstupu do tohoto kroku. Naproti tomu `arrange(dep_time)` porovnává pouze čas na hodinách napříč všemi dny. Nejde o stejnou otázku; časům kolem půlnoci se věnuje @sec-upravy-cas. [Dokumentace arrange()](https://dplyr.tidyverse.org/reference/arrange.html)
 
 ### Cvičení 2: Část zpoždění se podařilo dohnat {.exercise}
 
-Vyberte lety, které odletěly **alespoň 60 minut později**, ale rozdíl mezi zpožděním odletu a příletu je **větší než 30 minut**. Seřaďte je podle zpoždění odletu od největšího. Patří do výběru let se zpožděním odletu 60 minut a příletu 20 minut?
+Vyberte lety, které odletěly **alespoň 60 minut později**, ale rozdíl mezi zpožděním odletu a příletu je **větší než 30 minut**. To znamená, že mezi odletem a příletem dohnaly přes 30 minut zpoždění. Seřaďte je podle zpoždění odletu od největšího. Patří do výběru let se zpožděním odletu 60 minut a příletu 20 minut?
 
 Upravené zadání podle [R4DS, cvičení k řádkům](https://r4ds.hadley.nz/data-transform.html#exercises).
 
@@ -234,7 +263,7 @@ Vybráno je 1 844 záznamů. Let s hodnotami 60 a 20 podmínky splňuje: první 
 
 ### `distinct()` a `count()`: seznam možností, nebo jejich četnosti?
 
-`distinct(origin, dest)` ponechá jeden řádek pro každou různou kombinaci letiště odletu a cíle. Výsledek proto představuje seznam tras, ne jednotlivé lety. `count(origin, dest)` navíc uvede počet záznamů každé trasy. Argument `sort = TRUE` seřadí četnosti od největší.
+`distinct(origin, dest)` ponechá jeden řádek pro každou různou kombinaci letiště odletu a cíle. Výsledek proto představuje seznam tras, ne jednotlivé lety. `count(origin, dest)` navíc uvede počet záznamů každé trasy. Argument `sort = TRUE` seřadí řádky výsledné tabulky podle sloupce s četnostmi `n`, od největší četnosti po nejmenší.
 
 ```{r}
 #| label: l03-trasy
@@ -248,7 +277,7 @@ flights |>
   head(n = 5)
 ```
 
-V tabulce je 224 různých kombinací letišť. Nejpočetnější je JFK–LAX s 11 262 záznamy. `distinct()` by tuto trasu uvedlo jednou, bez informace o četnosti. Bez vyjmenování sloupců porovnává `distinct()` celé řádky. Ani shodné hodnoty několika proměnných ale samy nedokazují omylem zdvojené pozorování: dva lidé mohou mít stejný věk i skór. Před odstraňováním domnělých duplicit určete, co má jednoznačně identifikovat záznam.
+V tabulce je 224 různých kombinací letišť. Nejpočetnější je JFK–LAX s 11 262 záznamy. `distinct()` by tuto trasu uvedlo jednou, bez informace o četnosti. Bez vyjmenování sloupců porovnává `distinct()` celé řádky. Dostaneme tedy pouze unikátní řádky: každé dva se liší hodnotou alespoň v jednom sloupci. Z úplně shodných řádků zůstane jen první. Ani shodné hodnoty několika proměnných ale samy nedokazují omylem zdvojené pozorování: dva lidé mohou mít stejný věk i skór. Před odstraňováním domnělých duplicit určete, co má jednoznačně identifikovat záznam.
 
 ### Cvičení 3: Jsou zastoupené všechny dny? {.exercise}
 
@@ -269,7 +298,7 @@ Výsledkem je 365. V těchto datech z roku 2013 jsou tedy zastoupeny všechny ka
 
 ## Výběr a uspořádání sloupců {#sec-upravy-sloupce}
 
-`filter()` vybírá případy, zatímco **`select()` vybírá proměnné**. Pro kontrolu zpoždění nepotřebujeme pokaždé všech 19 sloupců. Vyjmenováním názvů určíme také jejich pořadí:
+`filter()` vybírá případy (řádky), zatímco **`select()` vybírá proměnné (sloupce)**. Pro kontrolu zpoždění nepotřebujeme pokaždé všech 19 sloupců. Vyjmenováním názvů určíme také jejich pořadí:
 
 ```{r}
 #| label: l03-select
@@ -370,7 +399,7 @@ lety_vypocty |>
 
 V prvním řádku se zpoždění zvětšilo z 2 na 11 minut, takže `zmena_zpozdeni` je 9. Záporný rozdíl by znamenal zmenšení zpoždění. Nově vytvořený sloupec `vzdalenost_km` lze použít hned v následujícím výrazu uvnitř téhož `mutate()`.
 
-Rychlost vychází z uvedené vzdálenosti a času ve vzduchu, ne z okamžitého měření rychloměrem ani z celkové doby cesty cestujícího. Chybějící vstup se promítne do chybějícího výsledku. Před dělením je vhodné ověřit také nulovou nebo zápornou dobu letu. Výpočet nulu sám neopraví.
+Rychlost vychází z uvedené vzdálenosti a času ve vzduchu, ne z okamžitého měření rychloměrem ani z celkové doby cesty pasažéra. Chybějící vstup se promítne do chybějícího výsledku. Před dělením je vhodné ověřit také nulovou nebo zápornou dobu letu. Výpočet nulu sám neopraví.
 
 Ve výchozím nastavení se nové sloupce přidají na konec. `.before = 1` je umístí na začátek. Pro samotnou kontrolu odvozených hodnot můžeme použít `.keep = "none"`, které na neseskupené tabulce ponechá jen vytvořené sloupce:
 
@@ -410,7 +439,7 @@ Na prvním místě je let LGA–ATL se vzdáleností 762 mil a dobou ve vzduchu 
 
 ### `summarise()` mění, co představuje jeden řádek
 
-`mutate()` ponechává jednotlivá pozorování. **`summarise()`** je naopak shrnuje: například vypočítá jeden průměr za celou tabulku. Obě podoby jména, `summarise()` i `summarize()`, jsou rovnocenné. Nejprve úmyslně ponecháme výchozí zacházení s chybějícími hodnotami:
+`mutate()` ponechává jednotlivá pozorování. **`summarise()`** je naopak shrnuje: například vypočítá jeden průměr za celou tabulku. Obě podoby názvu funkce, `summarise()` i `summarize()`, jsou rovnocenné. Nejprve úmyslně ponecháme výchozí zacházení s chybějícími hodnotami:
 
 ```{r}
 #| label: l03-mean-na
@@ -435,7 +464,7 @@ celkem
 Průměrné zpoždění odletu je přibližně 12,64 minuty. Počet řádků je 336 776, ale průměr vychází jen z 328 521 dostupných hodnot. `n()` uvnitř souhrnu počítá **všechny řádky**, zatímco `sum(!is.na(dep_delay))` jen ty s dostupným zpožděním. Průměr zahrnuje i záporné hodnoty odletů před plánem. Není to tedy průměr jen mezi opožděnými lety.
 
 ::: {.callout-warning title="Vynechání NA není řešení příčiny chybění"}
-`na.rm = TRUE` umožní výpočet z dostupných hodnot; nedoplní chybějící data a nezaručí reprezentativnost výsledku. V psychologickém výzkumu může být například průměr dostupných následných měření jiný než průměr všech původně zařazených účastníků. Pokud ve skupině chybí všechny hodnoty, `mean(..., na.rm = TRUE)` vrátí `NaN`, nikoli nulu. Znamená to, že z prázdné sady dostupných hodnot nemáme průměr co spočítat.
+`na.rm = TRUE` umožní výpočet z dostupných hodnot; nedoplní chybějící data a nezaručí reprezentativnost výsledku. V psychologickém výzkumu může být například průměr dostupných následných měření jiný než průměr všech původně zařazených účastníků. Pokud ve skupině chybí všechny hodnoty, `mean(..., na.rm = TRUE)` vrátí `NaN`, nikoli nulu. Když nemáme k dispozici ani jednu platnou hodnotu, není průměr z čeho spočítat. Průměr „ničeho“ není smysluplné číslo; `NaN` znamená *Not a Number* (není číslo).
 :::
 
 ### `group_by()` určí, pro které skupiny počítáme {#sec-upravy-mesicni}
@@ -458,7 +487,7 @@ print(mesicni_souhrn, n = 12)
 
 Nyní jeden řádek představuje měsíc, nikoli let. Červenec má průměr přibližně 21,7 minuty, listopad 5,4 minuty. V červenci je 29 425 záznamů, ale dostupné zpoždění jen u 28 485. Rozdíl měsíců je popisem těchto dat; samotná tabulka nevysvětluje jeho příčinu.
 
-Argument `.groups = "drop"` zajistí, že výsledná tabulka už nebude seskupená. Zvlášť u několika seskupovacích proměnných tím předejdeme tomu, aby další krok nečekaně pokračoval uvnitř zbývajících skupin. Funkce `ungroup()` umí seskupení odstranit také samostatně.
+Argument `.groups = "drop"` zajistí, že výsledná tabulka už nebude seskupená. Zruší tedy seskupení podle všech seskupovacích proměnných (*grouping variables*). Následné operace budou pracovat s výslednou tabulkou jako s celkem, nikoli zvlášť s každou skupinou. Hodnoty ani sloupce, podle nichž jsme seskupovali, se tím neodstraní. Funkce `ungroup()` umí seskupení odstranit také samostatně.
 
 ### Cvičení 6: Průměr za letiště {.exercise}
 
