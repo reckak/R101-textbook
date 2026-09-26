@@ -33,6 +33,7 @@ jobs:
             any::tidyverse
             any::palmerpenguins
             any::ggthemes
+            any::nycflights13
             any::knitr
             any::rmarkdown
       - name: Render complete book

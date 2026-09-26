@@ -1,6 +1,6 @@
 # R101: Praktický úvod do R
 
-Česká učebnice pro studenty psychologie bez předchozí zkušenosti s programováním. Projekt používá [Quarto Book](https://quarto.org/docs/books/); aktuálně obsahuje úvod, kapitolu o základech R/RStudia a kapitolu o grafech v ggplot2.
+Česká učebnice pro studenty psychologie bez předchozí zkušenosti s programováním. Projekt používá [Quarto Book](https://quarto.org/docs/books/); aktuálně obsahuje úvod a kapitoly o základech R/RStudia, grafech v ggplot2 a úpravách dat v dplyr.
 
 ## Práce s projektem
 
@@ -25,6 +25,7 @@ Výstup vzniká ve složce `_book/`, úvodní stránka je `_book/index.html`. Pr
 - `index.qmd`: úvod pro studenty.
 - `quarto/lekce_01.qmd`: první kapitola a vzor pro další materiály.
 - `quarto/lekce_02.qmd`: základy tvorby a interpretace grafů v ggplot2.
+- `quarto/lekce_03.qmd`: úpravy dat, chybějící hodnoty a skupinové souhrny v dplyr.
 - `_quarto.yml`: pořadí kapitol a společné nastavení knihy.
 - `quarto/lesson.css`: společné styly včetně tlačítek kopírování.
 - `scripts/`: původní podklady a samostatná instalace balíčků.
@@ -39,7 +40,7 @@ Novou kapitolu přidejte jako `.qmd` do `quarto/` a zapište ji do `book.chapter
 
 Po změně vykreslete celou knihu. Kontrolu výpočtů spusťte příkazem `Rscript --vanilla quarto/_verification/check-r.R`. Pro kontrolu HTML je potřeba Node.js a Playwright: jednorázově spusťte `npm install --no-save --package-lock=false playwright` a `npx playwright install chromium`, potom `node quarto/_verification/check-html.cjs`. Alternativně lze cestu k modulu Playwright předat proměnnou `PLAYWRIGHT_MODULE` a cestu k existujícímu prohlížeči proměnnou `CHROME_PATH`.
 
-Kontrola R ověřuje samostatná závěrečná řešení obou kapitol, číselné interpretace a vybrané grafické výpočty. Kontrola HTML prochází obě kapitoly: ověřuje navigaci knihy, pravou osnovu, skrytí a rozbalení všech řešení, skutečné kopírování všech ukázek kódu, obrázky, odkazy uvnitř knihy a mobilní rozložení. Vytváří také snímky stránek a přehledy grafů ve `quarto/_verification/` pro vizuální kontrolu. Na úzkých obrazovkách se pravá osnova standardně skrývá, aby zůstal prostor pro text. Generované výstupy a lokální pracovní soubory se do Gitu neukládají.
+Kontrola R ověřuje samostatná závěrečná řešení všech tří kapitol, číselné interpretace a vybrané grafické výpočty. Třetí kapitolu navíc spouští celou v samostatné čisté relaci pomocí `check-lesson-03.R`, včetně všech řešení a obou očekávaných demonstračních chyb. Kontrola HTML prochází všechny tři kapitoly: ověřuje navigaci knihy, pravou osnovu, skrytí a rozbalení všech řešení, skutečné kopírování všech ukázek kódu, obrázky, odkazy uvnitř knihy a mobilní rozložení. Vytváří také snímky stránek a přehledy grafů ve `quarto/_verification/` pro vizuální kontrolu. Na úzkých obrazovkách se pravá osnova standardně skrývá, aby zůstal prostor pro text. Generované výstupy a lokální pracovní soubory se do Gitu neukládají.
 
 Další větší změny připravujte v samostatné větvi a před sloučením kontrolujte rozdíly a vykreslený výsledek.
 

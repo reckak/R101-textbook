@@ -1,0 +1,848 @@
+---
+title: "Úpravy dat v dplyr"
+subtitle: "Od jednotlivých záznamů k přehledným souhrnům"
+---
+
+## Co se naučíte {#sec-upravy-cile}
+
+Před vytvořením grafu nebo výpočtem statistiky často potřebujeme vybrat část dat, přepočítat jednotky nebo vytvořit souhrn za každou skupinu. V této lekci se naučíte vybírat a řadit řádky, vybírat a přejmenovávat sloupce, vytvářet nové proměnné a počítat souhrny pomocí balíčku **dplyr**. U každého kroku budeme kontrolovat, co nyní představuje jeden řádek a z kolika dostupných hodnot výsledek vznikl.
+
+Předpokládáme práci se skriptem (@sec-skript), objekty, funkcemi a jejich argumenty (@sec-argumenty), vektory a načítáním balíčků (@sec-balicky). Pipe operátor si krátce připomeneme. V závěru navážeme na tvorbu grafů (@sec-grafy-cile). Import vlastních souborů ani spojování několika tabulek zatím nepotřebujeme.
+
+Hlavním příkladem jsou skutečné záznamy letů z balíčku **nycflights13**. Na jedné tabulce lze dobře sledovat výběr případů, chybějící údaje a rozdíl mezi jednotlivým pozorováním a skupinovým souhrnem. Stejné kroky uplatníme také na malé, výslovně smyšlené tabulce psychologických měření. Nepovinné oddíly na konci rozšiřují základní postup; při prvním čtení je můžete přeskočit.
+
+### Připravte si skript a data {#sec-upravy-priprava}
+
+Ve svém projektu vytvořte skript `scripts/03_upravy_dat.R`. Chybějící balíčky jednorázově nainstalujte v konzoli:
+
+```{r}
+#| label: l03-instalace
+#| eval: false
+install.packages(c("tidyverse", "nycflights13"))
+```
+
+Na začátek skriptu patří jejich načtení:
+
+```{r}
+#| label: l03-balicky
+library(tidyverse)
+library(nycflights13)
+```
+
+Tidyverse připojí mimo jiné dplyr a ggplot2. Datový balíček nycflights13 načítáme samostatně; není součástí tidyverse. Žádný soubor nemusíte stahovat. Začněte v nové relaci R a ukázky spouštějte postupně shora dolů. Pokud R použije jinou funkci `filter()`, než očekáváte, zapište jednoznačně `dplyr::filter()`; význam `::` znáte z @sec-balicky.
+
+Případné upozornění `package ... was built under R version ...` se týká verze R, pod kterou byl balíček sestaven. Samo o sobě neznamená, že se balíček nenačetl. Pokud však načtení nebo některý výpočet selže, zkontrolujte verzi R a instalaci balíčku; varování bez přečtení nepřeskakujte.
+
+## Nejdříve porozumějte tabulce {#sec-upravy-data}
+
+Tabulka `flights` obsahuje záznamy vnitrostátních letů z newyorských letišť EWR, JFK a LGA v roce 2013. Jeden řádek je záznam jednoho letu, nikoli jednoho letadla nebo jednoho dne. Některé záznamy nemají skutečný čas odletu či příletu, a proto nelze počet řádků automaticky označit za počet dokončených letů. Význam sloupců popisuje [dokumentace dat flights](https://nycflights13.tidyverse.org/reference/flights.html).
+
+```{r}
+#| label: l03-nahled
+flights
+glimpse(flights)
+```
+
+Tabulka má 336 776 řádků a 19 sloupců. Náhled nevypisuje všechny záznamy, ale zkrácený výpis neznamená, že o ostatní data přicházíme. `glimpse()` ukazuje i sloupce, které se do šířky náhledu nevejdou. `<int>` a `<dbl>` označují číselné typy, `<chr>` text a `<dttm>` datum s časem. Číselné uložení samo neříká, zda má smysl počítat průměr: například `flight` je číslo letu, ne měřená veličina.
+
+| Sloupec | Co představuje |
+|:---|:---|
+| `year`, `month`, `day` | Rok, měsíc a den záznamu. |
+| `origin`, `dest` | Kódy letiště odletu a cílového letiště. |
+| `carrier`, `flight`, `tailnum` | Kód dopravce, číslo letu a registrace letadla. |
+| `dep_delay`, `arr_delay` | Zpoždění odletu a příletu v minutách. Záporné hodnoty znamenají odlet či přílet před plánem. |
+| `dep_time`, `sched_dep_time` | Skutečný a plánovaný čas odletu ve formátu HHMM; například 517 znamená 5:17. |
+| `arr_time`, `sched_arr_time` | Obdobně skutečný a plánovaný místní čas příletu. |
+| `air_time`, `distance` | Doba ve vzduchu v minutách a vzdálenost v mílích. |
+| `hour`, `minute`, `time_hour` | Hodina a minuta **plánovaného** odletu, případně jeho datum a hodina. |
+
+`NA` označuje chybějící hodnotu, ne nulové zpoždění. Pro první kontrolu použijeme známé `sum(is.na(...))`; `$` vybírá sloupec tabulky:
+
+```{r}
+#| label: l03-kontrola-na
+sum(is.na(flights$dep_delay))
+sum(is.na(flights$arr_delay))
+```
+
+Zpoždění odletu chybí v 8 255 záznamech a zpoždění příletu v 9 430. Dostupnost obou údajů tedy není stejná. Chybějící zpoždění nebudeme nahrazovat nulou: ta by znamenala přesný odlet či přílet podle plánu. Prohlížeč dat a nápovědu můžete při samostatné práci otevřít takto:
+
+```{r}
+#| label: l03-napoveda
+#| eval: false
+View(flights)
+?flights
+```
+
+## Jak navazují kroky za sebou {#sec-upravy-pipe}
+
+Funkce dplyr dostávají jako první argument tabulku, dalšími argumenty popisujeme úpravu. Názvy jejích sloupců v těchto funkcích obvykle píšeme bez uvozovek. Výsledkem je nová tabulka; vstupní objekt zůstává beze změny, pokud mu výsledek sami nepřiřadíme.
+
+**Pipe operátor `|>`** předá výsledek nalevo jako první argument funkce napravo. Oba následující zápisy proto vyberou stejné lety se zpožděním odletu přes dvě hodiny:
+
+```{r}
+#| label: l03-pipe
+filter(flights, dep_delay > 120)
+
+flights |>
+  filter(dep_delay > 120)
+```
+
+Výsledek má 9 723 řádků. Podmínka `> 120` neobsahuje zpoždění přesně 120 minut; pro „alespoň dvě hodiny“ bychom napsali `>= 120`. Nová tabulka se zatím jen vypsala. Chceme-li s ní pokračovat, uložíme ji:
+
+```{r}
+#| label: l03-prirazeni
+zpozdene_lety <- flights |>
+  filter(dep_delay > 120)
+
+nrow(zpozdene_lety)
+nrow(flights)
+```
+
+`nrow()` vrací počet řádků. První výsledek je 9 723, druhý stále 336 776: přiřazení vytvořilo `zpozdene_lety`, ale nezměnilo `flights`. Pipe čteme přibližně jako „vezmi data a potom…“. `|>` ponecháváme na konci řádku, podobně jako `+` při skládání grafu; oba znaky ovšem slouží k jinému účelu.
+
+## Výběr řádků pomocí `filter()` {#sec-upravy-filter}
+
+`filter()` zachová jen řádky, u nichž podmínka vyjde jako `TRUE`. Například pro záznamy z 1. ledna musí současně platit správný měsíc i den. Čárka mezi podmínkami má zde stejný význam jako logické „a zároveň“ (`&`):
+
+```{r}
+#| label: l03-leden
+leden_prvni <- flights |>
+  filter(month == 1, day == 1)
+
+nrow(leden_prvni)
+```
+
+Vybrali jsme 842 záznamů z jednoho dne. Stejný výsledek dává `filter(month == 1 & day == 1)`. Dvě rovnítka `==` porovnávají hodnoty; jedno `=` při volání funkce přiřazuje hodnotu argumentu.
+
+| Zápis | Význam a příklad |
+|:---|:---|
+| `==`, `!=` | Rovná se, nerovná se: `origin == "JFK"`, `origin != "JFK"`. |
+| `>`, `>=`, `<`, `<=` | Větší, alespoň, menší, nejvýše. |
+| `&` | Současně: `month == 1 & day == 1`. |
+| `\|` | Alespoň jedna podmínka: `month == 1 \| month == 2`. |
+| `!` | Negace: `!is.na(dep_delay)` znamená dostupné zpoždění. |
+| `%in%` | Hodnota je mezi uvedenými možnostmi: `month %in% c(1, 2, 3)`. |
+| `between(x, a, b)` | Hodnota je mezi `a` a `b` **včetně obou hranic**. |
+
+Pro leden až březen použijeme `%in%`. Vektor možností vytváří již známá funkce `c()`. Textové hodnoty, například kódy letišť, by byly v uvozovkách.
+
+```{r}
+#| label: l03-moznosti
+prvni_ctvrtleti <- flights |>
+  filter(month %in% c(1, 2, 3))
+
+prvni_ctvrtleti |>
+  count(month)
+```
+
+`count(month)` spočítá řádky pro každý měsíc a uloží počty do sloupce `n`. Výstup obsahuje pouze měsíce 1, 2 a 3; tím kontrolujeme, že filtr odpovídá záměru. Pro tento souvislý interval by šlo použít také `between(month, 1, 3)`. Pro nesousedící měsíce, například leden a červenec, je vhodnější `%in%`.
+
+### Dvě chyby, které vypadají nenápadně
+
+Následující ukázka je **záměrně chybná**. R ji odmítne, protože jsme místo porovnání uvedli pojmenovaný argument:
+
+```{r}
+#| label: l03-chyba-rovnitko
+#| error: true
+flights |>
+  filter(month = 1)
+```
+
+Hlášení upozorňuje na pojmenovaný vstup a navrhuje `month == 1`. Tuto opravu zapište do vlastního skriptu. Jiná chyba nemusí vyvolat žádné hlášení:
+
+```{r}
+#| label: l03-chyba-nebo
+flights |>
+  filter(month == 1 | 2) |>
+  nrow()
+```
+
+Výsledkem je všech 336 776 řádků. R vyhodnotí zvlášť `month == 1` a zvlášť číslo `2`, které se při logické operaci převede na `TRUE`. Podmínka tak vždy platí. Správně napište `month %in% c(1, 2)` nebo `month == 1 | month == 2`. Při kombinaci „a“ a „nebo“ používejte závorky, aby byl záměr zřejmý, například `(month == 1 | month == 2) & origin == "JFK"`.
+
+### Cvičení 1: Lety do Houstonu {.exercise}
+
+Vyberte lety do Houstonu (`IAH` nebo `HOU`), které přiletěly se zpožděním **alespoň** 120 minut. Výsledek uložte a ověřte, jaká cílová letiště obsahuje. Co se stane se záznamem, u něhož zpoždění příletu chybí?
+
+Vlastní kombinace podmínek inspirovaná [cvičeními R4DS k výběru řádků](https://r4ds.hadley.nz/data-transform.html#exercises).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l03-reseni-houston
+houston_zpozdene <- flights |>
+  filter(dest %in% c("IAH", "HOU"), arr_delay >= 120)
+
+houston_zpozdene |>
+  count(dest)
+```
+
+Výsledek obsahuje 58 záznamů pro HOU a 162 pro IAH, celkem 220 letů se známým zpožděním příletu alespoň 120 minut. Čárka vyžaduje současné splnění obou podmínek. Záznam s chybějícím `arr_delay` se nezachová, protože porovnání s `NA` nepotvrdí splnění podmínky. O neznámém zpoždění tím netvrdíme, že bylo kratší než dvě hodiny.
+:::
+
+### Chybějící hodnota není `FALSE` {#sec-upravy-na}
+
+Porovnání `NA > 120` vrací `NA`: výsledek neznáme. `filter()` zahodí řádky s podmínkou `FALSE` **i** `NA`. Chceme-li zachovat chybějící zpoždění pro další kontrolu, musíme to napsat výslovně. Na malé pomocné tabulce bude rozdíl přehlednější. `tibble()` vytvoří tabulku z pojmenovaných sloupců; každý zde obsahuje tři hodnoty.
+
+```{r}
+#| label: l03-na-priklad
+ukazka <- tibble(zpozdeni = c(-5, 130, NA))
+
+ukazka |>
+  filter(zpozdeni > 120)
+
+ukazka |>
+  filter(zpozdeni > 120 | is.na(zpozdeni))
+```
+
+První výstup má jediný řádek s hodnotou 130. Druhý zachová také `NA`. Chybění testujeme funkcí `is.na()`, nikoli `== NA`. Ve výzkumu analogicky rozlišujeme účastníka, který nesplňuje věkovou hranici, a účastníka, jehož věk neznáme. Rozhodnutí, zda jej vyřadit, závisí na účelu analýzy. [Podrobnosti k chování filter()](https://dplyr.tidyverse.org/reference/filter.html)
+
+## Řazení, různé hodnoty a četnosti {#sec-upravy-radky}
+
+### `arrange()`: mění pořadí, ne počet řádků
+
+`arrange()` seřadí tabulku vzestupně. Funkce `desc()` obrátí směr na sestupný. Pro rychlý náhled použijeme `head(n = 5)`, která zobrazí prvních pět řádků předané tabulky.
+
+```{r}
+#| label: l03-razeni
+flights |>
+  arrange(desc(dep_delay)) |>
+  head(n = 5)
+```
+
+Na prvním místě je zpoždění odletu 1 301 minut. Pět zobrazených řádků vzniklo až krokem `head()`; samotné řazení žádný záznam nevynechalo. Chybějící hodnoty se v těchto lokálních tabulkách řadí na konec, a to i při použití `desc()`.
+
+Více sloupců znamená postupné rozhodování při shodě. `arrange(year, month, day, dep_time)` nejprve řadí podle roku, potom v rámci roku podle měsíce atd. Naproti tomu `arrange(dep_time)` porovnává pouze čas na hodinách napříč všemi dny. Nejde o stejnou otázku; časům kolem půlnoci se věnuje @sec-upravy-cas. [Dokumentace arrange()](https://dplyr.tidyverse.org/reference/arrange.html)
+
+### Cvičení 2: Část zpoždění se podařilo dohnat {.exercise}
+
+Vyberte lety, které odletěly **alespoň 60 minut později**, ale rozdíl mezi zpožděním odletu a příletu je **větší než 30 minut**. Seřaďte je podle zpoždění odletu od největšího. Patří do výběru let se zpožděním odletu 60 minut a příletu 20 minut?
+
+Upravené zadání podle [R4DS, cvičení k řádkům](https://r4ds.hadley.nz/data-transform.html#exercises).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l03-reseni-dohnani
+dohnane_lety <- flights |>
+  filter(dep_delay >= 60, dep_delay - arr_delay > 30) |>
+  arrange(desc(dep_delay))
+
+nrow(dohnane_lety)
+head(dohnane_lety, n = 3)
+```
+
+Vybráno je 1 844 záznamů. Let s hodnotami 60 a 20 podmínky splňuje: první hranice je včetně 60 a zlepšení je 40 minut. Nejde o přílet bez zpoždění, ale o jeho zmenšení vůči zpoždění odletu. Pokud některý potřebný údaj chybí, splnění pravidla nelze potvrdit. Z rozdílu zpoždění samotného nezjistíme, jakou část změny způsobily podmínky ve vzduchu, na letišti nebo plánovaná časová rezerva.
+:::
+
+### `distinct()` a `count()`: seznam možností, nebo jejich četnosti?
+
+`distinct(origin, dest)` ponechá jeden řádek pro každou různou kombinaci letiště odletu a cíle. Výsledek proto představuje seznam tras, ne jednotlivé lety. `count(origin, dest)` navíc uvede počet záznamů každé trasy. Argument `sort = TRUE` seřadí četnosti od největší.
+
+```{r}
+#| label: l03-trasy
+trasy <- flights |>
+  distinct(origin, dest)
+
+nrow(trasy)
+
+flights |>
+  count(origin, dest, sort = TRUE) |>
+  head(n = 5)
+```
+
+V tabulce je 224 různých kombinací letišť. Nejpočetnější je JFK–LAX s 11 262 záznamy. `distinct()` by tuto trasu uvedlo jednou, bez informace o četnosti. Bez vyjmenování sloupců porovnává `distinct()` celé řádky. Ani shodné hodnoty několika proměnných ale samy nedokazují omylem zdvojené pozorování: dva lidé mohou mít stejný věk i skór. Před odstraňováním domnělých duplicit určete, co má jednoznačně identifikovat záznam.
+
+### Cvičení 3: Jsou zastoupené všechny dny? {.exercise}
+
+Zjistěte počet různých kombinací `year`, `month` a `day`. Rok 2013 má 365 dní. Co výsledek říká o pokrytí kalendářních dnů a co neříká o dokončení všech letů?
+
+Zadání inspirované [R4DS, cvičení k distinct()](https://r4ds.hadley.nz/data-transform.html#exercises).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l03-reseni-dny
+flights |>
+  distinct(year, month, day) |>
+  nrow()
+```
+
+Výsledkem je 365. V těchto datech z roku 2013 jsou tedy zastoupeny všechny kalendářní dny. Počítali jsme dny s alespoň jedním záznamem, nikoli počet letů s dostupným příletem. Z výstupu nelze usoudit, že všechny plánované lety skutečně dokončily cestu.
+:::
+
+## Výběr a uspořádání sloupců {#sec-upravy-sloupce}
+
+`filter()` vybírá případy, zatímco **`select()` vybírá proměnné**. Pro kontrolu zpoždění nepotřebujeme pokaždé všech 19 sloupců. Vyjmenováním názvů určíme také jejich pořadí:
+
+```{r}
+#| label: l03-select
+flights |>
+  select(year, month, day, origin, dest, dep_delay, arr_delay) |>
+  head(n = 5)
+```
+
+První záznam má zpoždění odletu 2 minuty a příletu 11 minut, druhý 4 a 20 minut. Výběr sloupců hodnoty nezměnil; jen je snáze porovnáme. Další možností je souvislý úsek sloupců `year:day` nebo jeho vynechání pomocí `!`:
+
+```{r}
+#| label: l03-select-rozsah
+flights |>
+  select(year:day) |>
+  head(n = 3)
+
+flights |>
+  select(!(year:day)) |>
+  head(n = 3)
+```
+
+První výstup obsahuje rok, měsíc a den, druhý tyto tři sloupce vynechává. Dvojtečka zde označuje úsek podle **současného pořadí sloupců**, nikoli rozsah jejich hodnot. U tabulky s jiným pořadím proto může stejný zápis vybrat jiné proměnné.
+
+Pro více podobně pojmenovaných sloupců pomáhají výběrové funkce:
+
+```{r}
+#| label: l03-select-pomocnici
+flights |>
+  select(starts_with("dep")) |>
+  head(n = 3)
+
+flights |>
+  select(ends_with("delay")) |>
+  head(n = 3)
+```
+
+První výstup obsahuje `dep_time` a `dep_delay`; druhý `dep_delay` a `arr_delay`. `contains("arr")` by hledalo text kdekoli v názvu a zahrnulo by i `carrier`. Pomocná funkce tedy vybírá podle **zápisu názvu**, nikoli podle významu proměnné. Po výběru vždy zkontrolujte skutečné sloupce. Výběr podle typu, například `select(where(is.numeric))`, ukazujeme v @sec-upravy-vyber-navic.
+
+### Přejmenování a přesun
+
+`rename()` přejmenuje sloupec a ostatní zachová. Zápis je vždy `novy_nazev = stary_nazev`. `relocate()` přesouvá sloupce; bez dalších argumentů na začátek, pomocí `.after` za zvolený sloupec a pomocí `.before` před něj.
+
+```{r}
+#| label: l03-rename
+lety_popisne <- flights |>
+  rename(air_time_min = air_time) |>
+  relocate(air_time_min, .after = day)
+
+names(lety_popisne)
+```
+
+`names()` vypíše názvy sloupců. `air_time_min` je nyní za `day`; hodnoty zůstaly v minutách jako dříve. Přejmenování jednotky nepřepočítává. Také `select()` umí zápis `novy = stary`, ale současně ponechá pouze vybrané sloupce: `select(tail_num = tailnum)` vrátí jediný sloupec, kdežto `rename(tail_num = tailnum)` ponechá celou tabulku.
+
+### Cvičení 4: Proč chybí sloupec? {.exercise}
+
+Chcete získat registrace letadel seřazené podle zpoždění příletu. Proč následující kód selže a jak jej opravíte změnou pořadí kroků?
+
+```{r}
+#| label: l03-chyba-select
+#| error: true
+flights |>
+  select(tailnum) |>
+  arrange(arr_delay)
+```
+
+Úloha podle [R4DS, cvičení k výběru sloupců](https://r4ds.hadley.nz/data-transform.html#exercises-1).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l03-reseni-select
+flights |>
+  arrange(arr_delay) |>
+  select(tailnum) |>
+  head(n = 5)
+```
+
+Po původním `select(tailnum)` už ve výsledku není `arr_delay`. Nejprve proto seřadíme úplnou tabulku a teprve potom vybereme registraci. Ve výstupu jsou registrace letadel z pěti záznamů s nejčasnějším příletem vůči plánu, nikoli s největším kladným zpožděním; pro něj bychom použili `desc(arr_delay)`. Opakovaná registrace by neznamenala chybu: stejné letadlo může vykonat více letů. Při kontrole je praktické dočasně ponechat i `arr_delay`.
+:::
+
+## Nové proměnné pomocí `mutate()` {#sec-upravy-mutate}
+
+`mutate()` vytváří nové sloupce nebo přepisuje existující. Výpočty s několika sloupci probíhají po odpovídajících řádcích. Z rozdílu zpoždění příletu a odletu zjistíme, zda se zpoždění zvětšilo. Vzdálenost převedeme z mil na kilometry a dobu letu z minut na hodiny, abychom získali orientační průměrnou rychlost v km/h.
+
+```{r}
+#| label: l03-mutate
+lety_vypocty <- flights |>
+  mutate(
+    zmena_zpozdeni = arr_delay - dep_delay,
+    vzdalenost_km = distance * 1.609344,
+    rychlost_kmh = vzdalenost_km / (air_time / 60)
+  )
+
+lety_vypocty |>
+  select(dep_delay, arr_delay, zmena_zpozdeni,
+         vzdalenost_km, air_time, rychlost_kmh) |>
+  head(n = 5)
+```
+
+V prvním řádku se zpoždění zvětšilo z 2 na 11 minut, takže `zmena_zpozdeni` je 9. Záporný rozdíl by znamenal zmenšení zpoždění. Nově vytvořený sloupec `vzdalenost_km` lze použít hned v následujícím výrazu uvnitř téhož `mutate()`.
+
+Rychlost vychází z uvedené vzdálenosti a času ve vzduchu, ne z okamžitého měření rychloměrem ani z celkové doby cesty cestujícího. Chybějící vstup se promítne do chybějícího výsledku. Před dělením je vhodné ověřit také nulovou nebo zápornou dobu letu. Výpočet nulu sám neopraví.
+
+Ve výchozím nastavení se nové sloupce přidají na konec. `.before = 1` je umístí na začátek. Pro samotnou kontrolu odvozených hodnot můžeme použít `.keep = "none"`, které na neseskupené tabulce ponechá jen vytvořené sloupce:
+
+```{r}
+#| label: l03-mutate-keep
+flights |>
+  mutate(
+    zmena_zpozdeni = arr_delay - dep_delay,
+    rychlost_kmh = (distance * 1.609344) / (air_time / 60),
+    .keep = "none"
+  ) |>
+  head(n = 3)
+```
+
+Výpočet je stejný jako předtím, ale výstup má jen dva sloupce. Pro skutečnou kontrolu jednotlivých letů bychom obvykle ponechali také jejich identifikaci a vstupní proměnné. [Podrobnosti k mutate()](https://dplyr.tidyverse.org/reference/mutate.html)
+
+### Cvičení 5: Které lety mají nejvyšší vypočtenou rychlost? {.exercise}
+
+Z objektu `lety_vypocty` vyberte záznamy s dostupnou kladnou dobou ve vzduchu a dostupnou rychlostí. Seřaďte je podle rychlosti sestupně a zobrazte prvních pět s letišti, vzdáleností a dobou letu. Proč neobvyklá hodnota ještě není dostatečným důvodem k automatickému vyřazení?
+
+Vlastní rozšíření úlohy o rychlosti z [R4DS, cvičení k řádkům](https://r4ds.hadley.nz/data-transform.html#exercises).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l03-reseni-rychlost
+lety_vypocty |>
+  filter(!is.na(air_time), air_time > 0, !is.na(rychlost_kmh)) |>
+  arrange(desc(rychlost_kmh)) |>
+  select(origin, dest, distance, air_time, rychlost_kmh) |>
+  head(n = 5)
+```
+
+Na prvním místě je let LGA–ATL se vzdáleností 762 mil a dobou ve vzduchu 65 minut; vypočtená rychlost je přibližně 1 132 km/h. Krátká doba při dané vzdálenosti tento poměr zvyšuje. Neobvyklý záznam nejprve porovnáme s významem proměnných, jednotkami a dostupnými informacemi o měření; bez takové kontroly nevíme, zda jde o chybu. Z tohoto pořadí také nelze určit „nejrychlejšího dopravce“ obecně: porovnáváme jednotlivé záznamy různých tras.
+:::
+
+## Souhrny celé tabulky a jednotlivých skupin {#sec-upravy-souhrny}
+
+### `summarise()` mění, co představuje jeden řádek
+
+`mutate()` ponechává jednotlivá pozorování. **`summarise()`** je naopak shrnuje: například vypočítá jeden průměr za celou tabulku. Obě podoby jména, `summarise()` i `summarize()`, jsou rovnocenné. Nejprve úmyslně ponecháme výchozí zacházení s chybějícími hodnotami:
+
+```{r}
+#| label: l03-mean-na
+flights |>
+  summarise(prumer_min = mean(dep_delay))
+```
+
+Výsledkem je `NA`, protože vstup obsahuje chybějící hodnoty. `na.rm = TRUE` je při výpočtu vynechá. Toto nastavení patří funkci `mean()`, nikoli celé funkci `summarise()`:
+
+```{r}
+#| label: l03-celkovy-souhrn
+celkem <- flights |>
+  summarise(
+    prumer_min = mean(dep_delay, na.rm = TRUE),
+    pocet_radku = n(),
+    pocet_platnych = sum(!is.na(dep_delay))
+  )
+
+celkem
+```
+
+Průměrné zpoždění odletu je přibližně 12,64 minuty. Počet řádků je 336 776, ale průměr vychází jen z 328 521 dostupných hodnot. `n()` uvnitř souhrnu počítá **všechny řádky**, zatímco `sum(!is.na(dep_delay))` jen ty s dostupným zpožděním. Průměr zahrnuje i záporné hodnoty odletů před plánem. Není to tedy průměr jen mezi opožděnými lety.
+
+::: {.callout-warning title="Vynechání NA není řešení příčiny chybění"}
+`na.rm = TRUE` umožní výpočet z dostupných hodnot; nedoplní chybějící data a nezaručí reprezentativnost výsledku. V psychologickém výzkumu může být například průměr dostupných následných měření jiný než průměr všech původně zařazených účastníků. Pokud ve skupině chybí všechny hodnoty, `mean(..., na.rm = TRUE)` vrátí `NaN`, nikoli nulu. Znamená to, že z prázdné sady dostupných hodnot nemáme průměr co spočítat.
+:::
+
+### `group_by()` určí, pro které skupiny počítáme {#sec-upravy-mesicni}
+
+Chceme-li jeden souhrn za každý měsíc, nejprve uvedeme `group_by(month)`. Tato funkce sama nepočítá průměry ani nerozděluje objekt do samostatných tabulek; přidá informaci, že následující operace mají zohlednit skupiny. Počet původních řádků přitom zůstává stejný.
+
+```{r}
+#| label: l03-mesice
+mesicni_souhrn <- flights |>
+  group_by(month) |>
+  summarise(
+    prumer_min = mean(dep_delay, na.rm = TRUE),
+    pocet_radku = n(),
+    pocet_platnych = sum(!is.na(dep_delay)),
+    .groups = "drop"
+  )
+
+print(mesicni_souhrn, n = 12)
+```
+
+Nyní jeden řádek představuje měsíc, nikoli let. Červenec má průměr přibližně 21,7 minuty, listopad 5,4 minuty. V červenci je 29 425 záznamů, ale dostupné zpoždění jen u 28 485. Rozdíl měsíců je popisem těchto dat; samotná tabulka nevysvětluje jeho příčinu.
+
+Argument `.groups = "drop"` zajistí, že výsledná tabulka už nebude seskupená. Zvlášť u několika seskupovacích proměnných tím předejdeme tomu, aby další krok nečekaně pokračoval uvnitř zbývajících skupin. Funkce `ungroup()` umí seskupení odstranit také samostatně.
+
+### Cvičení 6: Průměr za letiště {.exercise}
+
+Spočítejte průměr zpoždění příletu zvlášť podle letiště **odletu** `origin`. Uveďte počet všech záznamů a počet dostupných hodnot příletového zpoždění. Výsledek seřaďte sestupně podle průměru. Vysvětlete, proč pro počet dostupných hodnot nestačí `n()`.
+
+Vlastní úloha inspirovaná [R4DS, souhrny podle skupin](https://r4ds.hadley.nz/data-transform.html#groups).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l03-reseni-letiste
+flights |>
+  group_by(origin) |>
+  summarise(
+    prumer_prilet_min = mean(arr_delay, na.rm = TRUE),
+    pocet_radku = n(),
+    pocet_platnych = sum(!is.na(arr_delay)),
+    .groups = "drop"
+  ) |>
+  arrange(desc(prumer_prilet_min))
+```
+
+Výstup má tři řádky, jeden za každé letiště odletu. Nejvyšší průměr příletového zpoždění mají v těchto datech lety z EWR. Počet dostupných hodnot je v každé skupině menší než `n()`, protože část záznamů nemá `arr_delay`. Porovnáváme lety odlétající z různých letišť, ne přílety na tato letiště. Trasy, dopravci i časy odletů se mohou lišit, takže nejde o izolovaný účinek letiště.
+:::
+
+### Více proměnných a rozdíl mezi `mutate()` a `summarise()` {#sec-upravy-skupiny}
+
+Skupinu může tvořit kombinace hodnot. U letů je `group_by(year, month, day)` seskupení po kalendářních dnech. Samotné `group_by(day)` by smíchalo například všechny první dny různých měsíců.
+
+Na malé tabulce vytvořené pro výuku lépe uvidíme, jak se mění počet řádků. Každý řádek zde představuje jednoho účastníka s jedním měřením. Zápis `1:5` vytváří posloupnost celých čísel od 1 do 5, kterou použijeme jako identifikátory `id`:
+
+```{r}
+#| label: l03-mala-tabulka
+mereni <- tibble(
+  id = 1:5,
+  skupina = c("A", "B", "A", "A", "B"),
+  sezeni = c("rano", "rano", "odpoledne", "odpoledne", "rano"),
+  skore = c(10, 14, 12, 16, 18)
+)
+
+mereni |>
+  group_by(skupina, sezeni) |>
+  summarise(prumer = mean(skore), .groups = "drop")
+```
+
+Výsledek obsahuje tři **zastoupené** kombinace: A odpoledne s průměrem 14, A ráno s průměrem 10 a B ráno s průměrem 16. Kombinace B odpoledne v těchto datech není, proto pro ni nevznikl řádek ani průměr. Kdybychom místo souhrnu potřebovali ke každému člověku doplnit průměr jeho skupiny a sezení, použijeme `mutate()`:
+
+```{r}
+#| label: l03-skupinovy-mutate
+mereni |>
+  group_by(skupina, sezeni) |>
+  mutate(prumer_skupiny = mean(skore)) |>
+  ungroup()
+```
+
+Zůstává všech pět účastníků. U účastníků 3 a 4 se opakuje skupinový průměr 14, u 2 a 5 průměr 16. `group_by()` samo řádky podle skupiny nepřeskládalo; k řazení slouží `arrange()`. Skupinový průměr přidaný do více řádků také není více nezávislých odhadů téhož průměru.
+
+### Cvičení 7: Co bude představovat řádek? {.exercise}
+
+Použijte `mereni`. Potřebujete jediný průměr skóru za skupinu A a jediný za B bez ohledu na sezení. Zvolte `mutate()` nebo `summarise()`, napište kód a předem odhadněte počet řádků výsledku.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l03-reseni-jednotka
+mereni |>
+  group_by(skupina) |>
+  summarise(prumer = mean(skore), pocet = n(), .groups = "drop")
+```
+
+Výsledek má dva řádky. Skupina A má tři účastníky a průměr přibližně 12,67 bodu, skupina B dva účastníky a průměr 16 bodů. Použili jsme `summarise()`, protože chceme shrnout jednotlivá pozorování. `mutate()` by ponechalo pět řádků a průměry opakovalo.
+:::
+
+## Výběr řádků uvnitř skupin {#sec-upravy-slice}
+
+Někdy nechceme skupinu shrnout průměrem, ale vybrat z ní určitá pozorování. Funkce začínající `slice_` ponechávají celé řádky. Na seskupené tabulce pracují **uvnitř každé skupiny**:
+
+| Funkce | Které řádky vybírá |
+|:---|:---|
+| `slice_head(n = 1)` | První řádek v současném pořadí. |
+| `slice_tail(n = 1)` | Poslední řádek v současném pořadí. |
+| `slice_min(dep_delay, n = 1)` | Řádky s nejnižším zpožděním odletu. |
+| `slice_max(dep_delay, n = 1)` | Řádky s nejvyšším zpožděním odletu. |
+| `slice_sample(n = 1)` | Jeden náhodně vybraný řádek. |
+
+`slice_head()` hledá první řádek, nikoli automaticky nejmenší hodnotu. Pro „první let podle času“ bychom před ním museli vhodně seřadit data. U `slice_min()` a `slice_max()` se ve výchozím nastavení zachovávají shody (`with_ties = TRUE`), takže `n = 1` může vrátit více řádků. `na_rm = TRUE` zde odstraňuje chybějící hodnoty řadicí proměnné; všimněte si podtržítka, které se liší od `na.rm` ve funkci `mean()`.
+
+```{r}
+#| label: l03-maxima
+maxima_odletu <- flights |>
+  group_by(origin) |>
+  slice_max(dep_delay, n = 1, with_ties = TRUE, na_rm = TRUE) |>
+  ungroup() |>
+  select(origin, dest, year, month, day, dep_delay)
+
+maxima_odletu
+```
+
+Získali jsme lety s největším zpožděním z každého **letiště odletu**. Ve výsledku je pro každé letiště jeden záznam; to ale není zaručené samotným `n = 1`, nýbrž absencí shody na maximu v těchto datech. Pokud potřebujeme právě jeden řádek, lze použít `with_ties = FALSE`; při shodě se pak vybere první v současném pořadí, ne věcně „lepší“ případ.
+
+### Cvičení 8: Shoda na nejvyšší hodnotě {.exercise}
+
+Vytvořte pomocnou tabulku se skóry `10, 15, 15`. Kolik řádků získáte pomocí `slice_max(skore, n = 1)`? Jak se výsledek změní s `with_ties = FALSE`?
+
+Vlastní úloha k [chování rodiny slice()](https://dplyr.tidyverse.org/reference/slice.html).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l03-reseni-shody
+shody <- tibble(id = 1:3, skore = c(10, 15, 15))
+
+shody |>
+  slice_max(skore, n = 1)
+
+shody |>
+  slice_max(skore, n = 1, with_ties = FALSE)
+```
+
+První výstup má dva řádky, protože nejvyšší skór 15 mají účastníci 2 i 3. Druhý má jediný řádek s účastníkem 2, který je v tabulce dříve. Vynechaný účastník 3 přitom nemá nižší skór.
+:::
+
+Náhodný výběr lze zopakovat díky `set.seed()`, které nastavuje počáteční stav generátoru pseudonáhodných čísel. Není to velikost výběru; tu zadáváme pomocí `n`.
+
+```{r}
+#| label: l03-nahodny-vyber
+set.seed(2026)
+kontrolni_vyber <- flights |>
+  group_by(month) |>
+  slice_sample(n = 1) |>
+  ungroup() |>
+  select(month, day, origin, dest, dep_delay)
+
+print(kontrolni_vyber, n = 12)
+```
+
+Výstup obsahuje jeden náhodně vybraný záznam z každého měsíce, celkem dvanáct. Může sloužit k ruční kontrole záznamů; ve vybraném červnovém záznamu například zpoždění chybí, protože výběr nebyl omezen na úplná data. Není to výběr dvanácti řádků se stejnou pravděpodobností z celé tabulky: měsíce mají různý počet letů, ale vybíráme z každého stejně. Pro reprodukci zachovejte také stejná data, jejich pořadí a prostředí R.
+
+## Od souhrnné tabulky ke grafu {#sec-upravy-graf}
+
+Položme si otázku: **jak se liší průměrné zpoždění odletu podle plánované hodiny odletu?** Nejprve vytvoříme a prohlédneme souhrnnou tabulku. Díky tomu bude jasné, z jakých hodnot graf vychází.
+
+```{r}
+#| label: l03-hodinovy-souhrn
+hodinovy_souhrn <- flights |>
+  group_by(hour) |>
+  summarise(
+    prumer_min = mean(dep_delay, na.rm = TRUE),
+    pocet_radku = n(),
+    pocet_platnych = sum(!is.na(dep_delay)),
+    .groups = "drop"
+  )
+
+print(hodinovy_souhrn, n = 24)
+```
+
+Pro plánovanou hodinu 1 existuje jediný záznam, ale zpoždění odletu v něm chybí. Výstup má proto `pocet_platnych = 0` a průměr `NaN`. Pro 5. hodinu máme 1 944 dostupných hodnot a průměr přibližně 0,69 minuty; pro 19. hodinu 20 580 hodnot a průměr přibližně 24,8 minuty. Počet podkladových hodnot se tedy mezi hodinami podstatně liší.
+
+Do grafu předáme jen skupiny s alespoň jedním dostupným zpožděním. Hodinu bez vypočitatelného průměru nepřevedeme na nulové zpoždění. Body představují souhrny za hodinu a čára usnadňuje sledování jejich pořadí; není to regresní model.
+
+```{r}
+#| label: fig-l03-hodiny
+#| fig-cap: "Průměrné zpoždění odletu podle plánované hodiny. Hodina bez dostupného zpoždění není vykreslena."
+#| fig-alt: "Body a spojnice průměrného zpoždění podle plánované hodiny odletu; hodnoty rostou od rána k večeru a po 19. hodině klesají."
+hodinovy_souhrn |>
+  filter(pocet_platnych > 0) |>
+  ggplot(aes(x = hour, y = prumer_min)) +
+  geom_line() +
+  geom_point(size = 2) +
+  labs(x = "Plánovaná hodina odletu",
+       y = "Průměrné zpoždění odletu (min)")
+```
+
+Průměry se od rána k večeru zvyšují, nejvyšší jsou kolem 19.–21. hodiny a později klesají. Hodnoty za celý rok nezobrazují průběh jednoho konkrétního dne. Graf také neukazuje rozptýlení jednotlivých zpoždění ani nejistotu průměrů. Neprokazuje, že samotná pozdější hodina způsobuje větší zpoždění; může se měnit složení letů i provozní podmínky.
+
+### Cvičení 9: Který dopravce má nejvyšší průměr? {.exercise}
+
+Porovnejte dopravce podle průměrného zpoždění **příletu**. Současně uveďte počet dostupných příletových zpoždění a seřaďte tabulku od největšího průměru. Kódy dopravců a jejich názvy najdete v tabulce `airlines`. Proč výsledek nestačí k obecnému žebříčku kvality dopravců?
+
+Upravená úloha podle [R4DS, souhrny ve skupinách](https://r4ds.hadley.nz/data-transform.html#groups).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l03-reseni-dopravci
+flights |>
+  group_by(carrier) |>
+  summarise(
+    prumer_prilet_min = mean(arr_delay, na.rm = TRUE),
+    pocet_platnych = sum(!is.na(arr_delay)),
+    .groups = "drop"
+  ) |>
+  arrange(desc(prumer_prilet_min)) |>
+  print(n = 16)
+
+airlines |>
+  filter(carrier == "F9")
+```
+
+Nejvyšší průměr má F9 (Frontier Airlines), přibližně 21,9 minuty z 681 dostupných příletových zpoždění. Dopravci se výrazně liší počtem pozorování i trasami. Výsledek je popisem dostupných záznamů z těchto letišť v roce 2013; nezohledňuje všechny lety dopravců, rozdílné podmínky ani lety bez dostupného příletového zpoždění. V psychologii obdobně nelze z prostého pořadí průměrů automaticky vyvozovat příčinu rozdílů mezi skupinami.
+:::
+
+## Závěrečná úloha: změna skóru ve dvou skupinách {#sec-upravy-samostatne .exercise}
+
+Vytvořte skript `scripts/03_samostatne.R`, který lze spustit po restartu R. Následující data jsou **ručně vytvořená pouze pro výuku**. Osm účastníků je rozděleno do skupin A a B. U každého zaznamenáváme skór před a po programu; vyšší skór znamená více obtíží. O způsobu rozdělení do skupin nemáme informace. U jednoho účastníka chybí následné měření.
+
+```{r}
+#| label: l03-zadani-psychologie
+ucastnici <- tibble(
+  id = 1:8,
+  skupina = c("A", "A", "A", "A", "B", "B", "B", "B"),
+  skore_pred = c(20, 18, 25, 22, 19, 23, 21, 24),
+  skore_po = c(16, 17, 20, NA, 18, 23, 19, 25)
+)
+```
+
+Vytvořte změnu `skore_po - skore_pred`. Za každou skupinu spočítejte počet všech účastníků, počet dostupných změn a průměrnou změnu. Výslednou tabulku vypište a průměry zobrazte sloupcovým grafem. Do interpretace zahrňte význam znaménka, počet dostupných dvojic měření a omezení závěru. Nakonec ověřte celý skript v nové relaci R.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: fig-l03-reseni-samostatne
+#| fig-cap: "Průměrná změna skóru ve fiktivních skupinách. Záporná změna znamená snížení skóru obtíží."
+#| fig-alt: "Dva sloupce směřující od nuly dolů: skupina A má průměrnou změnu minus 3,33 bodu, skupina B minus 0,5 bodu."
+library(tidyverse)
+
+# Ručně vytvořené výukové hodnoty, nikoli výzkumná data.
+ucastnici <- tibble(
+  id = 1:8,
+  skupina = c("A", "A", "A", "A", "B", "B", "B", "B"),
+  skore_pred = c(20, 18, 25, 22, 19, 23, 21, 24),
+  skore_po = c(16, 17, 20, NA, 18, 23, 19, 25)
+)
+
+ucastnici_zmena <- ucastnici |>
+  mutate(zmena = skore_po - skore_pred)
+
+souhrn_zmen <- ucastnici_zmena |>
+  group_by(skupina) |>
+  summarise(
+    pocet_ucastniku = n(),
+    pocet_dvojic = sum(!is.na(zmena)),
+    prumer_zmeny = mean(zmena, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+print(souhrn_zmen)
+
+graf_zmen <- ggplot(souhrn_zmen,
+                   aes(x = skupina, y = prumer_zmeny)) +
+  geom_col() +
+  labs(x = "Skupina",
+       y = "Průměrná změna skóru (body)",
+       subtitle = "Fiktivní data; změna = po − před")
+
+print(graf_zmen)
+```
+
+Skupina A má čtyři účastníky, ale jen tři dostupné změny: −4, −1 a −5 bodů. Jejich průměr je přibližně −3,33 bodu. Skupina B má čtyři dostupné změny a průměr −0,5 bodu. Oba záporné průměry znamenají snížení skóru obtíží; sloupec A sahá dále pod nulu. Graf používá `geom_col()`, protože výšky sloupců jsme již spočítali v tabulce.
+
+Průměr změn počítáme z dostupných **dvojic měření stejného účastníka**. U A bychom nedostali stejný výsledek prostým odečtením průměru všech dostupných následných skórů a průměru všech vstupních skórů: každý z nich by zahrnoval jinou sestavu osob. Chybějící následný skór nenahrazujeme nulou ani nulovou změnou.
+
+Jde o výukové hodnoty, ze kterých neděláme výzkumný závěr. Ani u skutečných dat by samotné průměry neprokazovaly účinek programu nebo rozdíl účinků mezi skupinami: potřebovali bychom znát design, způsob zařazení, důvody chybění a nejistotu odhadů. Sloupcový graf navíc skrývá rozdíly mezi jednotlivci. Samostatný skript začíná načtením balíčku a vytvořením vstupů, takže nepotřebuje objekty z předchozích lekcí.
+:::
+
+## Nepovinně: další možnosti výběru sloupců {#sec-upravy-vyber-navic}
+
+Je-li seznam názvů uložen jako textový vektor, použijeme `all_of()`. Ta vyžaduje existenci všech vyjmenovaných sloupců. `any_of()` vybere pouze existující a chybějící přeskočí. První varianta se hodí pro povinné proměnné, druhá pro skutečně nepovinné položky. Tolerovat chybějící sloupec s klíčovým výsledkem studie by byla chyba.
+
+```{r}
+#| label: l03-all-any
+pozadovane <- c("dep_time", "dep_delay", "neexistujici")
+
+flights |>
+  select(any_of(pozadovane)) |>
+  head(n = 3)
+```
+
+Výstup obsahuje jen `dep_time` a `dep_delay`. S `all_of(pozadovane)` by následovala chyba upozorňující na chybějící název; ta může být při kontrole dat užitečná. Pokud potřebujeme přesně čtyři sloupce `dep_time`, `dep_delay`, `arr_time` a `arr_delay`, vyjmenujeme je nebo použijeme `all_of()` s jejich přesným seznamem. `select(starts_with("dep_"), starts_with("arr_"))` nyní vybere stejné čtyři sloupce, ale po přidání dalších názvů se stejným začátkem by se jeho výběr rozšířil. Například `air_time` nezachytí, protože nezačíná `arr_`.
+
+`where(is.numeric)` vybírá podle datového typu a pomocné funkce pro názvy obvykle nerozlišují velikost písmen. Argument `ignore.case = FALSE` toto chování změní:
+
+```{r}
+#| label: l03-vyber-typ
+names(select(flights, where(is.numeric)))
+names(select(flights, contains("TIME")))
+names(select(flights, contains("TIME", ignore.case = FALSE)))
+```
+
+Číselný výběr obsahuje i rok, měsíc, číslo letu nebo hodinu, takže nejde automaticky o seznam proměnných vhodných k průměrování. Vyhledání `"TIME"` bez ohledu na velikost písmen najde názvy obsahující `time`; při přesném rozlišování v této tabulce nenajde žádný (`character(0)`). Opakování stejného názvu v běžném `select(dep_time, dep_time)` sloupec nezdvojí. [Dokumentace all_of() a any_of()](https://tidyselect.r-lib.org/reference/all_of.html)
+
+## Nepovinně: trvání seskupení a `.by` {#sec-upravy-by}
+
+Po `group_by(skupina, sezeni)` a běžném souhrnu s jedním řádkem za kombinaci `summarise()` bez argumentu `.groups` standardně odstraní poslední úroveň seskupení. Zůstane seskupení podle `skupina`. Může to ovlivnit další výpočet, proto v hlavních příkladech používáme výslovné `.groups = "drop"`. Aktuální seskupovací proměnné vypíše `group_vars()`:
+
+```{r}
+#| label: l03-zbyvajici-skupiny
+#| message: true
+souhrn_sezeni <- mereni |>
+  group_by(skupina, sezeni) |>
+  summarise(prumer = mean(skore))
+
+group_vars(souhrn_sezeni)
+group_vars(ungroup(souhrn_sezeni))
+```
+
+První výpis obsahuje `"skupina"`, druhý prázdný seznam názvů `character(0)`. Zpráva od `summarise()` připomíná zbylé seskupení, nejde o chybu. Pokud chceme celkový průměr ze všech původních měření, odstraníme seskupení **před** souhrnem. Prostý průměr skupinových průměrů obecně není totožný s průměrem všech pozorování, zejména při nestejných počtech dostupných hodnot.
+
+Od dplyr 1.1.0 lze pro jedinou operaci zadat seskupení pomocí `.by`. Na neseskupené tabulce je to kratší alternativa k `group_by()` a `summarise(..., .groups = "drop")`:
+
+```{r}
+#| label: l03-by
+mereni |>
+  summarise(prumer = mean(skore), .by = c(skupina, sezeni))
+```
+
+Průměry odpovídají předchozímu souhrnu za kombinace, ale řádky mohou být v jiném pořadí: `.by` zachovává pořadí prvního výskytu skupin. Výsledek není seskupený. `.by` nekombinujeme s již seskupeným vstupem ani s `.groups`; pro začátek stačí osvojit si hlavní postup s `group_by()`. [Dokumentace summarise()](https://dplyr.tidyverse.org/reference/summarise.html)
+
+## Nepovinně: proč nelze odečítat časy HHMM {#sec-upravy-cas}
+
+Zápis 530 v `dep_time` znamená 5:30, nikoli 530 minut. Rozdíl mezi 6:10 a 5:50 proto není `610 - 550 = 60`, ale 20 minut. Hodiny získáme celočíselným dělením `%/% 100`, minuty zbytkem po dělení `%% 100`:
+
+```{r}
+#| label: l03-hhmm
+cas <- 530
+cas %/% 100
+cas %% 100
+(cas %/% 100) * 60 + cas %% 100
+```
+
+Výstupy jsou 5 hodin, 30 minut a celkem 330 minut od půlnoci. Takto převedeme plánovaný i skutečný čas do **nových** sloupců, aby původní hodnoty zůstaly dostupné:
+
+```{r}
+#| label: l03-casy
+lety_casy <- flights |>
+  mutate(
+    plan_min = (sched_dep_time %/% 100) * 60 + sched_dep_time %% 100,
+    odlet_min = (dep_time %/% 100) * 60 + dep_time %% 100,
+    rozdil_hodin = odlet_min - plan_min
+  )
+
+neshody_casu <- lety_casy |>
+  filter(dep_delay != rozdil_hodin)
+
+neshody_casu |>
+  count(posun_min = dep_delay - rozdil_hodin)
+```
+
+U 1 207 záznamů se rozdíl časů na hodinách od zaznamenaného zpoždění liší o 1 440 minut, tedy jeden den. Například odlet plánovaný na 23:50 a uskutečněný další den v 0:30 má zpoždění 40 minut, ale prosté odečtení minut od půlnoci dává −1 400. Chybějící zpoždění se do tohoto porovnání vůbec nedostala.
+
+Tato kontrola vysvětluje konkrétní nesoulad v datech; pravidlo „vždy přičti jeden den“ by nebylo obecně bezpečným výpočtem zpoždění. Pro obecné rozdíly časů potřebujeme i správná data a časová pásma. Zejména odlet a přílet mohou být uvedeny v různých místních časech. K analýze zpoždění zde používáme hotové `dep_delay` a `arr_delay`, k době ve vzduchu `air_time`.
+
+### Cvičení 10: Co znamená „nejdříve“? {.exercise}
+
+Chcete vyhledat dostupné skutečné odlety s nejnižším časem **na hodinách**, bez ohledu na den záznamu. Který sloupec použijete? Proč nestačí seřadit `time_hour` a proč takto vybraný odlet nemusí být běžný ranní let?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l03-reseni-cas
+flights |>
+  filter(!is.na(dep_time)) |>
+  arrange(dep_time) |>
+  select(year, month, day, dep_time, sched_dep_time, dep_delay) |>
+  head(n = 5)
+```
+
+Na začátku jsou skutečné odlety v 0:01, zapsané jako `1`. Například první záznam má plánovaný čas 22:49 a zpoždění 72 minut: skutečný odlet nastal až po půlnoci. `time_hour` naproti tomu zahrnuje datum a **plánovanou** hodinu. Jeho řazení by odpovídalo jiné otázce. „Nejdříve v kalendářním pořadí“, „nejnižší čas na hodinách“ a „nejdříve oproti plánu“ jsou tři různé výběry.
+:::
+
+## Časté potíže {#sec-upravy-potize}
+
+| Co pozorujete | Co zkontrolovat |
+|:---|:---|
+| `filter()` hlásí pojmenovaný vstup | Při porovnávání použijte `==`, ne `=`. |
+| Filtr nečekaně vrací všechny řádky | Každá část spojená `\|` musí být úplná podmínka; pro seznam použijte `%in%`. |
+| Výsledek má méně řádků, než čekáte | Zkontrolujte hranice podmínky a chybějící hodnoty. |
+| Sloupec při dalším kroku „neexistuje“ | Předchozí `select()` jej mohl vynechat; sledujte výsledek každého kroku. |
+| Průměr je `NA` nebo `NaN` | Zkontrolujte chybění, umístění `na.rm` a počet dostupných hodnot. |
+| Počet u průměru nesouhlasí | `n()` zahrnuje i řádky s chybějící hodnotou dané proměnné. |
+| Výsledek má nečekaně mnoho řádků | Rozlišujte `mutate()` a `summarise()`; u `slice_max()` ověřte shody. |
+| Následující výpočet probíhá stále po skupinách | Použijte `.groups = "drop"` nebo `ungroup()`. |
+| Po přejmenování se „změnila jednotka“ jen v názvu | Jednotky přepočítejte výslovně pomocí `mutate()`. |
+
+## Co si odnést {#sec-upravy-shrnuti}
+
+Při úpravách dat průběžně kontrolujte tři věci: **které případy zůstaly, které proměnné jsou dostupné a co představuje jeden řádek**. `filter()` vybírá řádky, `arrange()` je řadí, `select()` vybírá sloupce a `mutate()` vytváří nové proměnné. `group_by()` určuje skupiny, `summarise()` za ně počítá souhrny a `ungroup()` seskupení odstraňuje. Pomocí `|>` spojujeme tyto jednoduché kroky do čitelného postupu.
+
+Správný výpočet závisí na významu a jednotkách proměnných i na zacházení s chybějícími údaji. U průměru proto sledujte počet dostupných hodnot, u skupinových výsledků jednotku souhrnu a u grafu jeho skutečný datový podklad. Dokončený skript spusťte celý po restartu R: teprve tak ověříte, že obsahuje všechny potřebné kroky.
+
+## Zdroje a další procvičení {#sec-upravy-zdroje}
+
+Výklad tematicky navazuje na [R for Data Science, 2. vydání: Data transformation](https://r4ds.hadley.nz/data-transform.html) od Hadleyho Wickhama, Mine Çetinkaya-Rundel a Garretta Grolemunda. U cvičení je vyznačeno, zda jde o upravené zadání nebo vlastní úlohu inspirovanou knihou. Podrobnější práci s podmínkami rozvíjí kapitola [Logical vectors](https://r4ds.hadley.nz/logicals.html). Význam dat ověřujte v [dokumentaci nycflights13](https://nycflights13.tidyverse.org/reference/flights.html), přesné chování funkcí v [referenční příručce dplyr](https://dplyr.tidyverse.org/reference/index.html).

@@ -86,3 +86,10 @@ stopifnot(all(slopes > 0))
 cat("PASS: new chapter counts, medians, histogram total, proportions, grouped trends and facets.\n")
 print(slopes)
 print(sessionInfo())
+
+# Execute lesson 03 in its own clean process, including every executable solution.
+status_l03 <- system2(
+  file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript"),
+  c("--vanilla", "quarto/_verification/check-lesson-03.R")
+)
+stopifnot(status_l03 == 0L)
