@@ -8,6 +8,7 @@ book:
     - index.qmd
     - quarto/lekce_01.qmd
     - quarto/lekce_02.qmd
+    - quarto/lekce_03.qmd
 lang: cs
 language:
   code-copy-button-tooltip: "Zkopírovat"

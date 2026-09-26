@@ -12,4 +12,6 @@ Krátká cvičení navazují přímo na vysvětlený postup. Nejprve je zkuste v
 
 V [první kapitole](quarto/lekce_01.qmd) si připravíte pracovní prostředí, vyzkoušíte základní příkazy a vytvoříte samostatně spustitelný skript. Potřebujete nainstalované R a RStudio Desktop; instalaci dalších balíčků vysvětluje kapitola.
 
-Ve [druhé kapitole](quarto/lekce_02.qmd) se naučíte tvořit a číst grafy v ggplot2: od bodového grafu přes rozdělení hodnot a porovnání skupin až po uložení obrázku. Učebnice se průběžně rozšiřuje.
+Ve [druhé kapitole](quarto/lekce_02.qmd) se naučíte tvořit a číst grafy v ggplot2: od bodového grafu přes rozdělení hodnot a porovnání skupin až po uložení obrázku.
+
+Ve [třetí kapitole](quarto/lekce_03.qmd) budete upravovat tabulky pomocí dplyr: vybírat řádky a sloupce, vytvářet nové proměnné a počítat souhrny podle skupin. Naučíte se také kontrolovat chybějící údaje a připravit souhrnnou tabulku pro graf.

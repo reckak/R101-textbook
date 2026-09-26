@@ -34,9 +34,10 @@ function check(condition, message) { if (!condition) throw new Error(message); }
     const homeLink = page.locator('#quarto-sidebar a.sidebar-link').first();
     check(['/', '/index.html'].includes(new URL(await homeLink.getAttribute('href'), page.url()).pathname), 'Home navigation missing');
     check((await page.locator('h1 .chapter-number').innerText()).trim() === '1', 'First lesson must be chapter 1');
-    for (const chapterNumber of [1, 2]) {
+    for (const chapterNumber of [1, 2, 3]) {
       await page.setViewportSize({ width: 1440, height: 1000 });
-      await page.locator('#quarto-sidebar a.sidebar-link').filter({ hasText: chapterNumber === 1 ? 'První kroky' : 'Základy tvorby' }).click();
+      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat' };
+      await page.locator('#quarto-sidebar a.sidebar-link').filter({ hasText: titles[chapterNumber] }).click();
       await page.waitForLoadState('networkidle');
       check((await page.locator('h1 .chapter-number').innerText()).trim() === String(chapterNumber), 'Wrong chapter number');
       const source = fs.readFileSync(path.join(__dirname, '..', 'lekce_0' + chapterNumber + '.qmd'), 'utf8');
@@ -48,7 +49,7 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       const mainBox = await page.locator('main').boundingBox();
       check(tocBox.x >= mainBox.x + mainBox.width - 1 && tocBox.y < 180, 'TOC not at top right');
       check(await toc.locator('a[data-scroll-target]').count() > 5, 'TOC incomplete');
-      const tocTarget = chapterNumber === 1 ? '#sec-balicky' : '#sec-vztahy';
+      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny' }[chapterNumber];
       await toc.locator('a[data-scroll-target="' + tocTarget + '"]').click();
       await page.waitForFunction(id => Math.abs(document.querySelector(id).getBoundingClientRect().top) < 200, tocTarget);
       await page.evaluate(() => window.scrollTo(0, 0));
@@ -114,16 +115,20 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       if (chapterNumber === 1) {
         await screenshot('html-keyboard', '#specialni-znaky');
         await screenshot('html-headings', '#nadpisy-skriptu');
-      } else {
+      } else if (chapterNumber === 2) {
         await screenshot('html-graph', '#fig-tucnaci-final');
         await screenshot('html-solution', '#fig-reseni-samostatne');
+      } else {
+        await screenshot('html-table', '#sec-upravy-mesicni .cell');
+        await screenshot('html-graph', '#fig-l03-hodiny');
+        await screenshot('html-solution', '#fig-l03-reseni-samostatne');
       }
       await page.setViewportSize({ width: 390, height: 844 });
       await screenshot('html-mobile');
       result.mobileWidth = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, viewport: innerWidth }));
       check(result.mobileWidth.page <= result.mobileWidth.viewport + 1, 'Horizontal page overflow on mobile');
       result.chapters.push({ chapter: chapterNumber, solutions: result.solutions, codeBlocks: result.codeBlocks, copyChecks: result.copyChecks, images: result.images.length, localLinks: checkedLinks.size, mobileWidth: result.mobileWidth });
-      if (chapterNumber === 2) {
+      if (chapterNumber >= 2) {
         const images = await page.locator('main .cell-output-display img').evaluateAll(imgs => imgs.map(img => ({src: img.src, alt: img.alt, id: img.closest('[id]')?.id})));
         const gallery = await context.newPage();
         await gallery.setViewportSize({ width: 1500, height: 1000 });
@@ -131,7 +136,7 @@ function check(condition, message) { if (!condition) throw new Error(message); }
           const items = images.slice(i, i + 6).map(img => '<article><p>' + img.id + '</p><img src="' + img.src + '"><p>' + img.alt + '</p></article>').join('');
           await gallery.setContent('<style>body{font:14px sans-serif;margin:16px;display:grid;grid-template-columns:1fr 1fr;gap:20px}article{border:1px solid #aaa;padding:8px}img{width:100%}p{margin:4px}</style>' + items);
           await gallery.waitForFunction(() => Array.from(document.images).every(img => img.complete && img.naturalWidth > 0));
-          await gallery.screenshot({ path: path.join(__dirname, 'qa-gallery-' + (1 + i / 6) + '.png'), fullPage: true });
+          await gallery.screenshot({ path: path.join(__dirname, 'qa-gallery-' + chapterNumber + '-' + (1 + i / 6) + '.png'), fullPage: true });
         }
         await gallery.close();
       }
