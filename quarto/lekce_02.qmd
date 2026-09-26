@@ -5,11 +5,11 @@ subtitle: "Od výzkumné otázky k čitelnému grafu"
 
 ## Co se naučíte {#sec-grafy-cile}
 
-Graf pomáhá zjistit, jak jsou hodnoty rozložené, zda se skupiny liší a jak spolu proměnné souvisejí. V této kapitole se naučíte sestavit graf z dat, mapování a vrstev, zvolit zobrazení podle typu proměnných a výsledek stručně interpretovat. Vyzkoušíte bodový graf, sloupcový graf četností, histogram, křivku hustoty, boxplot i rozdělení do panelů. Nakonec graf uložíte do souboru.
+Graf pomáhá zjistit, jak jsou hodnoty rozložené, zda se skupiny liší a jak spolu proměnné souvisejí. V této kapitole se naučíte sestavit graf z dat, mapování a vrstev, zvolit zobrazení podle typu proměnných a výsledek stručně interpretovat. Vyzkoušíme si tvobu bodového grafu, sloupcového grafu četností, histogramu, křivku hustoty, boxplot i rozdělení do panelů. Nakonec graf uložíte do souboru.
 
-Předpokládáme práci s projektem a skriptem (@sec-projekt a @sec-skript), přiřazení pomocí `<-`, volání funkcí a jejich argumenty (@sec-argumenty) a rozdíl mezi instalací a připojením balíčku (@sec-balicky). Nové grafické funkce vysvětlíme od začátku. Trendové čáry zde slouží k orientaci ve vztahu dvou proměnných; podrobná regresní analýza není cílem kapitoly.
+Předpokládáme znalost práce s projektem a skriptem (@sec-projekt a @sec-skript), přiřazení pomocí `<-`, volání funkcí a jejich argumentů (@sec-argumenty) a rozdílu mezi instalací a načtením balíčku (@sec-balicky). Nové grafické funkce vysvětlíme od začátku. Trendové křivky zde slouží k orientaci ve vztahu dvou proměnných; podrobná regresní analýza není cílem kapitoly.
 
-Hlavním příkladem jsou skutečná měření tučňáků z balíčku palmerpenguins, dostupná bez stahování vlastního souboru. Umožní nám srovnávat postupy nad stejnými daty. V psychologii obdobně zobrazujeme rozdělení dotazníkových skórů, rozdíly experimentálních skupin nebo vztahy mezi dvěma měřeními. Závěrečné procvičení volby grafu proto zasadíme i do psychologického kontextu.
+Hlavním příkladem jsou skutečná biometrická měření tučňáků z balíčku palmerpenguins, dostupná bez stahování vlastního souboru. Umožní nám srovnávat postupy nad stejnými daty. V psychologii obdobně zobrazujeme rozdělení dotazníkových skórů, rozdíly experimentálních skupin nebo vztahy mezi dvěma měřeními. Závěrečné procvičení volby grafu proto zasadíme i do psychologického kontextu.
 
 ### Připravte skript a balíčky {#sec-grafy-priprava}
 
@@ -32,16 +32,15 @@ library(palmerpenguins)
 library(ggthemes)
 ```
 
-Tidyverse připojí mimo jiné ggplot2 pro grafy a forcats pro práci s kategoriemi. Palmerpenguins zpřístupní tabulku `penguins`; ggthemes poskytne paletu barev. Všechny objekty potřebné pro tuto kapitolu vzniknou zde, takže můžete začít po restartu R. Zprávy o připojených balíčcích nejsou samy o sobě chybou.
-
+Tidyverse načte mj. ggplot2 pro grafy a forcats pro práci s kategoriemi. Palmerpenguins zpřístupní tabulku `penguins`; ggthemes poskytne paletu barev. Všechny objekty potřebné pro tuto kapitolu vzniknou zde, takže můžete začít po restartu R. Zprávy o připojených balíčcích nejsou samy o sobě chybou.
 
 ## První graf: od dat k otázce
 
-Analýza obvykle zahrnuje načtení a kontrolu dat, jejich úpravu, průzkum, případné modelování a sdělení výsledků. Nejde vždy o jednosměrný postup: graf nás může vrátit ke kontrole neobvyklé hodnoty. V této kapitole začneme daty dostupnými v balíčku a budeme se soustředit na jejich grafické zobrazení.
+Analýza obvykle zahrnuje načtení a kontrolu dat, jejich úpravu, průzkum, případné modelování a sdělení výsledků. Nejde vždy o jednosměrný postup: graf nás může vrátit ke kontrole neobvyklé hodnoty. V této kapitole začneme daty dostupnými v balíčku a zaměříme se na jejich grafické zobrazení.
 
-### Co je v datech `penguins` {#sec-penguins}
+### Co je v datech `penguins`  {#sec-penguins}
 
-Prozkoumáme otázku: **jak souvisí délka ploutve tučňáků s jejich tělesnou hmotností a jak se v grafu projevují druhy?** Stejné principy tvorby a čtení grafu lze použít například pro vztah dvou dotazníkových skórů.
+Budeme hledat odpověď na otázku: **jak souvisí délka ploutve tučňáků s jejich tělesnou hmotností a jak se v grafu projevují druhy?** Stejné principy tvorby a čtení grafu lze použít například pro vztah dvou dotazníkových skórů.
 
 **Datová tabulka** má řádky s pozorováními a sloupce s proměnnými. Zde je jeden řádek měření jednoho tučňáka; tabulka obsahuje 344 řádků a 8 proměnných z měření v letech 2007–2009. Jsou to skutečná biologická data, nikoli smyšlená. [Zdroj a původ dat: dokumentace palmerpenguins](https://allisonhorst.github.io/palmerpenguins/reference/penguins.html)
 
@@ -51,7 +50,7 @@ penguins
 glimpse(penguins)
 ```
 
-Samotný název zobrazí náhled tabulky, `glimpse()` stručně ukáže všechny sloupce a jejich typy. Označení **tibble** znamená variantu datové tabulky používanou v tidyverse; nemusíte se nyní zabývat jejími technickými odlišnostmi. `<int>` označuje celá čísla, `<dbl>` obecnější číselné hodnoty a `<fct>` kategorickou proměnnou uloženou jako faktor.
+Samotný název zobrazí náhled tabulky, `glimpse()` stručně ukáže všechny sloupce a jejich typy. Označení **tibble** znamená variantu datové tabulky používanou v tidyverse; nemusíte se nyní zabývat jejími technickými odlišnostmi. `<int>` označuje celá čísla, `<dbl>` obecnější číselné hodnoty (které mohou obsahovat i desetinná místa) a `<fct>` kategoriální proměnnou uloženou jako faktor.
 
 | Proměnná | Význam |
 |:-----------------------------------|:-----------------------------------|
@@ -70,16 +69,16 @@ summary(penguins)
 
 U faktorů výstup uvádí četnosti kategorií, u číselných sloupců souhrny jako medián a rozsah. Všimněte si nestejného počtu záznamů jednotlivých druhů a chybějících hodnot: hmotnost chybí dvakrát, pohlaví jedenáctkrát. Pro graf hmotnosti není pohlaví potřeba, takže nemusíme automaticky odstraňovat všechny řádky, ve kterých chybí jakákoli proměnná.
 
-Při vlastní práci můžete tabulku otevřít také v prohlížeči dat RStudia nebo vypsat všechny řádky. `View()` otevírá samostatnou kartu a začíná velkým V; `print()` s `n = Inf` vypíše všechny řádky tibble do konzole. Takto dlouhý výpis obvykle není vhodný pro rychlou orientaci, pro ni použijte `glimpse()`.
+Při vlastní práci můžete tabulku otevřít také v prohlížeči dat RStudia nebo vypsat všechny řádky. `view()` otevírá samostatnou kartu a začíná velkým V; `print()` s `n = Inf` vypíše všechny řádky tibble do konzole. Takto dlouhý výpis obvykle není vhodný pro rychlou orientaci, pro ni použijte `glimpse()`.
 
 ```{r}
 #| label: grafy-prohlizeni
 #| eval: false
-View(penguins)
+view(penguins)
 print(penguins, n = Inf)
 ```
 
-V datech se objevuje **`NA`**, značka chybějící hodnoty. Neznamená nulu. Podrobnosti k datům otevřete při vlastní práci takto:
+V datech se objevuje **`NA`**, značka chybějící hodnoty (Not Available). Neznamená nulu. Podrobnosti k datům otevřete při vlastní práci takto:
 
 ```{r}
 #| label: napoveda-penguins
@@ -98,7 +97,7 @@ V datech se objevuje **`NA`**, značka chybějící hodnoty. Neznamená nulu. Po
 ggplot(data = penguins)
 ```
 
-Funkce **`aes()`** popisuje *vizuální mapování*: která souřadnice, barva nebo jiná charakteristika grafu má reprezentovat který sloupec (proměnnou) z vybraných dat. Do `x` přiřadíme délku ploutve, do `y` hmotnost. `geom_point()` přidá bod pro každé pozorování s dostupnými souřadnicemi. Vrstvy grafu spojujeme znakem `+`, který ponecháváme na konci předchozího řádku. Pomocí `labs()` můžeme doplnit srozumitelné názvy os.
+Funkce **`aes()`** popisuje tzv. *vizuální (estetické) mapování*: která souřadnice, barva nebo jiná charakteristika grafu má reprezentovat který sloupec (proměnnou) z vybraných dat. Do `x` přiřadíme délku ploutve, do `y` hmotnost. `geom_point()` přidá bod pro každé pozorování s dostupnými souřadnicemi. Vrstvy grafu spojujeme znakem `+`, který ponecháváme na konci předchozího řádku. Pomocí `labs()` můžeme doplnit srozumitelné názvy os.
 
 Nejprve si vyzkoušejte samotné mapování bez bodové vrstvy:
 
@@ -129,7 +128,7 @@ Body ukazují převážně rostoucí vztah: s delší ploutví bývá spojena vy
 
 U tohoto kroku očekáváme **varování o vynechání dvou řádků** s chybějícími souřadnicemi. Graf přesto vznikne: varování není totéž co chyba, která daný výpočet přeruší. Znění zprávy se může mezi verzemi ggplot2 lišit.
 
-Počet chybějících hodnot si ověříme. Zápis `penguins$body_mass_g` vybírá jeden sloupec tabulky, `is.na()` označí chybějící hodnoty jako `TRUE` a `sum()` je při součtu logických hodnot spočítá (`TRUE` se započítá jako 1, `FALSE` jako 0):
+Počet chybějících hodnot si můžeme ověřit. Zápis `penguins$body_mass_g` vybírá jeden sloupec tabulky, `is.na()` označí chybějící hodnoty jako `TRUE` a `sum()` je při součtu logických hodnot spočítá (`TRUE` se započítá jako 1, `FALSE` jako 0):
 
 ```{r}
 #| label: kontrola-na
@@ -187,11 +186,11 @@ ggplot(data = penguins,
        color = "Druh")
 ```
 
-Tučňáci Gentoo v tomto souboru vykazují delší ploutve a vyšší hmotnosti. Při popisu vztahu proto rozlišujeme rozdíly **mezi druhy** a sledujeme vztah mezi proměnnými i **uvnitř jednotlivých druhů**. Analogicky může v psychologii společný graf dvou skupin zachytit jak individuální souvislost, tak rozdíl skupinových průměrů.
+Tučňáci Gentoo v tomto souboru vykazují delší ploutve a vyšší hmotnosti. Při popisu vztahu proto rozlišujeme rozdíly **mezi druhy** a sledujeme vztah mezi proměnnými i **v rámci jednotlivých druhů**. Analogicky může v psychologii společný graf dvou skupin zachytit jak mezi lidmi v rámci skupiny, tak rozdíly mezi skupinami.
 
-## Vrstvy a trendové čáry {#sec-vrstvy}
+## Vrstvy a trendové křivky {#sec-vrstvy}
 
-Funkce `geom_smooth()` přidává vyhlazenou křivku pro zobrazení vztahu. V těchto datech použije metodu `loess`, která dovoluje zachytit i zakřivený průběh. Výchozí metoda závisí na velikosti největší skupiny: pod 1 000 pozorování se používá `loess`, u větších skupin standardně zobecněný aditivní model. Pro tuto ukázku je podstatné, jak umístění mapování ovlivní počet křivek. [Zdroj: ggplot2 – geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html)
+Funkce `geom_smooth()` přidává vyhlazenou křivku pro zobrazení vztahu. V těchto datech použije metodu `loess`, která dovoluje zachytit i zakřivený průběh. Výchozí metoda závisí na velikosti největší skupiny: pod 1 000 pozorování se používá `loess`, u větších skupin standardně zobecněný aditivní model (`gam`). Pro tuto ukázku je podstatné, jak umístění mapování ovlivní počet křivek. [Zdroj: ggplot2 – geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html)
 
 ```{r}
 #| label: fig-vyhlazeni
@@ -208,7 +207,7 @@ ggplot(data = penguins,
        color = "Druh")
 ```
 
-Křivky zachycují převážně rostoucí vztah uvnitř jednotlivých druhů, místy s odchylkami od přímého průběhu. Na krajích rozsahu je dat méně a pásy se rozšiřují.
+Křivky zachycují převážně rostoucí vztah uvnitř jednotlivých druhů, jen s malými odchylkami od lineárního průběhu. Na krajích rozsahu je dat méně, a proto se pásy vyjadřující intervaly spolehlivosti rozšiřují.
 
 Mapování v hlavní funkci `ggplot()` dědí všechny vrstvy. Proto zde vznikají křivky zvlášť pro každý druh. Chceme-li **přímky**, určíme `method = "lm"`. Zápis `formula = y ~ x` říká, že modelujeme y pomocí x; symbol `~` je součást zápisu rovnice modelu. Můžeme jej vypsat výslovně, aby byla specifikace zřejmá.
 
@@ -232,6 +231,8 @@ Všechny tři přímky mají kladný sklon, ale různou polohu a strmost. Jejich
 Jestliže má být přímka společná všem druhům, přesuňte `color = species` z hlavního `aes()` do `aes()` uvnitř `geom_point()`, jak ukazuje následující konečný graf. Pak bude barva rozdělena podle druhu pouze u bodů, nikoli v modelové vrstvě.
 
 ### Dokončený graf a opatrná interpretace {#sec-graf-objekt}
+
+Ne každá vizuální vlastnost má smysl u každého geomu. Například `shape` mění tvar bodů v `geom_point()`, ale `geom_smooth()` žádné bodové značky nekreslí, takže jím tvar křivky nezměníme. Čáru můžeme rozlišit barvou (`color`), typem čáry (`linetype`, například plná či přerušovaná) nebo její tloušťkou (`linewidth`). Platí to pro pevné nastavení i pro mapování v `aes()`; podporované vlastnosti uvádí dokumentace daného geomu v oddílu *Aesthetics*. Mapování tvaru proto umístíme přímo do bodové vrstvy. [Dokumentace ggplot2 – geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html).
 
 Vedle barvy můžeme odlišit druh tučňáků také **tvarem** (`shape`), aby informace nebyla závislá jen na rozlišování barev. Velikost bodů `size = 3` nastavíme mimo `aes()`, protože má být pro všechny body stejná. Funkce `scale_color_colorblind()` z ggthemes volí paletu navrženou s ohledem na poruchy barevného vidění. Graf si uložíme do objektu `graf_tucnaci`, abychom jej mohli znovu zobrazit a případně exportovat.
 
@@ -283,9 +284,11 @@ ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
   labs(x = "Délka ploutve (mm)", y = "Tělesná hmotnost (g)")
 ```
 
-Body jsou na stejných místech jako v prvním grafu. Vynechali jsme názvy argumentů hlavní funkce, nikoli informaci o tom, co zobrazujeme. V dalších ukázkách budeme používat tento kratší zápis; názvy `x` a `y` ponecháme kvůli čitelnosti.
+Body jsou na stejných místech jako v prvním grafu. Vynechali jsme názvy argumentů hlavní funkce (`data`, `maping`), nikoli informaci o tom, co zobrazujeme. V dalších ukázkách budeme používat tento kratší zápis; názvy `x` a `y` ponecháme kvůli čitelnosti.
 
-**Pipe operátor `|>`** předá výsledek nalevo jako první argument funkce napravo. Můžete jej číst jako „a potom“. Například `penguins |> ggplot(aes(...))` znamená předat tabulku funkci `ggplot()`. Pro graf tak lze použít i následující zápis:
+**Pipe operátor `|>`** vložíte v RStudiu zkratkou **Ctrl + Shift + M** (na macOS **Cmd + Shift + M**). Pokud zkratka vkládá `%>%`, zapněte v **Tools → Global Options → Code → Editing** volbu **Use native pipe operator, |>**. [Přehled zkratek RStudia](https://docs.posit.co/ide/user/ide/reference/shortcuts.html).
+
+Operátor `|>` předá výsledek nalevo jako první argument funkce napravo. Můžete jej číst jako „a potom“. Například `penguins |> ggplot(aes(...))` znamená předat tabulku funkci `ggplot()`. Pro graf tak lze použít i následující zápis:
 
 ```{r}
 #| label: fig-pipe-zapis
@@ -335,6 +338,35 @@ ggplot(penguins, aes(x = species)) +
 ```
 
 Nejvíce je pozorování druhu Adelie (152), nejméně Chinstrap (68); Gentoo má 124 záznamů. Druhy jsou tedy nestejně zastoupené. Tyto počty popisují složení souboru, nikoli zastoupení druhů v celé Antarktidě. Do tohoto grafu vstupují i řádky s chybějící hmotností, protože pro počítání druhu není hmotnost potřeba.
+
+Stejný graf můžeme sestavit z předem vypočtených četností. Funkce `count()` z dplyr spočítá řádky pro každou hodnotu zadané proměnné a uloží počty do nového sloupce `n`:
+
+```{r}
+#| label: cetnosti-tabulka
+cetnosti_druhu <- penguins |> count(species)
+cetnosti_druhu
+```
+
+Tabulka má nyní jen tři řádky: jeden pro každý druh. Ve sloupci `n` jsou počty 152, 68 a 124. Pro takto připravené hodnoty použijeme `geom_col()`, který výšky sloupců převezme z dat. **Musíme výslovně mapovat `y = n`**, protože tato vrstva četnosti sama nepočítá:
+
+```{r}
+#| label: fig-cetnosti-col
+#| fig-cap: "Stejné četnosti vykreslené z předem připravené tabulky."
+#| fig-alt: "Sloupce Adelie 152, Chinstrap 68 a Gentoo 124, shodné s grafem pomocí geom_bar."
+ggplot(cetnosti_druhu, aes(x = species, y = n)) +
+  geom_col() +
+  labs(x = "Druh", y = "Počet tučňáků")
+```
+
+Výšky sloupců i jejich interpretace jsou stejné jako u `geom_bar()`; změnilo se jen to, kde četnosti počítáme. `geom_col()` využijeme i pro jiné předem vypočtené hodnoty, například průměry, ale pak musí popisek osy y odpovídat těmto hodnotám. [Dokumentace ggplot2 – sloupcové grafy](https://ggplot2.tidyverse.org/reference/geom_bar.html).
+
+#### Procvičení: co se počítá? {.exercise}
+
+Co by zobrazil příkaz `ggplot(cetnosti_druhu, aes(x = species)) + geom_bar()`? Vysvětlete, proč by nereprodukoval původní četnosti, a uveďte správné mapování pro `geom_col()`.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+`geom_bar()` by spočítal řádky nové tabulky. Každý druh v ní má jediný řádek, takže všechny tři sloupce by měly výšku 1; obsah sloupce `n` se automaticky nepoužije. Pro skutečné četnosti potřebujeme `aes(x = species, y = n)` a `geom_col()`, jak ukazuje předchozí příklad. Výšky pak opět budou 152, 68 a 124.
+:::
 
 **Faktor** ukládá kategorické hodnoty a pořadí jejich kategorií (úrovní). Funkce `fct_infreq()` z forcats seřadí úrovně podle četnosti od nejvyšší. Funkce `fct_rev()` pořadí obrátí. Pomocí již známého pipe operátoru můžeme obě operace spojit:
 
@@ -386,6 +418,10 @@ ggplot(penguins, aes(x = body_mass_g)) +
 
 Dvě chybějící hmotnosti do histogramu nevstupují. `na.rm = TRUE` zde používáme až po kontrole chybění v @sec-bodovy-graf. Volba šířky intervalu ovlivňuje vzhled: velmi úzké intervaly zvýrazní drobné výkyvy, velmi široké skryjí rozdíly. Alternativně lze zadat přibližný počet intervalů pomocí `bins`, například `bins = 10`; nezadávejte současně `bins` a `binwidth`, pokud chcete mít volbu jednoznačnou. [Dokumentace ggplot2 – histogram](https://ggplot2.tidyverse.org/reference/geom_histogram.html).
 
+Pokud nezadáme ani `binwidth`, ani `bins` (ani vlastní hranice `breaks`), ggplot2 použije **pevné výchozí nastavení `bins = 30`** a vypíše zprávu vybízející k lepší volbě šířky. Počet intervalů tedy nevybírá podle velikosti vzorku nebo tvaru rozdělení; nejde například o Sturgesovo ani Freedmanovo–Diaconisovo pravidlo. Šířku rovnoměrných intervalů odvodí z rozsahu číselné osy. V běžném případě bez dalších nastavení, jako zde, vychází na `(maximum - minimum) / (30 - 1)`: minimum a maximum leží ve středech krajních intervalů. Pro naše hmotnosti je to `(6300 - 2700) / 29`, přibližně 124,14 g. Toto vysvětlení se týká původní osy bez transformace; s vlastními hranicemi či jiným ukotvením se dělení může změnit. [Dokumentace histogramu](https://ggplot2.tidyverse.org/reference/geom_histogram.html) a [výpočet hranic v ggplot2](https://github.com/tidyverse/ggplot2/blob/main/R/bin.R).
+
+Výchozích 30 intervalů je tedy jen výchozí bod pro prohlížení dat, nikoli záruka vhodného zobrazení. Proto v naší ukázce šířku určujeme výslovně a dále porovnáme jiné možnosti.
+
 ### Cvičení 5: Co udělá šířka intervalu? {.exercise}
 
 Porovnejte histogramy s `binwidth = 20` a `binwidth = 2000`, vždy s `boundary = 0`. Který ukáže mnoho drobných výkyvů a který rozdělení výrazně zjednoduší? Změnily se původní hmotnosti?
@@ -411,7 +447,7 @@ ggplot(penguins, aes(x = body_mass_g)) +
   labs(x = "Tělesná hmotnost (g)", y = "Počet tučňáků")
 ```
 
-Při 20 g vidíme množství úzkých sloupců a mezer; tvar je silně ovlivněný také přesností zaznamenaných měření. Při 2000 g zůstávají jen tři obsazené intervaly a jemnější struktura mizí. Vstupní hmotnosti ani počet 342 dostupných měření se nemění. Rozumnou šířku vybíráme s ohledem na otázku, jednotky a množství dat, nikoli podle toho, která varianta nejlépe podporuje očekávaný závěr.
+Při 20 g vidíme množství úzkých sloupců a mezer; tvar je silně ovlivněný také přesností zaznamenaných měření. Při 2000 g zůstávají jen tři obsazené intervaly a jemnější struktura mizí. Vstupní hmotnosti ani počet 342 dostupných měření se nemění. Rozumnou šířku vybíráme s ohledem na analytickou otázku, jednotky a množství dat, nikoli podle toho, která varianta nejlépe podporuje očekávaný závěr.
 :::
 
 ### Křivka hustoty {#sec-hustota}
@@ -454,7 +490,7 @@ ggplot(penguins, aes(x = species, y = body_mass_g)) +
   labs(x = "Druh", y = "Tělesná hmotnost (g)")
 ```
 
-Gentoo mají medián 5000 g, zatímco Adelie 3700 g a Chinstrap 3700 g. Rozdělení Adelie a Chinstrap se výrazně překrývají; shoda mediánů však neznamená totožnost všech hodnot. Boxplot ukazuje rozdíly polohy a rozptýlení, sám neprovádí test ani neukazuje všechny podrobnosti tvaru rozdělení. V psychologii lze obdobně porovnat skóry mezi experimentálními podmínkami.
+Gentoo mají medián 5000 g, zatímco Adelie 3700 g a Chinstrap 3700 g. Rozdělení Adelie a Chinstrap se výrazně překrývají; shoda mediánů však neznamená totožnost všech hodnot. Boxplot ukazuje rozdíly polohy a rozptýlení, sám neprovádí test ani neukazuje všechny podrobnosti tvaru rozdělení. V psychologii lze obdobně porovnat skóry např. mezi experimentálními podmínkami nebo jinými skupinami.
 
 ### Cvičení 7: Vodorovný boxplot {.exercise}
 
@@ -475,7 +511,7 @@ Změnila se orientace, nikoli výpočet. Gentoo má stále medián 5000 g a oba 
 
 ### Hustoty podle skupin: barva, výplň a průhlednost
 
-Pro podrobnější porovnání tvaru rozdělení lze vykreslit hustoty podle druhu. `color` určuje obrys, `fill` výplň. Obě vlastnosti nyní mapujeme na druh uvnitř `aes()`. Argument `alpha` nastaví všem výplním stejnou průhlednost: 0 je úplně průhledná, 1 neprůhledná. `linewidth` je tloušťka čáry.
+Pro podrobnější porovnání tvaru rozdělení lze vykreslit hustoty podle druhu. `color` určuje barvu obrysu, `fill` výplně. Druh tučňáka můžeme mapovat jak na `color`, tak na `fill` uvnitř `aes()`. Argument `alpha` nastaví všem výplním stejnou průhlednost: 0 je úplně průhledná, 1 neprůhledná. `linewidth` je tloušťka čáry.
 
 ```{r}
 #| label: fig-hustoty-druhy
@@ -542,7 +578,7 @@ Pro složení vybereme `position = "fill"`, protože podíly počítá zvlášť
 
 ## Více proměnných: rozdělení do panelů {#sec-panely}
 
-V bodovém grafu už umíme použít barvu i tvar. Příliš mnoho mapování současně však komplikuje čtení. **Facety** rozdělují graf do menších panelů podle kategorií. `facet_wrap(~ island, ncol = 2)` vytvoří panel pro každý ostrov, nejvýše ve dvou sloupcích. Zápis `~ island` zde určuje proměnnou pro rozdělení panelů; nejde o regresní model.
+V bodovém grafu už umíme použít barvu i tvar. Příliš mnoho mapování současně však komplikuje čtení. **Facety** rozdělují graf do menších panelů podle kategorií. `facet_wrap(facets = vars(island), ncol = 2)` vytvoří panel pro každý ostrov, nejvýše ve dvou sloupcích. V novějším zápisu funkce `vars()` označuje proměnnou či proměnné pro rozdělení do panelů; argument `facets` je předává funkci `facet_wrap()`. Pro panely podle druhu bychom napsali `facet_wrap(facets = vars(species), ncol = 2)`. Starší zápis `facet_wrap(~ island, ncol = 2)` je nadále platný a pro jednu proměnnou dává stejný výsledek; `~ island` zde není regresní model. [Dokumentace ggplot2 – facet_wrap](https://ggplot2.tidyverse.org/reference/facet_wrap.html).
 
 ```{r}
 #| label: fig-panely
@@ -551,7 +587,7 @@ V bodovém grafu už umíme použít barvu i tvar. Příliš mnoho mapování so
 #| fig-alt: "Tři panely podle ostrova: Biscoe zahrnuje větší Gentoo i menší Adelie, Dream Adelie a Chinstrap, Torgersen Adelie."
 ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
   geom_point(aes(color = species, shape = species), na.rm = TRUE) +
-  facet_wrap(~ island, ncol = 2) +
+  facet_wrap(facets = vars(island), ncol = 2) +
   scale_color_colorblind() +
   labs(x = "Délka ploutve (mm)", y = "Tělesná hmotnost (g)",
        color = "Druh", shape = "Druh")
@@ -573,17 +609,33 @@ Vlastní zadání inspirované [R4DS – tři a více proměnných](https://r4ds
 #| fig-alt: "Panely Adelie, Chinstrap a Gentoo s rostoucí souvislostí ploutve a hmotnosti uvnitř každého druhu."
 ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
   geom_point(na.rm = TRUE) +
-  facet_wrap(~ species, ncol = 2) +
+  facet_wrap(facets = vars(species), ncol = 2) +
   labs(x = "Délka ploutve (mm)", y = "Tělesná hmotnost (g)")
 ```
 
 Druh je určen panelem a jeho názvem, takže jej nemusíme současně kódovat barvou a tvarem. Uvnitř každého panelu vidíme převážně kladnou souvislost délky ploutve s hmotností a různou míru rozptylu bodů. Gentoo má obecně vyšší hodnoty obou proměnných. Zobrazení odděluje pohled na vztah uvnitř druhů od porovnání jejich polohy na společných osách.
 :::
 
-
 ## Nepovinně: legenda pro dvě trendové čáry {#sec-legenda-modelu}
 
-Někdy chceme rozlišit dvě čáry, přestože jejich označení není sloupcem tabulky. Například společnou lineární přímku a křivku loess. Pokud nastavíme `color = "blue"` mimo `aes()`, určíme pouze pevnou barvu a legenda pro ni nevznikne. Pokud uvnitř `aes()` napíšeme `color = "Lineární"`, mapujeme vlastní textové označení. Vznikne kategorie ve škále a ggplot2 pro ni může vytvořit legendu. Jde o označení vrstvy, nikoli o novou proměnnou naměřenou u tučňáků.
+Někdy chceme rozlišit dvě čáry, přestože jejich označení není sloupcem tabulky. Například společnou lineární přímku a křivku loess. Pokud nastavíme `color = "blue"` mimo `aes()`, určíme pouze pevnou barvu a legenda pro ni nevznikne. Názorně to ukazuje následující méně vhodné řešení, pokud potřebujeme čáry vysvětlit legendou:
+
+```{r}
+#| label: fig-modely-bez-legendy
+#| fig-cap: "Pevné barvy odliší čáry, ale samy nevytvoří legendu."
+#| fig-alt: "Modrá lineární přímka a oranžová loess křivka přes body tučňáků, bez legendy."
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(color = "blue", fill = "blue",
+              method = "lm", formula = y ~ x, alpha = 0.2, na.rm = TRUE) +
+  geom_smooth(color = "orange", fill = "orange",
+              method = "loess", formula = y ~ x, alpha = 0.2, na.rm = TRUE) +
+  labs(x = "Délka ploutve (mm)", y = "Tělesná hmotnost (g)")
+```
+
+Modrá přímka i oranžová křivka zachycují celkově rostoucí vztah, ale samotný graf neříká, která barva označuje kterou metodu. To poznáme až z kódu nebo doprovodného textu. Pevná barva není chyba; pro samostatně srozumitelný graf dvou metod je však užitečné přidat legendu. V následující verzi se výpočty obou čar ani jejich pásů nezmění, pouze přiřadíme barvám názvy a zvolíme jinou dvojici barev.
+
+Pokud uvnitř `aes()` napíšeme `color = "Lineární"`, mapujeme vlastní textové označení. Vznikne kategorie ve škále a ggplot2 pro ni může vytvořit legendu. Jde o označení vrstvy, nikoli o novou proměnnou naměřenou u tučňáků.
 
 Funkce `scale_color_manual()` a `scale_fill_manual()` dovolí přiřadit kategoriím vlastní barvy. Použijeme pojmenované hodnoty, aby bylo jednoznačné, která barva patří kterému označení:
 
@@ -613,7 +665,6 @@ Jaký je rozdíl mezi `color = "blue"` mimo `aes()` a `aes(color = "blue")` uvni
 První zápis nastaví modrou barvu přímo a sám pro ni nevytvoří legendu. Druhý vytvoří mapování na textovou kategorii pojmenovanou „blue“: její barvu vybere barevná škála, takže modrou čáru nezaručuje. Konkrétní barvu kategorie lze určit pomocí `scale_color_manual()`, jak ukazuje předchozí příklad. Toto rozlišení vysvětluje, proč stejné slovo může mít uvnitř a vně `aes()` jiný význam.
 :::
 
-
 ## Uložení grafu do souboru {#sec-export-grafu}
 
 Graf jsme již uložili do objektu `graf_tucnaci` (@sec-graf-objekt). Takový objekt lze znovu zobrazit pomocí `print(graf_tucnaci)` nebo dále upravit přidáním vrstvy či popisků. Přiřazení `novy_graf <- graf_tucnaci + labs(title = "Nový titulek")` vytvoří upravenou verzi a původní objekt ponechá beze změny.
@@ -633,7 +684,6 @@ ggsave(filename = "output/figures/tucnaci.png",
 ```
 
 Na kartě Files nyní v `output/figures` najdete `tucnaci.png`. Opětovné spuštění přepíše tento odvozený výstup; původní data nijak nemění. Graf ukládáme kódem, abychom mohli stejné nastavení výstupu obnovit.
-
 
 ## Závěrečná úloha: malá analýza od začátku
 
@@ -670,19 +720,19 @@ ggsave(filename = "output/figures/tucnaci_samostatne.png",
        width = 18, height = 12, units = "cm", dpi = 300)
 ```
 
-Možná interpretace grafu: „V zobrazeném souboru mají tučňáci s delšími ploutvemi obecně vyšší hmotnost a druhy se částečně liší svými tělesnými rozměry; graf sám neprokazuje příčinný účinek délky ploutve na hmotnost.“
+Možná interpretace grafu: „V zobrazeném souboru mají tučňáci s delšími ploutvemi obecně vyšší hmotnost a druhy se částečně liší svými tělesnými rozměry, což však samozřejmě neznamená, že jedno je příčinou druhého.“
 
 Po restartu běží skript znovu od `library()` až po export. Pokud se objeví `object ... not found`, zkontrolujeme chybějící řádek, překlep nebo pořadí příkazů. Jestliže chybí balíček, nejprve jej nainstalujeme do knihovny dostupné používané verzi R. Výsledkem má být nově vytvořený obrázek se stejnými daty.
 :::
 
-## Souhrnné procvičení: otázka určuje graf {.exercise #sec-volba-grafu}
+## Souhrnné procvičení: otázka určuje graf {#sec-volba-grafu .exercise}
 
 Pro každý z následujících **výukových scénářů** vyberte vhodný typ grafu, určete mapování os a případné rozdělení do skupin. Data nyní nemáte, takže úkolem je navrhnout zobrazení, nikoli domýšlet výsledky.
 
-1. Chcete prohlédnout rozdělení celkového skóru úzkosti v jednom souboru účastníků.
-2. Chcete porovnat skóry úzkosti mezi intervenční a kontrolní skupinou.
-3. Chcete zjistit, jak spolu souvisejí skóry stresu a kvality spánku.
-4. Skupiny jsou nestejně velké a chcete porovnat podíl odpovědí „ano“ a „ne“ uvnitř každé skupiny.
+1.  Chcete prohlédnout rozdělení celkového skóru úzkosti v jednom souboru účastníků.
+2.  Chcete porovnat skóry úzkosti mezi intervenční a kontrolní skupinou.
+3.  Chcete zjistit, jak spolu souvisejí skóry stresu a kvality spánku.
+4.  Skupiny jsou nestejně velké a chcete porovnat podíl odpovědí „ano“ a „ne“ uvnitř každé skupiny.
 
 ::: {.callout-note collapse="true" title="Ukázat řešení"}
 Pro rozdělení jednoho číselného skóru začneme histogramem: x je skór a y četnost vypočtená z intervalů. Šířku intervalu volíme v bodech škály; u skóru s jen několika možnými hodnotami může být přehlednější zobrazit četnost každé hodnoty.
@@ -697,7 +747,7 @@ Pro odpovědi uvnitř nestejně velkých skupin použijeme sloupcový graf s `po
 ## Časté potíže při tvorbě grafů {#sec-grafy-potize}
 
 | Co vidíte | Co zkontrolovat |
-|:---|:---|
+|:-----------------------------------|:-----------------------------------|
 | Graf je prázdný nebo má jen osy | Přidali jste geometrickou vrstvu, například `geom_point()`? |
 | Nová vrstva se nepřidala | Znak `+` patří na konec předchozího řádku; spusťte celý příkaz. |
 | Změnil se popisek, ale body zůstaly na stejných místech | `labs()` mění text; proměnné na osách mění `aes()`. |

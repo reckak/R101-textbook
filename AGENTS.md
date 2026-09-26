@@ -240,6 +240,32 @@ ostatní chyby neopomíjej ani plošně nepotlačuj varování.
 správnost a rozdíly; bez dopadu na výstup knihy není nutný nový render.
 
 ## Git a dokončení úkolu
+- Výchozím místem práce je hlavní pracovní složka projektu, v tomto
+repozitáři `D:\R Projects\github\R101-textbook`. Upravuj soubory přímo zde,
+také když již obsahují necommitované změny. Před úpravou přečti jejich
+aktuální obsah a rozdíly vůči Gitu a navazuj na uživatelovu redakci.
+Zachování rozpracovaných změn znamená zachovat jejich obsah a záměr,
+nikoli se úpravě souboru vyhnout.
+- Kvůli samotným necommitovaným změnám, požadavku na tematickou větev
+ani snaze získat čistý pracovní strom nevytvářej další pracovní složky,
+paralelní kopie repozitáře, worktrees ani dočasné verze kapitol, které
+by se staly druhým místem pro úpravy. Oddělenou pracovní kopii použij
+jen na výslovnou žádost uživatele nebo při konkrétní nezbytné potřebě
+izolace, kterou předem vysvětlíš a kterou nelze rozumně vyřešit v hlavní
+pracovní složce. Případná záloha či pomocný soubor pro kontrolu nesmí
+nahrazovat úpravu cílového souboru ani zanechat soupeřící verze výsledku.
+- Tematická větev nevyžaduje jinou pracovní složku. Při změně větve
+bezpečně zachovej rozpracované změny; neodstraňuj je ani neobnovuj starší
+obsah jen pro získání čistého pracovního stromu. Pokud se změny překrývají,
+spoj je podle dohodnutého záměru; ptej se pouze při skutečně nejasném
+obsahovém konfliktu. Dočasně odložené změny vrať do původních souborů
+a ověř jejich zachování.
+- Po dokončení ověř, že úplný aktuální výsledek je na uživatelem očekávané
+cestě v hlavní pracovní složce, nikoli pouze v jiné kopii nebo na GitHubu.
+Pokud se pracovalo v odůvodněně oddělené kopii, zajisti před jejím vyřazením
+dostupnost výsledku v hlavní složce a zachování rozpracované práce.
+Nepotřebný spravovaný worktree archivuj určeným nástrojem; jiné pracovní
+složky neodstraňuj bez ověření jejich účelu, obsahu a případného používání.
 - Každou kapitolu připravuj v samostatné větvi, například
 `codex/lekce-02`. Další úpravy dosud nesloučené kapitoly patří do její větve;
 po sloučení založ pro nový úkol novou větev z aktuálního `main`.
