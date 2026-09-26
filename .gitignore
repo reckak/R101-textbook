@@ -6,6 +6,8 @@
 # Generated Quarto output and local verification artifacts
 /.quarto/
 /_book/
+/podklady/
+/cheatsheets/
 /output/
 /quarto/*.html
 /quarto/*_files/

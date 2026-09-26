@@ -1,0 +1,99 @@
+::Mapování a pevné nastavení::V bodovém grafu délky ploutve a hmotnosti tučňáků přidáte vrstvu geom_point(aes(color = species), size = 3). Co tento zápis znamená?
+ :r1 Barva i velikost bodů se mění podle druhu tučňáka.
+ :r2 Barva bodů se řídí druhem tučňáka a velikost je pro všechny body nastavena na 3.
+ :r3 V grafu se zobrazí pouze tři tučňáci každého druhu.
+ :r4 Všechny body mají stejnou barvu a jejich velikost se řídí druhem tučňáka.
+:r1 0 Podle druhu se mění pouze vlastnost uvnitř aes(), tedy barva. Velikost je nastavena mimo aes() na společnou hodnotu.
+:r2 ok Funkce aes() mapuje proměnnou species na barvu. Nastavení size = 3 mimo aes() určuje jednotnou velikost bodů.
+:r3 0 Argument size určuje velikost bodových značek, nikoli počet zobrazených pozorování.
+:r4 0 Zápis color = species uvnitř aes() přiřazuje barvy druhům. Velikost je naopak pevně nastavena na 3.
+--
+::Trendové přímky podle skupin::V hlavním aes() funkce ggplot() mapujete délku ploutve na x, hmotnost na y a species na color. Přidáte geom_point() a geom_smooth(method = "lm"). Data obsahují dostatek úplných měření pro každý ze tří druhů. Jaké trendové přímky vzniknou?
+ :r1 Jedna společná přímka pro všechny druhy, protože method = "lm" vždy vytvoří jedinou přímku.
+ :r2 Žádná přímka, protože geom_smooth() lze použít pouze bez bodové vrstvy.
+ :r3 Jedna samostatná přímka pro každého tučňáka.
+ :r4 Tři přímky, jedna pro každý druh tučňáka.
+:r1 0 Nastavení method = "lm" určuje lineární model, nikoli počet skupin. Mapování barvy podle druhu dědí také vrstva s přímkami.
+:r2 0 Bodovou vrstvu a trendovou vrstvu lze v jednom grafu kombinovat pomocí znaku +.
+:r3 0 Skupiny zde určuje druh, nikoli jednotlivé řádky. Přímka shrnuje vztah mezi měřeními v dané skupině.
+:r4 ok Vrstva geom_smooth() dědí hlavní mapování barvy podle druhu a odhadne přímku zvlášť pro každý druh. Samotné přímky neprokazují příčinný vztah.
+--
+::Předání dat a přidání vrstvy::Co dělají operátory v příkazu penguins |> ggplot(aes(x = flipper_length_mm, y = body_mass_g)) + geom_point()?
+ :r1 Operátor |> předá tabulku do ggplot() a znak + přidá bodovou vrstvu.
+ :r2 Operátor |> sečte hodnoty tabulky a znak + uloží graf do souboru.
+ :r3 Oba operátory zde slouží k přidání nové grafické vrstvy.
+ :r4 Operátor |> vybere jen úplné řádky a znak + přidá novou proměnnou do tabulky.
+:r1 ok Pipe operátor |> předá penguins jako první argument funkce ggplot(). Znak + potom připojí geom_point(), který zobrazí pozorování jako body.
+:r2 0 Pipe v tomto zápisu data předává, nesčítá je. Pro uložení grafu do souboru slouží ggsave().
+:r3 0 Vrstvy grafu zde přidává znak +. Pipe |> má jinou úlohu, předává data následující funkci.
+:r4 0 Pipe sám řádky nefiltruje. Ani přidání bodové vrstvy nemění sloupce původní tabulky.
+--
+::Sloupcový graf četností::Tabulka penguins obsahuje jeden řádek pro každého tučňáka a sloupec species označuje jeho druh. Co ukazují výšky sloupců v grafu ggplot(penguins, aes(x = species)) + geom_bar()?
+ :r1 Průměrnou hmotnost tučňáků každého druhu.
+ :r2 Podíl každého druhu v celé světové populaci tučňáků.
+ :r3 Počet řádků v tabulce připadajících na každý druh.
+ :r4 Předem vypočtené hodnoty, které geom_bar() automaticky hledá ve sloupci n.
+:r1 0 Hmotnost není v tomto grafu mapována. Výchozí geom_bar() počítá pozorování v kategoriích.
+:r2 0 Graf ukazuje četnosti v daném souboru. Bez dalších informací je nelze vztáhnout na celou populaci.
+:r3 ok Výchozí geom_bar() samo spočítá řádky pro jednotlivé druhy, takže osu y nemusíme zadávat. Pro předem vypočtené výšky bychom použili geom_col() a výslovně mapovali y.
+:r4 0 Výchozí geom_bar() sloupec n automaticky nepoužívá. Předem vypočtené četnosti zobrazíme pomocí geom_col() s mapováním y = n.
+--
+::Šířka intervalů histogramu::V histogramu tělesné hmotnosti v gramech použijete geom_histogram(binwidth = 200). Co určuje hodnota 200?
+ :r1 Přesný počet sloupců histogramu.
+ :r2 Šířku každého intervalu na ose hmotnosti, tedy 200 gramů.
+ :r3 Počet tučňáků, kteří musejí být v každém intervalu.
+ :r4 Nejvyšší hmotnost, kterou lze v grafu zobrazit.
+:r1 0 Binwidth určuje šířku intervalu. Přibližný počet intervalů lze zadat argumentem bins.
+:r2 ok Šířka se udává v jednotkách proměnné na ose x. Změna binwidth mění členění histogramu, nikoli původní naměřené hodnoty.
+:r3 0 Počet pozorování v intervalu závisí na datech a určuje výšku sloupce. Nemusí být ve všech intervalech stejný.
+:r4 0 Binwidth neomezuje maximální zobrazenou hmotnost. Určuje, jak široké úseky číselné osy histogram použije.
+--
+::Křivky hustoty a velikost skupin::Pomocí geom_density() zobrazíte samostatnou křivku hustoty hmotnosti pro každý druh tučňáka. Jeden druh má vyšší vrchol křivky než ostatní. Znamená to, že má v tabulce nejvíce záznamů?
+ :r1 Ano, výška vrcholu přímo udává počet záznamů daného druhu.
+ :r2 Ano, protože plocha pod každou křivkou odpovídá počtu tučňáků daného druhu.
+ :r3 Ne, vyšší vrchol naopak vždy znamená méně záznamů.
+ :r4 Ne, každá skupinová hustota má plochu jedna a výška vrcholu sama velikost skupiny neurčuje.
+:r1 0 Na svislé ose je hustota, nikoli počet pozorování. Vyšší vrchol může souviset například s užším rozdělením hodnot.
+:r2 0 V tomto zobrazení se každá skupinová hustota normalizuje samostatně na plochu jedna.
+:r3 0 Ani opačný závěr neplatí. Z výšky vrcholu nelze samotnou četnost skupiny určit.
+:r4 ok Křivky slouží k porovnání tvaru rozdělení. Pro porovnání počtů druhů použijeme sloupcový graf četností; odhad podílu v určitém rozsahu hodnot souvisí s plochou pod hustotou v tomto rozsahu.
+--
+::Čtení boxplotu::Ve výukovém scénáři porovnáváte pomocí boxplotů rozdělení skóru úzkosti v intervenční a kontrolní skupině. Co představuje čára uvnitř každého boxu?
+ :r1 Medián skóru v dané skupině.
+ :r2 Aritmetický průměr skóru v dané skupině.
+ :r3 Nejvyšší skór v dané skupině.
+ :r4 Hranici statistické významnosti rozdílu mezi skupinami.
+:r1 ok Čára označuje medián. Hrany boxu odpovídají prvnímu a třetímu kvartilu, takže box vymezuje prostředních přibližně 50 % hodnot.
+:r2 0 Běžný boxplot zobrazuje uvnitř boxu medián, nikoli aritmetický průměr. Tyto charakteristiky se mohou lišit.
+:r3 0 Čára uvnitř boxu není maximum. Vzdálenější hodnoty se mohou zobrazit jako samostatné body za vousy a nejsou tím automaticky označeny za chyby.
+:r4 0 Boxplot shrnuje rozdělení hodnot. Samotné jeho zobrazení neprovádí test rozdílu mezi skupinami ani neprokazuje účinek intervence.
+--
+::Počty a podíly::Ve výukovém scénáři máte dvě nestejně velké skupiny účastníků a jejich odpovědi „ano“ či „ne“. Použijete geom_bar(position = "fill"), na osu x mapujete skupinu a na fill odpověď. Co vyjadřují barevné části každého sloupce?
+ :r1 Absolutní počty odpovědí v dané skupině.
+ :r2 Podíly odpovědí z celého souboru obou skupin dohromady.
+ :r3 Podíly odpovědí uvnitř dané skupiny.
+ :r4 Průměrné hodnoty číselného skóru v dané skupině.
+:r1 0 Nastavení position = "fill" převádí každý sloupec na výšku jedna, tedy 100 %. Absolutní počty z výšky sloupce nevyčteme.
+:r2 0 Základem pro výpočet podílů je zde vždy jedna skupina na ose x, nikoli celý soubor.
+:r3 ok Každý sloupec ukazuje složení odpovědí uvnitř své skupiny a součet jeho částí je 100 %. Stejně vysoké sloupce proto neznamenají stejně velké skupiny.
+:r4 0 Graf pracuje se dvěma kategoriálními proměnnými a zobrazuje podíly jejich kombinací. Žádný číselný skór zde neprůměrujeme.
+--
+::Rozdělení grafu do panelů::K bodovému grafu tučňáků přidáte facet_wrap(facets = vars(island), ncol = 2). Sloupec island obsahuje tři ostrovy. Jak se graf rozdělí?
+ :r1 Vzniknou dva panely, do kterých se tučňáci náhodně rozdělí.
+ :r2 Vznikne panel pro každý ostrov, uspořádaný nejvýše do dvou sloupců.
+ :r3 Všechny body zůstanou v jednom panelu a ostrovy se rozliší pouze barvou.
+ :r4 Vznikne jeden panel pro každého tučňáka, uspořádaný do dvou řádků.
+:r1 0 Panely určuje proměnná island. Argument ncol řídí počet sloupců jejich uspořádání, nikoli počet skupin.
+:r2 ok Vzniknou tři panely podle ostrova. Ve výchozím nastavení mají společné rozsahy os, což usnadňuje srovnání stejných hodnot mezi panely.
+:r3 0 Funkce facet_wrap() rozděluje graf do panelů. Barvu by bylo potřeba nastavit nebo mapovat samostatně.
+:r4 0 Jeden panel odpovídá kategorii ostrova, nikoli jednotlivému pozorování. Ncol navíc označuje počet sloupců, ne řádků.
+--
+::Uložení konkrétního grafu::V R máte vytvořený grafický objekt graf_tucnaci. Chcete jej uložit do souboru tucnaci.png v pracovním adresáři bez ohledu na to, který graf jste zobrazili naposledy. Který příkaz to provede?
+ :r1 ggsave(filename = "tucnaci.png", plot = graf_tucnaci)
+ :r2 print(graf_tucnaci)
+ :r3 graf_tucnaci + labs(title = "tucnaci.png")
+ :r4 ggsave(filename = "tucnaci.png")
+:r1 ok Argument filename určuje soubor a argument plot výslovně vybírá grafický objekt. Případnými argumenty width, height, units a dpi můžeme určit rozměry a rozlišení výstupu.
+:r2 0 Print() graf zobrazí, ale samo jej neuloží do samostatného obrázkového souboru.
+:r3 0 Labs() zde změní titulek grafu. Text titulku není pokynem k uložení souboru.
+:r4 0 Bez argumentu plot používá ggsave() poslední zobrazený graf. Ten nemusí být totožný s objektem graf_tucnaci.
