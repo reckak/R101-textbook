@@ -1,5 +1,13 @@
 # Autorská dokumentace učebnice R101
 
+## Upřesnění lekce 3, 27. 9. 2026
+
+Na žádost uživatele byly doplněny plné názvy letišť a přesnější označení newyorské metropolitní oblasti. Interaktivní ukázka používá `tibble::view()` dostupné po načtení tidyverse; text vysvětluje vztah k `View()`. Nový oddíl srovnává `%>%` z magrittr a nativní `|>` od R 4.1.0, na spustitelných příkladech ukazuje shodu běžného řetězce a rozdíl `.$dep_delay` oproti `_$dep_delay` (od R 4.3.0). Uživatelem dodaný `screenshots/pipe.png` doprovází nastavení klávesové zkratky. Chování bylo porovnáno s dokumentací R, magrittr a tibble; historii verzí potvrzuje také [srovnání pipe operátorů od Hadleyho Wickhama](https://tidyverse.org/blog/2023/04/base-vs-magrittr-pipe/).
+
+Výklad nyní zdůvodňuje výsledek `NA` při porovnání `== NA`, podrobně rozepisuje řazení podle více sloupců včetně zachování vstupního pořadí při úplné shodě a vysvětluje četnosti, unikátní řádky i rozdíl řádků a sloupců. Zadání o dohnání zpoždění používá formulaci „mezi odletem a příletem“, která nepřipisuje změnu výhradně pobytu ve vzduchu. Jazykové úpravy zahrnují „cestu pasažéra“, „název funkce“, průměr bez jediné platné hodnoty a zrušení seskupení pro následné operace. Původní analytické postupy, data a výsledky se nemění; podkladový skript zůstává beze změn.
+
+Úspěšně proběhl render celé knihy a projektové kontroly R i HTML. Všechny spustitelné bloky lekce 3 včetně řešení prošly v čisté relaci; samostatně byla ověřena shoda obou pipe zápisů, porovnání s `NA`, konstantní rok 2013 a stabilní řazení všech záznamů `flights`. Kontrola HTML u lekce 3 ověřila 11 sbalených a rozbalitelných řešení, skutečné kopírování všech 70 bloků, načtení tří obrázků, 329 místních cílů odkazů a šířku 390 px bez přetékání. Celá kniha prošla bez chyb JavaScriptu. Nový snímek byl vizuálně zkontrolován na desktopu i mobilu; jeho text je rovněž popsán v okolním výkladu. Varování o balíčcích sestavených pod jinou verzí R nebyla potlačena a kontroly neovlivnila. Interaktivní otevření `view()` v RStudiu se automaticky netestovalo; ověřena byla dokumentace a implementace funkce. Veřejné nasazení není součástí tohoto lokálního ověření.
+
 ## Aktuální uspořádání
 
 `lekce_01.qmd` obsahuje základy R a RStudia, práci s projektem, skriptem, objekty, funkcemi, vektory a balíčky. `lekce_02.qmd` obsahuje základy ggplot2 a `lekce_03.qmd` úpravy dat v dplyr. Každá lekce samostatně připravuje všechny potřebné objekty a balíčky. Výstupy jsou `_book/quarto/lekce_01.html`, `_book/quarto/lekce_02.html` a `_book/quarto/lekce_03.html`; pro čtení knihy není třeba instalovat R. Instalační a provozní postupy popisuje kořenový `README.md`.
