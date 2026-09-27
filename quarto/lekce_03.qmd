@@ -46,7 +46,7 @@ glimpse(flights)
 Tabulka má 336 776 řádků a 19 sloupců. Náhled nevypisuje všechny záznamy, ale zkrácený výpis neznamená, že o ostatní data přicházíme. `glimpse()` ukazuje i sloupce, které se do šířky náhledu nevejdou. `<int>` a `<dbl>` označují číselné typy, `<chr>` text a `<dttm>` datum s časem. Číselné uložení samo neříká, zda má smysl počítat průměr: například `flight` je číslo letu, ne měřená veličina.
 
 | Sloupec | Co představuje |
-|:-----------------------------------|:-----------------------------------|
+|:---|:---|
 | `year`, `month`, `day` | Rok, měsíc a den záznamu. |
 | `origin`, `dest` | Kódy letiště odletu a cílového letiště. |
 | `carrier`, `flight`, `tailnum` | Kód dopravce, číslo letu a registrace letadla. |
@@ -144,7 +144,7 @@ nrow(leden_prvni)
 Vybrali jsme 842 záznamů z jednoho dne. Stejný výsledek dává `filter(month == 1 & day == 1)`. Dvě rovnítka `==` porovnávají hodnoty; jedno `=` při volání funkce přiřazuje hodnotu argumentu.
 
 | Zápis | Význam a příklad |
-|:-----------------------------------|:-----------------------------------|
+|:---|:---|
 | `==`, `!=` | Rovná se, nerovná se: `origin == "JFK"`, `origin != "JFK"`. |
 | `>`, `>=`, `<`, `<=` | Větší, alespoň, menší, nejvýše. |
 | `&` | Současně: `month == 1 & day == 1`. |
@@ -350,7 +350,30 @@ lety_popisne <- flights |>
 names(lety_popisne)
 ```
 
-`names()` vypíše názvy sloupců. `air_time_min` je nyní za `day`; hodnoty zůstaly v minutách jako dříve. Přejmenování jednotky nepřepočítává. Také `select()` umí zápis `novy = stary`, ale současně ponechá pouze vybrané sloupce: `select(tail_num = tailnum)` vrátí jediný sloupec, kdežto `rename(tail_num = tailnum)` ponechá celou tabulku.
+`names()` vypíše názvy sloupců. `air_time_min` je nyní za `day`; hodnoty zůstaly v minutách jako dříve. Přejmenování jednotky nepřepočítává.
+
+**Pokud chceme sloupce zároveň vybrat nebo přesunout a přejmenovat, nemusíme volat `rename()` samostatně.** Stejný zápis `novy_nazev = stary_nazev` přijímají také `select()` a `relocate()`. Předchozí přejmenování a přesun proto můžeme spojit do jediného volání:
+
+```{r}
+#| label: l03-relocate-prejmenovani
+lety_presunute <- flights |>
+  relocate(air_time_min = air_time, .after = day)
+
+names(lety_presunute)
+```
+
+Výsledek je stejný jako u `lety_popisne`: sloupec `air_time` se nyní jmenuje `air_time_min` a stojí hned za `day`. Všech 19 sloupců zůstalo zachováno a jejich hodnoty se nezměnily.
+
+Při výběru sloupců můžeme přejmenování podobně zapsat přímo do `select()`:
+
+```{r}
+#| label: l03-select-prejmenovani
+flights |>
+  select(origin, dest, air_time_min = air_time) |>
+  head(n = 3)
+```
+
+Náhled obsahuje pouze tři vybrané sloupce: letiště odletu `origin`, cílové letiště `dest` a dobu letu pod novým názvem `air_time_min`. Na rozdíl od `rename()` a `relocate()` zde `select()` ostatní sloupce vynechá. Chceme-li pouze změnit názvy a zachovat všechny sloupce v původním pořadí, použijeme `rename()`. Podrobnosti uvádí dokumentace [`select()`](https://dplyr.tidyverse.org/reference/select.html) a [`relocate()`](https://dplyr.tidyverse.org/reference/relocate.html).
 
 ### Cvičení 4: Proč chybí sloupec? {.exercise}
 
@@ -855,7 +878,7 @@ Na začátku jsou skutečné odlety v 0:01, zapsané jako `1`. Například prvn�
 ## Časté potíže {#sec-upravy-potize}
 
 | Co pozorujete | Co zkontrolovat |
-|:-----------------------------------|:-----------------------------------|
+|:---|:---|
 | `filter()` hlásí pojmenovaný vstup | Při porovnávání použijte `==`, ne `=`. |
 | Filtr nečekaně vrací všechny řádky | Každá část spojená `\|` musí být úplná podmínka; pro seznam použijte `%in%`. |
 | Výsledek má méně řádků, než čekáte | Zkontrolujte hranice podmínky a chybějící hodnoty. |

@@ -1,5 +1,11 @@
 # Autorská dokumentace učebnice R101
 
+## Přejmenování při výběru a přesunu sloupců, 27. 9. 2026
+
+V oddílu „Přejmenování a přesun“ lekce 3 byly doplněny dvě spustitelné ukázky zápisu `novy_nazev = stary_nazev` přímo v `relocate()` a `select()`. Výklad rozlišuje zachování všech sloupců při přesunu od ponechání vybraných sloupců a vysvětluje, kdy není potřeba samostatné `rename()`. Chování bylo ověřeno v oficiální dokumentaci obou funkcí. Původní příklad i analytické postupy zůstávají zachovány.
+
+Úspěšně proběhlo vykreslení celé knihy a projektové kontroly R i HTML. Samostatně byla ověřena úplná shoda výsledku kombinace `rename()` a `relocate()` s jediným voláním `relocate()` a zachování hodnot při výběru s přejmenováním. Výpisy obou nových ukázek byly zkontrolovány. V lekci 3 prošlo kopírování všech 72 ukázek, rozbalování 11 řešení, načítání obrázků, místní odkazy a mobilní šířka 390 px bez přetékání; žádné chyby JavaScriptu. R upozornilo na balíčky sestavené pod R 4.5.3, kontroly v R 4.5.1 však prošly. Součástí změny je také zachovaná místní uživatelská úprava oddělovacích řádků tří tabulek. Veřejné nasazení nebylo ověřováno.
+
 ## Upřesnění lekce 3, 27. 9. 2026
 
 Na žádost uživatele byly doplněny plné názvy letišť a přesnější označení newyorské metropolitní oblasti. Interaktivní ukázka používá `tibble::view()` dostupné po načtení tidyverse; text vysvětluje vztah k `View()`. Nový oddíl srovnává `%>%` z magrittr a nativní `|>` od R 4.1.0, na spustitelných příkladech ukazuje shodu běžného řetězce a rozdíl `.$dep_delay` oproti `_$dep_delay` (od R 4.3.0). Uživatelem dodaný `screenshots/pipe.png` doprovází nastavení klávesové zkratky. Chování bylo porovnáno s dokumentací R, magrittr a tibble; historii verzí potvrzuje také [srovnání pipe operátorů od Hadleyho Wickhama](https://tidyverse.org/blog/2023/04/base-vs-magrittr-pipe/).
