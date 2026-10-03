@@ -5,11 +5,11 @@ subtitle: "Jak jsou data v R uspořádána a co z toho plyne pro jejich zpracov�
 
 ## Co se naučíte {#sec-struktury-cile}
 
-Proč lze ze sloupce tabulky spočítat průměr, ale z jiného zdánlivě číselného sloupce nikoli? Proč se po výběru jednoho sloupce někdy vrátí tabulka a jindy vektor? A proč může spojení čísla s textem změnit i ostatní hodnoty? Odpovědi závisejí na **datové struktuře**: způsobu, jakým R hodnoty ukládá a uspořádává.
+Proč lze ze sloupce tabulky spočítat průměr, ale z jiného zdánlivě číselného sloupce nikoli? Proč se po výběru jednoho sloupce někdy vrátí tabulka, ale jindy vektor? A proč může spojení čísla s textem změnit i ostatní hodnoty? Odpovědi závisejí na **datové struktuře**: způsobu, jakým R hodnoty ukládá a uspořádává.
 
-V této lekci rozlišíte základní typy vektorů, bezpečně převedete jejich hodnoty a vyberete potřebné prvky. Naučíte se používat faktory pro kategorie, seznamy pro různorodé objekty a datové tabulky pro údaje o více osobách. U tabulek porovnáte výběr v základním R s již známými funkcemi dplyr.
+V této lekci rozlišíte základní typy vektorů, bezpečně převedete jejich hodnoty a vyberete potřebné prvky. Naučíte se používat faktory pro kategoriální proměnné, seznamy pro různorodé objekty a datové tabulky pro údaje o více osobách. U tabulek porovnáte výběr v základním R s již známými funkcemi `dplyr`.
 
-Předpokládáme práci s objekty, funkcemi a skriptem z [první lekce](lekce_01.qmd), základní grafy z oddílu [-@sec-grafy-cile] a výběr řádků a sloupců z oddílů [-@sec-upravy-filter] a [-@sec-upravy-sloupce]. Pipe operátor `|>` posílá výsledek do dalšího kroku; podrobněji viz oddíl [-@sec-upravy-pipe]. Nyní se podíváme dovnitř objektů, se kterými jste už pracovali. Tato znalost vám později pomůže při kontrole načtených dat i výsledků analýz.
+Předpokládáme znalost práce s objekty, funkcemi a skriptem z [první lekce](lekce_01.qmd), základních grafů z oddílu [-@sec-grafy-cile] a výběru řádků a sloupců z oddílů [-@sec-upravy-filter] a [-@sec-upravy-sloupce]. Pipe operátor `|>` posílá výsledek do dalšího kroku; podrobněji viz oddíl [-@sec-upravy-pipe]. Nyní se podíváme dovnitř objektů, se kterými jste už pracovali. Tato znalost vám později pomůže při kontrole načtených dat i výsledků analýz.
 
 ### Příprava {#sec-struktury-priprava}
 
@@ -28,13 +28,13 @@ Začněte novou relací R a do skriptu vložte:
 library(tidyverse)
 ```
 
-Všechny potřebné objekty vytvoříme přímo v lekci. Psychologické údaje jsou **ručně vytvořené výukové příklady, nikoli data ze skutečného výzkumu**. Krátké číselné a textové příklady slouží k vysvětlení chování R. Není třeba stahovat žádný soubor.
+Všechny potřebné objekty vytvoříme přímo v lekci. Psychologické údaje jsou **ručně vytvořené výukové příklady, nikoli data ze skutečného výzkumu**. Krátké číselné a textové příklady slouží k vysvětlení chování R. Není třeba stahovat žádný dodatečný soubor.
 
 Pokud se při načítání objeví varování `package ... was built under R version ...`, balíček byl sestaven pod jinou verzí R. Samotné hlášení ještě neznamená neúspěšné načtení. Pokud ale některý příkaz selže, zkontrolujte verzi R a instalaci balíčku.
 
 ## Vektor: hodnoty jednoho typu {#sec-struktury-vektory}
 
-Vektor už znáte jako uspořádanou řadu hodnot vytvořenou pomocí `c()`. V tabulce účastníků výzkumu může být jedním takovým vektorem věk, jiným skór a dalším identifikátor osoby. **Atomický vektor** obsahuje prvky jediného základního typu. Slovo „atomický“ zde znamená, že jeho jednotlivé prvky už nejsou dalšími vektory nebo seznamy.
+Vektor už znáte jako uspořádanou sadu hodnot vytvořenou pomocí `c()`. V tabulce účastníků výzkumu může být jedním takovým vektorem věk, jiným skór a dalším identifikátor osoby. **Atomický vektor** obsahuje prvky jediného základního typu. Slovo „atomický“ zde znamená, že jeho jednotlivé prvky už nejsou dalšími vektory nebo seznamy, ale jednotlivé hodnoty.
 
 ```{r}
 #| label: l04-prvni-vektor
@@ -44,7 +44,7 @@ typeof(skore)
 length(skore)
 ```
 
-`typeof()` vrací vnitřní typ objektu, zde `"double"`, a `length()` počet prvků, zde `5`. Nejde o počet různých hodnot. Pozice prvků jsou očíslovány od **1**. Značka `[1]` na začátku konzolového výpisu oznamuje pozici první hodnoty na daném řádku; není součástí dat.
+`typeof()` vrací vnitřní typ objektu, zde `"double"`, a `length()` počet prvků, zde `5`. Nejde o počet různých jedinečných hodnot. Pozice prvků jsou očíslovány od **1**. Značka `[1]` na začátku konzolového výpisu oznamuje pozici první hodnoty na daném řádku; není součástí dat.
 
 Pro běžnou práci budeme potřebovat čtyři typy:
 
@@ -55,11 +55,13 @@ Pro běžnou práci budeme potřebovat čtyři typy:
 | `double` | Čísla s možností desetinné části | `c(1, 2.5, 3)` |
 | `character` | Textové řetězce | `c("P01", "P02", "P03")` |
 
-Existují i další atomické typy, například komplexní čísla; pro tuto lekci je nepotřebujeme. Druhou důležitou skupinou vektorů jsou **seznamy**: jejich prvky mohou mít různé typy i délky. K nim se vrátíme v oddílu [-@sec-struktury-seznamy].
+Tyto typy si můžeme pro orientaci seřadit od jednodušších k obecnějším podle toho, jaké hodnoty dokážou vyjádřit. Logický vektor připouští pouze `TRUE`, `FALSE` a chybějící hodnotu `NA`. Typ `integer` dokáže kromě `0` a `1`, na které se při číselném převodu mění `FALSE` a `TRUE`, uložit i další celá čísla v podporovaném rozsahu. Typ `double` umožňuje také desetinné hodnoty, například `2.5`; jeho rozsah a přesnost jsou ovšem omezené (viz oddíl [-@sec-struktury-presnost]). Typ `character` může uchovávat textové zápisy čísel i další text. Chybějící hodnoty mohou obsahovat všechny čtyři typy. „Jednodušší“ zde neznamená kratší vektor: jde o možnosti typu jeho prvků, nikoli o jejich počet.
+
+Existují i další atomické typy, například komplexní čísla; pro tuto lekci je nepotřebujeme. Druhou důležitou skupinou vektorů jsou **seznamy** (anglicky lists): jejich prvky mohou mít různé typy i délky. K nim se vrátíme v oddílu [-@sec-struktury-seznamy].
 
 ### Logické, číselné a textové hodnoty
 
-Logický vektor vyjadřuje splnění podmínky: `TRUE` znamená pravda, `FALSE` nepravda a `NA` neznámou hodnotu. Často vznikne porovnáním:
+Logický vektor vyjadřuje splnění podmínky: `TRUE` znamená pravda, `FALSE` nepravda a `NA` neznámou hodnotu. Často logické vektory vytváříme porovnáním:
 
 ```{r}
 #| label: l04-logicky
@@ -68,9 +70,9 @@ vyssi_skore
 typeof(vyssi_skore)
 ```
 
-Výsledek `FALSE TRUE FALSE TRUE TRUE` má stejnou délku i pořadí jako `skore`. Druhá, čtvrtá a pátá hodnota jsou větší než 15. Hranice 15 je zde jen procvičovací podmínka; nepředstavuje diagnostické kritérium.
+Výsledek `FALSE TRUE FALSE TRUE TRUE` má stejnou délku i pořadí jako `skore`. Druhá, čtvrtá a pátá hodnota jsou větší než 15. Hranice 15 je zde samozřejmě jen arbitrární podmínka k procvičení; nepředstavuje diagnostické kritérium.
 
-Typy `integer` a `double` společně označujeme jako číselné neboli *numeric*. Při běžném zápisu čísla R vytváří `double`, i když číslo nemá desetinnou část. Přípona `L` výslovně požaduje celé číslo:
+Typy `integer` a `double` společně označujeme jako číselné neboli *numeric*. Při běžném zápisu čísla R vytváří `double`, i když číslo nemá desetinnou část. Příponou `L` ale můžeme požádat o celé číslo (`integer`):
 
 ```{r}
 #| label: l04-ciselne-typy
@@ -90,7 +92,7 @@ typeof("18")
 length("dlouhý text")
 ```
 
-Identifikátory i `"18"` mají typ `character`. Poslední výsledek je `1`: celý řetězec je jeden prvek, bez ohledu na počet znaků. Uvozovky odlišují textovou hodnotu od názvu objektu. `NA` bez uvozovek označuje chybění; `"NA"` je text tvořený dvěma písmeny.
+Identifikátory i `"18"` mají typ `character`. Poslední výsledek je `1`: celý řetězec je jeden prvek, bez ohledu na počet znaků. Uvozovky odlišují textovou hodnotu od názvu objektu. `NA` bez uvozovek označuje chybějící hodnotu; `"NA"` (s uvozovkami) je naopak text tvořený dvěma písmeny.
 
 ### Cvičení 1: Tři různé vektory {.exercise}
 
@@ -110,12 +112,12 @@ length(splneno)
 length(podminky)
 ```
 
-Typy jsou postupně `integer`, `logical` a `character`. První dva vektory mají 11 prvků: podmínka se vyhodnotí pro každé číslo, nikoli jen pro čísla, která jí vyhovují. Textový vektor má tři prvky.
+Typy jsou postupně `integer`, `logical` a `character`. První dva vektory mají 11 prvků: podmínka se vyhodnotí pro každé číslo, nikoli jen pro čísla, která ji splňují. Textový vektor má tři prvky.
 :::
 
-### Proč si dvě vypočítaná čísla nemusejí být přesně rovna {#sec-struktury-presnost}
+### Proč si dvě vypočtená čísla nemusejí být přesně rovna {#sec-struktury-presnost}
 
-Čísla typu `double` mají konečnou přesnost. Některé hodnoty nelze v počítači uložit přesně a při výpočtu vznikají velmi malé odchylky. Běžný výpis je může skrýt zaokrouhlením:
+Čísla typu `double` mají konečnou přesnost. Některé hodnoty nelze v počítači uložit přesně, a při výpočtu proto vznikají velmi malé odchylky. Běžný výpis je může skrýt v důsledku zaokrouhlení:
 
 ```{r}
 #| label: l04-presnost
@@ -126,11 +128,11 @@ odmocnina_na_druhou == 2
 near(odmocnina_na_druhou, 2)
 ```
 
-Výpis vypadá jako `2`, ale rozdíl je přibližně `4.44e-16`, tedy $4{,}44 \times 10^{-16}$. Přesné porovnání pomocí `==` proto vrátí `FALSE`. Funkce `near()` z dplyr porovnává čísla s tolerancí a zde vrátí `TRUE`. Je vhodná pro drobné numerické odchylky; neurčuje, zda je rozdíl psychologicky zanedbatelný. Takové posouzení vyžaduje jednotky, kontext měření a věcně zvolenou hranici. [R4DS: porovnávání čísel](https://r4ds.hadley.nz/logicals.html#sec-fp-comparison)
+Výpis vypadá jako `2`, ale rozdíl je přibližně `4.44e-16`, tedy $4{,}44 \times 10^{-16}$. Přesné porovnání pomocí `==` proto vrátí `FALSE`. Funkce `near()` z dplyr porovnává čísla s určitou tolerancí, takže velmi malé odchylky způsobené omezenou přesností výpočtu nepovažuje za rozdíl. Zde proto vrátí `TRUE`: výsledek `sqrt(2)^2` je číslu 2 dostatečně blízko, přestože přesné porovnání pomocí `==` vrací `FALSE`. [R4DS: porovnávání čísel](https://r4ds.hadley.nz/logicals.html#sec-fp-comparison)
 
 ### Cvičení 2: Další odmocnina {.exercise}
 
-Spočítejte `sqrt(3)^2`. Porovnejte výsledek s číslem 3 pomocí `==` i `near()` a vypište rozdíl. Vysvětlete, proč samotný zaokrouhlený výpis nestačí ke kontrole rovnosti. Jde o vlastní obměnu [cvičení R4DS 12.2.4](https://r4ds.hadley.nz/logicals.html#exercises).
+Spočítejte `sqrt(3)^2`. Porovnejte výsledek s číslem 3 pomocí `==` i `near()` a vypište rozdíl. Vysvětlete, proč samotný zaokrouhlený výpis nestačí ke kontrole přesné rovnosti. Jde o vlastní obměnu [cvičení R4DS 12.2.4](https://r4ds.hadley.nz/logicals.html#exercises).
 
 ::: {.callout-note collapse="true" title="Ukázat řešení"}
 ```{r}
@@ -163,7 +165,17 @@ as.logical(c(0, 1, 2))
 as.integer(c(2.9, -2.9))
 ```
 
-Skóry jsou po převodu čísla, takže s nimi lze počítat. Logické hodnoty se převádějí na `1` a `0`; opačně se nula převádí na `FALSE` a nenulová čísla na `TRUE`. Poslední příkaz vrátí `2` a `-2`: `as.integer()` odstraňuje desetinnou část směrem k nule, **nezaokrouhluje** na nejbližší celé číslo.
+Skóry jsou po převodu čísla, takže s nimi lze počítat. Logické hodnoty se převádějí na `1` a `0`; opačně se nula převádí na `FALSE` a nenulová čísla na `TRUE`, zatímco chybějící hodnota zůstává `NA`. Poslední příkaz vrátí `2` a `-2`: `as.integer()` odstraňuje desetinnou část směrem k nule, **nezaokrouhluje** na nejbližší celé číslo.
+
+K zaokrouhlení slouží funkce `round()`. Argument `digits` určuje počet desetinných míst; pokud jej neuvedeme, použije se `0`:
+
+```{r}
+#| label: l04-zaokrouhleni
+round(c(2.9, -2.9))
+typeof(round(c(2.9, -2.9)))
+```
+
+Výsledkem jsou `3` a `-3`, ale typ zůstává `double`: zaokrouhlení hodnoty samo o sobě není převodem na `integer`. U hodnot přesně uprostřed mezi dvěma celými čísly volí `round()` sudé číslo, například `round(2.5)` vrátí `2`. [Dokumentace zaokrouhlování v R](https://stat.ethz.ch/R-manual/R-devel/library/base/html/Round.html)
 
 Převod uspěje jen tehdy, když R dokáže hodnotu v požadovaném typu vyjádřit. Následující ukázka záměrně vyvolá varování:
 
@@ -174,11 +186,11 @@ prevedene_skore <- as.numeric(neuplny_text)
 prevedene_skore
 ```
 
-Pro `"neuvedeno"` vznikne `NA` a R upozorní `NAs introduced by coercion`: při převodu přibyly chybějící hodnoty. Výpočet pokračuje, ale je nutné zkontrolovat vstup a význam problematického textu. Ztrátu informace nelze napravit pouhým skrytím varování. Také zápis `"12,5"` není pro `as.numeric()` běžným desetinným číslem; zde R očekává desetinnou tečku.
+Pro `"neuvedeno"` vznikne `NA` a R upozorní `NAs introduced by coercion`: při převodu přibyly chybějící hodnoty. Výpočet pokračuje, ale je nutné zkontrolovat vstup a význam problematického textu. Ztrátu informace nelze napravit pouhým skrytím varování. Také zápis `"12,5"` by funkce `as.numeric()` nepřevedla na číslo, protože zde očekává desetinnou tečku.
 
 ### Automatický převod: společný typ a logické souhrny
 
-Atomický vektor nemůže současně uchovávat jeden prvek jako číslo a jiný jako text. Funkce `c()` proto u těchto základních typů hledá společný typ podle pořadí `logical` → `integer` → `double` → `character`:
+Atomický vektor nemůže současně uchovávat jeden prvek jako číslo a jiný jako text. Funkce `c()` proto u těchto základních typů hledá společný typ podle pořadí `logical` → `integer` → `double` → `character`. Obrazně hledá nejjednodušší „společný jmenovatel“: nejméně obecný typ, na který lze podle pravidel R převést všechny vstupy. Z uvedeného pořadí vybere typ, který je mezi vstupy nejvíce vpravo. Rozhodují přitom **typy vstupů**, nikoli jen jejich konkrétní hodnoty: i spojení `TRUE` s číslem `1` vytvoří `double`, protože takový typ má zapsané číslo `1`. [Dokumentace funkce c()](https://stat.ethz.ch/R-manual/R-devel/library/base/html/c.html)
 
 ```{r}
 #| label: l04-spolecny-typ
@@ -201,7 +213,7 @@ sum(!is.na(dokonceno))
 mean(dokonceno, na.rm = TRUE)
 ```
 
-Bez ošetření neznámé hodnoty dostaneme `NA`. Z dostupných údajů jsou tři dokončení a jedno nedokončení, takže podíl dokončení činí `0.75`, tedy 75 %. Jmenovatelem jsou **čtyři osoby se známým stavem**, nikoli všech pět osob. Stav páté osoby neznáme; `na.rm = TRUE` jej nedoplňuje. Jde o stejný princip kontroly chybějících údajů jako v oddílu [-@sec-upravy-na].
+Bez ošetření chybějící hodnoty dostaneme `NA`. Z dostupných údajů jsou tři dokončení a jedno nedokončení, takže podíl dokončení činí `0.75`, tedy 75 %. Jmenovatelem jsou **čtyři osoby se známým stavem**, nikoli všech pět osob. Stav páté osoby neznáme; `na.rm = TRUE` jej nedoplňuje, pouze říká, že chceme součet či průměr vypočíst z dostupných (nechybějících) hodnot. Jde o stejný princip kontroly chybějících údajů jako v oddílu [-@sec-upravy-na].
 
 ### Jak se na typ zeptat přímo
 
@@ -219,11 +231,23 @@ is.character(c("1", "2"))
 
 Výsledky jsou `TRUE`, `FALSE`, `FALSE`, `TRUE`, `TRUE`, `TRUE`. Uložení nul a jedniček jako čísel z nich samo neudělá logický vektor. Ani celočíselně vypadající zápis `c(1, 2)` nemá vnitřní typ `integer`.
 
-V kódu tidyverse můžete potkat také zápisy s podtržítkem, například `rlang::is_logical()` nebo `rlang::is_double()`. Pocházejí z balíčku rlang, který se instaluje jako závislost tidyverse. Zápis `rlang::` jednoznačně označuje původ funkce; názvy s tečkou a podtržítkem nejsou obecně zaměnitelné. V základní části lekce používáme funkce základního R. [Dokumentace rlang](https://rlang.r-lib.org/reference/type-predicates.html)
+V kódu tidyverse můžete potkat také zápisy s podtržítkem, například `rlang::is_logical()` nebo `rlang::is_double()`. Tyto funkce pocházejí z balíčku rlang. Ten se při běžné instalaci tidyverse nainstaluje automaticky, protože jej další balíčky tidyverse potřebují ke svému fungování. Takovému potřebnému balíčku říkáme **závislost**. Zápis `rlang::` říká, že chceme použít funkci právě z balíčku rlang; nemusíme jej nejprve připojit pomocí `library(rlang)`.
+
+Nejde jen o jiný zápis názvu. Jedním z praktických rozdílů je argument `n`, kterým u těchto funkcí z rlang ověříme zároveň **typ i požadovanou délku** vektoru:
+
+```{r}
+#| label: l04-kontrola-typu-delky
+is.double(skore)
+rlang::is_double(skore, n = 5)
+rlang::is_double(skore, n = 3)
+rlang::is_logical(skore, n = 5)
+```
+
+První dvě kontroly vrátí `TRUE`: `skore` má typ `double` a obsahuje pět prvků. Třetí vrátí `FALSE`, protože nesouhlasí délka, a čtvrtá také `FALSE`, protože nesouhlasí typ. Argument `n` délku nemění, pouze ji kontroluje; funkce `is.double()` ze základního R tento argument nemá. Názvy s tečkou a podtržítkem proto nejsou obecně zaměnitelné. V dalších příkladech budeme převážně používat funkce základního R. [Dokumentace rlang](https://rlang.r-lib.org/reference/type-predicates.html)
 
 ### Cvičení 3: Čísla, nebo text? {.exercise}
 
-Vytvořte `odpovedi <- c("10", "20", "30")`, zjistěte typ a převeďte hodnoty tak, abyste mohli spočítat jejich průměr. Změní `as.numeric(odpovedi)` původní objekt, pokud výsledek nikam nepřiřadíte?
+Vytvořte `odpovedi <- c("10", "20", "30")`, zjistěte typ vytvořeného vektoru a převeďte hodnoty tak, abyste mohli spočítat jejich průměr. Změní `as.numeric(odpovedi)` původní objekt, pokud výsledek nikam nepřiřadíte pomocí `<-`?
 
 ::: {.callout-note collapse="true" title="Ukázat řešení"}
 ```{r}
@@ -235,7 +259,7 @@ mean(odpovedi_cisla)
 typeof(odpovedi)
 ```
 
-Původní vektor je textový a zůstává textový. Nový objekt `odpovedi_cisla` obsahuje čísla s průměrem 20. Funkce převodu vrací výsledek; původní objekt přepíše až přiřazení do téhož názvu, například `odpovedi <- as.numeric(odpovedi)`.
+Původní vektor je textový a zůstává textový. Nový objekt `odpovedi_cisla` obsahuje čísla s průměrem 20. Funkce pro převod vrací výsledek; původní objekt se přepíše až přiřazením do téhož názvu, například `odpovedi <- as.numeric(odpovedi)`.
 :::
 
 ## Výpočty po prvcích a recyklace {#sec-struktury-recyklace}
@@ -252,36 +276,38 @@ c(1, 2, 3) * c(4, 5, 6)
 
 Změny skórů jsou `-3`, `0` a `-5` bodů. Záporná změna znamená nižší skór po měření; zda je to zlepšení, záleží na významu škály. Násobení vrátí `4`, `10` a `18`, nikoli všechny možné kombinace součinů. U párových dat musí stejné pozice patřit stejné osobě: R jejich identitu samo nekontroluje.
 
-Kratší vektor se při běžné aritmetice základního R opakuje, dokud se nepokryje délka delšího. Tomuto opakování říkáme **recyklace**. Nejčastěji využijeme jediné číslo:
+Kratší vektor se při běžných matematických operacích opakuje, dokud nedosáhne délky delšího vektoru. Tomuto opakování říkáme **recyklace**. Nejčastěji využijeme jediné číslo:
 
 ```{r}
 #| label: l04-recyklace-jedna
 reakce_s <- c(0.42, 0.51, 0.38)
 reakce_s * 1000
+reakce_s * c(1000, 1000, 1000)
 c(1, 2, 3) + 10
+c(1, 2, 3) + c(10, 10, 10)
 ```
 
-Časy jsou po převodu `420`, `510` a `380` milisekund. Číslo 1000 se použije pro každý prvek. Obdobně se desítka přičte ke všem třem číslům.
+Oba zápisy násobení vrátí stejné časy `420`, `510` a `380` milisekund. V prvním se číslo 1000 recykluje pro každý prvek z `reakce_s`, ve druhém jsme je třikrát zapsali sami. Obdobně oba zápisy sčítání vrátí `11`, `12` a `13`: jediná desítka se použije stejně jako vektor tří desítek. Recyklace jediné hodnoty nám tedy šetří opakovaný zápis.
 
 ```{r}
 #| label: l04-recyklace-vzor
 1:10 + 1:2
 ```
 
-R opakuje vzor `1, 2, 1, 2, …`; dostaneme `2, 4, 4, 6, 6, 8, 8, 10, 10, 12`. Varování se neobjeví, protože 10 je násobkem 2. To však neznamená, že výpočet odpovídá našemu záměru. Nechtěně krátký vektor může změnit výsledky bez upozornění.
+R opakuje vzor `1, 2, 1, 2, …`, proto dostaneme `2, 4, 4, 6, 6, 8, 8, 10, 10, 12`. Varování se neobjeví, protože 10 (délka delšího vektoru) je násobkem 2 (délky kratšího vektoru). To však neznamená, že výpočet odpovídá našemu záměru. Nechtěně krátký vektor může ovlivnit výsledky bez upozornění.
 
-Pokud delší délka není násobkem kratší, poslední opakování není úplné. Následující ukázka záměrně vyvolá varování:
+Pokud délka delšího vektoru není násobkem délky kratšího vektoru, poslední opakování nebude úplné. Následující ukázka záměrně vyvolá varování:
 
 ```{r}
 #| label: l04-varovani-recyklace
 1:10 + 1:3
 ```
 
-Výsledek přesto vznikne, ale hlášení `longer object length is not a multiple of shorter object length` upozorňuje na nesoulad délek. Při analýze se zastavte a zkontrolujte `length()` obou vstupů. Pro začátek je bezpečné používat stejně dlouhé vektory nebo jedinou společnou hodnotu. Pravidla nejsou ve všech funkcích stejná; tibble některé délky odmítne chybou (@sec-struktury-tibble). [Aritmetika v R](https://stat.ethz.ch/R-manual/R-devel/library/base/html/Arithmetic.html)
+Výsledek přesto vznikne, ale hlášení `longer object length is not a multiple of shorter object length` upozorňuje na nesoulad délek. Pokud jsme s tím předem nepočítali, je vždy lepší se zastavit a zkontrolovat `length()` obou vstupních vektorů. Pro začátek je bezpečnější používat stejně dlouhé vektory nebo jedinou společnou hodnotu. Pravidla nejsou ve všech funkcích stejná; např. `tibble()` některé délky odmítne a ohlásí chybu (@sec-struktury-tibble). [Aritmetika v R](https://stat.ethz.ch/R-manual/R-devel/library/base/html/Arithmetic.html)
 
 ### Cvičení 4: Varování při výpočtu {.exercise}
 
-Nejprve odhadněte a potom spusťte `1:10 + 1:4`. Jaká hodnota bude na desátém místě? Proč se objeví varování? Znamená přítomnost výsledku, že je výpočet vhodný pro párová měření?
+Nejprve odhadněte, jak bude výstup vypadat, a potom spusťte `1:10 + 1:4`. Jaká hodnota bude na desátém místě? Proč se objeví varování? Znamená přítomnost výsledku, že je výpočet vhodný pro párová měření?
 
 ::: {.callout-note collapse="true" title="Ukázat řešení"}
 ```{r}
@@ -289,11 +315,11 @@ Nejprve odhadněte a potom spusťte `1:10 + 1:4`. Jaká hodnota bude na desáté
 1:10 + 1:4
 ```
 
-Vznikne `2, 4, 6, 8, 6, 8, 10, 12, 10, 12`. Na desátém místě se přičte druhá hodnota vzoru, tedy `10 + 2 = 12`. Délka 10 není násobkem 4, proto R varuje. Pro párová měření musíme mít odpovídající údaje ke stejným osobám; automatické opakování chybějící protějšky nenahrazuje.
+Vznikne `2, 4, 6, 8, 6, 8, 10, 12, 10, 12`. Na desátém místě se přičte druhá hodnota z `1:4`, tedy `10 + 2 = 12`. Délka 10 není násobkem 4, proto nás R varuje. Pro párová měření musíme mít odpovídající údaje týchž osob; automatické opakování chybějící protějšky nenahradí.
 :::
 ## Výběr prvků vektoru {#sec-struktury-vyber}
 
-Z celé řady často potřebujeme jen určité hodnoty. Za název vektoru napíšeme hranaté závorky `[]` a dovnitř vložíme **index**, tedy určení vybíraných prvků. Může jít o pozice, logickou podmínku nebo názvy. Každý způsob řeší jinou situaci.
+Z celé řady často potřebujeme jen určité hodnoty. V takovém případě za název vektoru napíšeme hranaté závorky `[]` a dovnitř vložíme **index**, tedy určení vybíraných prvků. Může jít o pozice, logickou podmínku nebo názvy. Každý způsob řeší jinou situaci.
 
 ### Výběr podle pozice
 
