@@ -1,5 +1,20 @@
 # Autorská dokumentace učebnice R101
 
+## Upřesnění typů a recyklace v kapitole 4, 4. 10. 2026
+
+Na uživatelovu průběžnou redakci kapitoly navazují tato doplnění:
+
+- V přehledu vektorů je „složitost“ vysvětlena jako obecnost typu a možnosti reprezentace hodnot, nikoli délka vektoru. `double` zahrnuje i desetinné hodnoty a má omezený rozsah i přesnost; chybění je možné u všech čtyř probíraných typů.
+- Výklad `c()` používá přirovnání ke společnému jmenovateli, ale výslovně uvádí, že rozhodují vstupní typy podle hierarchie R, nikoli kontrola konkrétních hodnot.
+- Za `as.integer()` přibyla ukázka `round()` s vysvětlením, že zaokrouhlený výsledek zůstává typu `double`, i krátká poznámka k zaokrouhlování přesné poloviny na sudé číslo.
+- Pasáž o rlang vysvětluje závislost mezi balíčky a přidává kontrolu typu i délky argumentem `n`, včetně příkladů nesouhlasící délky a typu.
+- Recyklace porovnává násobení jedinou tisícovkou s `c(1000, 1000, 1000)` a přičtení jediné desítky s `c(10, 10, 10)`; výsledky jsou shodné.
+- V navazujícím textu je výslovně zachováno `NA` při logickém převodu a opravena formulace o desetinné čárce pro `as.numeric()`. Původní skript, data a analytické postupy se nemění. Dosavadní místní redakce kapitoly je zachována a zahrnuta do stejné změny; nesouvisející `tests/test_03.txt` zůstává mimo commit.
+
+Chování bylo ověřeno proti oficiální dokumentaci R (`c()`, `round()`) a rlang, odkazované v kapitole, i spuštěním příkladů. Prošlo vykreslení celé knihy a po poslední textové korektuře nový render kapitoly 4. Projektová kontrola R prošla včetně všech bloků a řešení čtvrté kapitoly v čisté relaci. Kontrola HTML prošla pro všechny čtyři kapitoly; v kapitole 4 ověřila deset skrytých a rozbalitelných řešení, skutečné kopírování všech 172 vykreslených úseků kódu, načtení grafu a 358 místních cílů odkazů. Při šířce 390 px není vodorovné přetékání a nebyly zaznamenány chyby JavaScriptu. R 4.5.1 hlásilo upozornění na některé balíčky sestavené pod R 4.5.3; kontroly prošly. Veřejné nasazení nebylo ověřováno.
+
+Nové pasáže o zaokrouhlování, kontrole typu a délky a recyklaci byly prohlédnuty také na snímcích vykresleného HTML; text, výstupy i tlačítka jsou čitelné.
+
 ## Čtvrtá kapitola: datové struktury, 3. 10. 2026
 
 Podkladem je `scripts/week_04.R`, zachovaný beze změny (SHA-256 `da0d5aedaa65ff7e3a0925f0354cc4b6cc0d15af7f6d18a46ae18eb6ceee8ca6`). Nová `lekce_04.qmd` navazuje na základní vektory z první lekce, grafy z druhé a úpravy tabulek z třetí. Obsahuje devět průběžných cvičení a samostatně spustitelnou závěrečnou úlohu. Všechna řešení včetně výstupů a interpretací jsou ve sbalených blocích. Pokročilejší výjimky a alternativy jsou označeny jako nepovinné.
