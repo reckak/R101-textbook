@@ -34,9 +34,9 @@ function check(condition, message) { if (!condition) throw new Error(message); }
     const homeLink = page.locator('#quarto-sidebar a.sidebar-link').first();
     check(['/', '/index.html'].includes(new URL(await homeLink.getAttribute('href'), page.url()).pathname), 'Home navigation missing');
     check((await page.locator('h1 .chapter-number').innerText()).trim() === '1', 'First lesson must be chapter 1');
-    for (const chapterNumber of [1, 2, 3]) {
+    for (const chapterNumber of [1, 2, 3, 4]) {
       await page.setViewportSize({ width: 1440, height: 1000 });
-      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat' };
+      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat', 4: 'Vektory, faktory' };
       await page.locator('#quarto-sidebar a.sidebar-link').filter({ hasText: titles[chapterNumber] }).click();
       await page.waitForLoadState('networkidle');
       check((await page.locator('h1 .chapter-number').innerText()).trim() === String(chapterNumber), 'Wrong chapter number');
@@ -49,7 +49,7 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       const mainBox = await page.locator('main').boundingBox();
       check(tocBox.x >= mainBox.x + mainBox.width - 1 && tocBox.y < 180, 'TOC not at top right');
       check(await toc.locator('a[data-scroll-target]').count() > 5, 'TOC incomplete');
-      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny' }[chapterNumber];
+      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny', 4: '#sec-struktury-faktory' }[chapterNumber];
       await toc.locator('a[data-scroll-target="' + tocTarget + '"]').click();
       await page.waitForFunction(id => Math.abs(document.querySelector(id).getBoundingClientRect().top) < 200, tocTarget);
       await page.evaluate(() => window.scrollTo(0, 0));
@@ -118,10 +118,14 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       } else if (chapterNumber === 2) {
         await screenshot('html-graph', '#fig-tucnaci-final');
         await screenshot('html-solution', '#fig-reseni-samostatne');
-      } else {
+      } else if (chapterNumber === 3) {
         await screenshot('html-table', '#sec-upravy-mesicni .cell');
         await screenshot('html-graph', '#fig-l03-hodiny');
         await screenshot('html-solution', '#fig-l03-reseni-samostatne');
+      } else {
+        await screenshot('html-table', '#sec-struktury-tabulky-vyber > .cell:first-of-type');
+        await screenshot('html-graph', '#fig-l04-narocnost');
+        await screenshot('html-solution', '#sec-struktury-samostatne .callout');
       }
       await page.setViewportSize({ width: 390, height: 844 });
       await screenshot('html-mobile');

@@ -120,3 +120,10 @@ status_l03 <- system2(
   c("--vanilla", "quarto/_verification/check-lesson-03.R")
 )
 stopifnot(status_l03 == 0L)
+
+# Execute lesson 04 independently, including intentional warnings and errors.
+status_l04 <- system2(
+  file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript"),
+  c("--vanilla", "quarto/_verification/check-lesson-04.R")
+)
+stopifnot(status_l04 == 0L)

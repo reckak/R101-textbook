@@ -15,3 +15,5 @@ V [první kapitole](quarto/lekce_01.qmd) si připravíte pracovní prostředí, 
 Ve [druhé kapitole](quarto/lekce_02.qmd) se naučíte tvořit a číst grafy v ggplot2: od bodového grafu přes rozdělení hodnot a porovnání skupin až po uložení obrázku.
 
 Ve [třetí kapitole](quarto/lekce_03.qmd) budete upravovat tabulky pomocí dplyr: vybírat řádky a sloupce, vytvářet nové proměnné a počítat souhrny podle skupin. Naučíte se také kontrolovat chybějící údaje a připravit souhrnnou tabulku pro graf.
+
+Ve [čtvrté kapitole](quarto/lekce_04.qmd) prozkoumáte, jak R ukládá data do vektorů, faktorů, seznamů a datových tabulek. Naučíte se kontrolovat a převádět typy, vybírat části objektů a rozpoznat chyby při práci s kategoriemi, chybějícími údaji a nestejně dlouhými vektory.

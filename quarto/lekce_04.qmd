@@ -1,0 +1,947 @@
+---
+title: "Vektory, faktory, seznamy a datové tabulky"
+subtitle: "Jak jsou data v R uspořádána a co z toho plyne pro jejich zpracování"
+---
+
+## Co se naučíte {#sec-struktury-cile}
+
+Proč lze ze sloupce tabulky spočítat průměr, ale z jiného zdánlivě číselného sloupce nikoli? Proč se po výběru jednoho sloupce někdy vrátí tabulka a jindy vektor? A proč může spojení čísla s textem změnit i ostatní hodnoty? Odpovědi závisejí na **datové struktuře**: způsobu, jakým R hodnoty ukládá a uspořádává.
+
+V této lekci rozlišíte základní typy vektorů, bezpečně převedete jejich hodnoty a vyberete potřebné prvky. Naučíte se používat faktory pro kategorie, seznamy pro různorodé objekty a datové tabulky pro údaje o více osobách. U tabulek porovnáte výběr v základním R s již známými funkcemi dplyr.
+
+Předpokládáme práci s objekty, funkcemi a skriptem z [první lekce](lekce_01.qmd), základní grafy z oddílu [-@sec-grafy-cile] a výběr řádků a sloupců z oddílů [-@sec-upravy-filter] a [-@sec-upravy-sloupce]. Pipe operátor `|>` posílá výsledek do dalšího kroku; podrobněji viz oddíl [-@sec-upravy-pipe]. Nyní se podíváme dovnitř objektů, se kterými jste už pracovali. Tato znalost vám později pomůže při kontrole načtených dat i výsledků analýz.
+
+### Příprava {#sec-struktury-priprava}
+
+Ve svém projektu založte skript `scripts/04_datove_struktury.R`. Pokud ještě nemáte tidyverse, nainstalujte jej jednorázově v konzoli podle oddílu [-@sec-balicky]:
+
+```{r}
+#| label: l04-instalace
+#| eval: false
+install.packages("tidyverse")
+```
+
+Začněte novou relací R a do skriptu vložte:
+
+```{r}
+#| label: l04-balicky
+library(tidyverse)
+```
+
+Všechny potřebné objekty vytvoříme přímo v lekci. Psychologické údaje jsou **ručně vytvořené výukové příklady, nikoli data ze skutečného výzkumu**. Krátké číselné a textové příklady slouží k vysvětlení chování R. Není třeba stahovat žádný soubor.
+
+Pokud se při načítání objeví varování `package ... was built under R version ...`, balíček byl sestaven pod jinou verzí R. Samotné hlášení ještě neznamená neúspěšné načtení. Pokud ale některý příkaz selže, zkontrolujte verzi R a instalaci balíčku.
+
+## Vektor: hodnoty jednoho typu {#sec-struktury-vektory}
+
+Vektor už znáte jako uspořádanou řadu hodnot vytvořenou pomocí `c()`. V tabulce účastníků výzkumu může být jedním takovým vektorem věk, jiným skór a dalším identifikátor osoby. **Atomický vektor** obsahuje prvky jediného základního typu. Slovo „atomický“ zde znamená, že jeho jednotlivé prvky už nejsou dalšími vektory nebo seznamy.
+
+```{r}
+#| label: l04-prvni-vektor
+skore <- c(12, 18, 9, 25, 16)
+skore
+typeof(skore)
+length(skore)
+```
+
+`typeof()` vrací vnitřní typ objektu, zde `"double"`, a `length()` počet prvků, zde `5`. Nejde o počet různých hodnot. Pozice prvků jsou očíslovány od **1**. Značka `[1]` na začátku konzolového výpisu oznamuje pozici první hodnoty na daném řádku; není součástí dat.
+
+Pro běžnou práci budeme potřebovat čtyři typy:
+
+| Typ v R | Význam | Příklad |
+|:---|:---|:---|
+| `logical` | Logické hodnoty | `c(TRUE, FALSE, NA)` |
+| `integer` | Celá čísla | `c(1L, 2L, 3L)` |
+| `double` | Čísla s možností desetinné části | `c(1, 2.5, 3)` |
+| `character` | Textové řetězce | `c("P01", "P02", "P03")` |
+
+Existují i další atomické typy, například komplexní čísla; pro tuto lekci je nepotřebujeme. Druhou důležitou skupinou vektorů jsou **seznamy**: jejich prvky mohou mít různé typy i délky. K nim se vrátíme v oddílu [-@sec-struktury-seznamy].
+
+### Logické, číselné a textové hodnoty
+
+Logický vektor vyjadřuje splnění podmínky: `TRUE` znamená pravda, `FALSE` nepravda a `NA` neznámou hodnotu. Často vznikne porovnáním:
+
+```{r}
+#| label: l04-logicky
+vyssi_skore <- skore > 15
+vyssi_skore
+typeof(vyssi_skore)
+```
+
+Výsledek `FALSE TRUE FALSE TRUE TRUE` má stejnou délku i pořadí jako `skore`. Druhá, čtvrtá a pátá hodnota jsou větší než 15. Hranice 15 je zde jen procvičovací podmínka; nepředstavuje diagnostické kritérium.
+
+Typy `integer` a `double` společně označujeme jako číselné neboli *numeric*. Při běžném zápisu čísla R vytváří `double`, i když číslo nemá desetinnou část. Přípona `L` výslovně požaduje celé číslo:
+
+```{r}
+#| label: l04-ciselne-typy
+typeof(1)
+typeof(1L)
+typeof(1:5)
+typeof(c(1L, 2L, 3L))
+```
+
+První příkaz vrátí `"double"`, ostatní `"integer"`. Operátor `:` zde vytváří celočíselnou posloupnost od 1 do 5. Pro většinu běžných výpočtů rozdíl mezi těmito dvěma typy nemusíte řešit. Důležitější je odlišit číslo od textu, který jen jako číslo vypadá:
+
+```{r}
+#| label: l04-text
+id <- c("P01", "P02", "P03")
+typeof(id)
+typeof("18")
+length("dlouhý text")
+```
+
+Identifikátory i `"18"` mají typ `character`. Poslední výsledek je `1`: celý řetězec je jeden prvek, bez ohledu na počet znaků. Uvozovky odlišují textovou hodnotu od názvu objektu. `NA` bez uvozovek označuje chybění; `"NA"` je text tvořený dvěma písmeny.
+
+### Cvičení 1: Tři různé vektory {.exercise}
+
+Vytvořte vektor `body` s celými čísly od 5 do 15, vektor `splneno` s podmínkou `body > 10` a textový vektor `podminky` s hodnotami `"ticho"`, `"hudba"` a `"hluk"`. Zjistěte jejich typy a délky. Kolik prvků bude mít `splneno`?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l04-reseni-typy
+body <- 5:15
+splneno <- body > 10
+podminky <- c("ticho", "hudba", "hluk")
+typeof(body)
+typeof(splneno)
+typeof(podminky)
+length(body)
+length(splneno)
+length(podminky)
+```
+
+Typy jsou postupně `integer`, `logical` a `character`. První dva vektory mají 11 prvků: podmínka se vyhodnotí pro každé číslo, nikoli jen pro čísla, která jí vyhovují. Textový vektor má tři prvky.
+:::
+
+### Proč si dvě vypočítaná čísla nemusejí být přesně rovna {#sec-struktury-presnost}
+
+Čísla typu `double` mají konečnou přesnost. Některé hodnoty nelze v počítači uložit přesně a při výpočtu vznikají velmi malé odchylky. Běžný výpis je může skrýt zaokrouhlením:
+
+```{r}
+#| label: l04-presnost
+odmocnina_na_druhou <- sqrt(2)^2
+odmocnina_na_druhou
+odmocnina_na_druhou - 2
+odmocnina_na_druhou == 2
+near(odmocnina_na_druhou, 2)
+```
+
+Výpis vypadá jako `2`, ale rozdíl je přibližně `4.44e-16`, tedy $4{,}44 \times 10^{-16}$. Přesné porovnání pomocí `==` proto vrátí `FALSE`. Funkce `near()` z dplyr porovnává čísla s tolerancí a zde vrátí `TRUE`. Je vhodná pro drobné numerické odchylky; neurčuje, zda je rozdíl psychologicky zanedbatelný. Takové posouzení vyžaduje jednotky, kontext měření a věcně zvolenou hranici. [R4DS: porovnávání čísel](https://r4ds.hadley.nz/logicals.html#sec-fp-comparison)
+
+### Cvičení 2: Další odmocnina {.exercise}
+
+Spočítejte `sqrt(3)^2`. Porovnejte výsledek s číslem 3 pomocí `==` i `near()` a vypište rozdíl. Vysvětlete, proč samotný zaokrouhlený výpis nestačí ke kontrole rovnosti. Jde o vlastní obměnu [cvičení R4DS 12.2.4](https://r4ds.hadley.nz/logicals.html#exercises).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l04-reseni-presnost
+trojka <- sqrt(3)^2
+trojka
+trojka - 3
+trojka == 3
+near(trojka, 3)
+```
+
+V tomto výpočtu vzniká rozdíl přibližně `-4.44e-16`. Přesná rovnost je `FALSE`, porovnání s tolerancí `TRUE`. Zápis `3` v běžném výpisu neznamená, že uložená hodnota je přesně 3. Poslední číslice numerických odchylek se mohou mezi výpočetními prostředími lišit.
+:::
+
+## Převod a kontrola typů {#sec-struktury-prevody}
+
+### Výslovný převod: funkce `as.*()`
+
+Typ někdy potřebujeme změnit záměrně, například když byl skór načten jako text. Funkce `as.numeric()` převádí na číselný typ `double`, `as.integer()` na celá čísla, `as.character()` na text a `as.logical()` na logické hodnoty.
+
+```{r}
+#| label: l04-prevody
+skore_text <- c("12", "18", "9")
+skore_cisla <- as.numeric(skore_text)
+skore_cisla
+typeof(skore_cisla)
+as.integer(c(TRUE, FALSE, TRUE))
+as.character(c(1, 2, 3))
+as.logical(c(0, 1, 2))
+as.integer(c(2.9, -2.9))
+```
+
+Skóry jsou po převodu čísla, takže s nimi lze počítat. Logické hodnoty se převádějí na `1` a `0`; opačně se nula převádí na `FALSE` a nenulová čísla na `TRUE`. Poslední příkaz vrátí `2` a `-2`: `as.integer()` odstraňuje desetinnou část směrem k nule, **nezaokrouhluje** na nejbližší celé číslo.
+
+Převod uspěje jen tehdy, když R dokáže hodnotu v požadovaném typu vyjádřit. Následující ukázka záměrně vyvolá varování:
+
+```{r}
+#| label: l04-varovani-prevod
+neuplny_text <- c("12", "neuvedeno", "18")
+prevedene_skore <- as.numeric(neuplny_text)
+prevedene_skore
+```
+
+Pro `"neuvedeno"` vznikne `NA` a R upozorní `NAs introduced by coercion`: při převodu přibyly chybějící hodnoty. Výpočet pokračuje, ale je nutné zkontrolovat vstup a význam problematického textu. Ztrátu informace nelze napravit pouhým skrytím varování. Také zápis `"12,5"` není pro `as.numeric()` běžným desetinným číslem; zde R očekává desetinnou tečku.
+
+### Automatický převod: společný typ a logické souhrny
+
+Atomický vektor nemůže současně uchovávat jeden prvek jako číslo a jiný jako text. Funkce `c()` proto u těchto základních typů hledá společný typ podle pořadí `logical` → `integer` → `double` → `character`:
+
+```{r}
+#| label: l04-spolecny-typ
+c(TRUE, 0L)
+c(TRUE, 0L, 2.5)
+c(TRUE, 0L, 2.5, "jedna")
+typeof(c(TRUE, 0L, 2.5, "jedna"))
+```
+
+Nejprve vzniknou celá čísla `1` a `0`, poté čísla typu `double`. Přidání textu způsobí převod všech prvků na text: `"TRUE"`, `"0"`, `"2.5"`, `"jedna"`. Pravidlo se týká těchto jednoduchých atomických vektorů; není univerzálním návodem pro kombinování všech tříd objektů, například faktorů a dat.
+
+Automatický převod je užitečný také při počítání splněných podmínek. `sum()` a `mean()` zacházejí s `TRUE` jako s jedničkou a s `FALSE` jako s nulou:
+
+```{r}
+#| label: l04-logicke-souhrny
+dokonceno <- c(TRUE, TRUE, FALSE, NA, TRUE)
+sum(dokonceno)
+sum(dokonceno, na.rm = TRUE)
+sum(!is.na(dokonceno))
+mean(dokonceno, na.rm = TRUE)
+```
+
+Bez ošetření neznámé hodnoty dostaneme `NA`. Z dostupných údajů jsou tři dokončení a jedno nedokončení, takže podíl dokončení činí `0.75`, tedy 75 %. Jmenovatelem jsou **čtyři osoby se známým stavem**, nikoli všech pět osob. Stav páté osoby neznáme; `na.rm = TRUE` jej nedoplňuje. Jde o stejný princip kontroly chybějících údajů jako v oddílu [-@sec-upravy-na].
+
+### Jak se na typ zeptat přímo
+
+Vedle `typeof()` můžete použít funkce vracející `TRUE` nebo `FALSE`. V základním R mají například názvy `is.logical()`, `is.integer()`, `is.double()`, `is.character()` a `is.numeric()`:
+
+```{r}
+#| label: l04-kontrola-typu
+is.logical(c(TRUE, FALSE))
+is.logical(c(0, 1))
+is.integer(c(1, 2))
+is.double(c(1, 2))
+is.numeric(c(1L, 2L))
+is.character(c("1", "2"))
+```
+
+Výsledky jsou `TRUE`, `FALSE`, `FALSE`, `TRUE`, `TRUE`, `TRUE`. Uložení nul a jedniček jako čísel z nich samo neudělá logický vektor. Ani celočíselně vypadající zápis `c(1, 2)` nemá vnitřní typ `integer`.
+
+V kódu tidyverse můžete potkat také zápisy s podtržítkem, například `rlang::is_logical()` nebo `rlang::is_double()`. Pocházejí z balíčku rlang, který se instaluje jako závislost tidyverse. Zápis `rlang::` jednoznačně označuje původ funkce; názvy s tečkou a podtržítkem nejsou obecně zaměnitelné. V základní části lekce používáme funkce základního R. [Dokumentace rlang](https://rlang.r-lib.org/reference/type-predicates.html)
+
+### Cvičení 3: Čísla, nebo text? {.exercise}
+
+Vytvořte `odpovedi <- c("10", "20", "30")`, zjistěte typ a převeďte hodnoty tak, abyste mohli spočítat jejich průměr. Změní `as.numeric(odpovedi)` původní objekt, pokud výsledek nikam nepřiřadíte?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l04-reseni-prevod
+odpovedi <- c("10", "20", "30")
+typeof(odpovedi)
+odpovedi_cisla <- as.numeric(odpovedi)
+mean(odpovedi_cisla)
+typeof(odpovedi)
+```
+
+Původní vektor je textový a zůstává textový. Nový objekt `odpovedi_cisla` obsahuje čísla s průměrem 20. Funkce převodu vrací výsledek; původní objekt přepíše až přiřazení do téhož názvu, například `odpovedi <- as.numeric(odpovedi)`.
+:::
+
+## Výpočty po prvcích a recyklace {#sec-struktury-recyklace}
+
+Při **vektorizovaném výpočtu** R provádí operaci s odpovídajícími prvky. U stejně dlouhých vektorů spojuje první s prvním, druhý s druhým a tak dále:
+
+```{r}
+#| label: l04-po-prvcich
+pred <- c(20, 16, 24)
+po <- c(17, 16, 19)
+po - pred
+c(1, 2, 3) * c(4, 5, 6)
+```
+
+Změny skórů jsou `-3`, `0` a `-5` bodů. Záporná změna znamená nižší skór po měření; zda je to zlepšení, záleží na významu škály. Násobení vrátí `4`, `10` a `18`, nikoli všechny možné kombinace součinů. U párových dat musí stejné pozice patřit stejné osobě: R jejich identitu samo nekontroluje.
+
+Kratší vektor se při běžné aritmetice základního R opakuje, dokud se nepokryje délka delšího. Tomuto opakování říkáme **recyklace**. Nejčastěji využijeme jediné číslo:
+
+```{r}
+#| label: l04-recyklace-jedna
+reakce_s <- c(0.42, 0.51, 0.38)
+reakce_s * 1000
+c(1, 2, 3) + 10
+```
+
+Časy jsou po převodu `420`, `510` a `380` milisekund. Číslo 1000 se použije pro každý prvek. Obdobně se desítka přičte ke všem třem číslům.
+
+```{r}
+#| label: l04-recyklace-vzor
+1:10 + 1:2
+```
+
+R opakuje vzor `1, 2, 1, 2, …`; dostaneme `2, 4, 4, 6, 6, 8, 8, 10, 10, 12`. Varování se neobjeví, protože 10 je násobkem 2. To však neznamená, že výpočet odpovídá našemu záměru. Nechtěně krátký vektor může změnit výsledky bez upozornění.
+
+Pokud delší délka není násobkem kratší, poslední opakování není úplné. Následující ukázka záměrně vyvolá varování:
+
+```{r}
+#| label: l04-varovani-recyklace
+1:10 + 1:3
+```
+
+Výsledek přesto vznikne, ale hlášení `longer object length is not a multiple of shorter object length` upozorňuje na nesoulad délek. Při analýze se zastavte a zkontrolujte `length()` obou vstupů. Pro začátek je bezpečné používat stejně dlouhé vektory nebo jedinou společnou hodnotu. Pravidla nejsou ve všech funkcích stejná; tibble některé délky odmítne chybou (@sec-struktury-tibble). [Aritmetika v R](https://stat.ethz.ch/R-manual/R-devel/library/base/html/Arithmetic.html)
+
+### Cvičení 4: Varování při výpočtu {.exercise}
+
+Nejprve odhadněte a potom spusťte `1:10 + 1:4`. Jaká hodnota bude na desátém místě? Proč se objeví varování? Znamená přítomnost výsledku, že je výpočet vhodný pro párová měření?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l04-reseni-recyklace
+1:10 + 1:4
+```
+
+Vznikne `2, 4, 6, 8, 6, 8, 10, 12, 10, 12`. Na desátém místě se přičte druhá hodnota vzoru, tedy `10 + 2 = 12`. Délka 10 není násobkem 4, proto R varuje. Pro párová měření musíme mít odpovídající údaje ke stejným osobám; automatické opakování chybějící protějšky nenahrazuje.
+:::
+## Výběr prvků vektoru {#sec-struktury-vyber}
+
+Z celé řady často potřebujeme jen určité hodnoty. Za název vektoru napíšeme hranaté závorky `[]` a dovnitř vložíme **index**, tedy určení vybíraných prvků. Může jít o pozice, logickou podmínku nebo názvy. Každý způsob řeší jinou situaci.
+
+### Výběr podle pozice
+
+```{r}
+#| label: l04-indexy
+slova <- c("jedna", "dva", "tri", "ctyri", "pet")
+slova[c(3, 2, 5)]
+slova[c(1, 1, 5)]
+slova[-c(1, 3, 5)]
+```
+
+První výběr vrátí `"tri"`, `"dva"`, `"pet"`: pořadí výsledku určuje pořadí indexů. Opakovaný index vybírá stejnou hodnotu opakovaně. Záporné indexy naopak uvedené pozice **vynechají**, takže v posledním výsledku zůstanou `"dva"` a `"ctyri"`.
+
+V jednom výběru nelze míchat kladné a záporné indexy: nebylo by zřejmé, zda určujeme ponechané, nebo vynechané prvky. Toto je záměrná demonstrační chyba:
+
+```{r}
+#| label: l04-chyba-indexy
+#| error: true
+slova[c(1, -3)]
+```
+
+Hlášení `only 0's may be mixed with negative subscripts` upozorňuje právě na smíchání obou způsobů. Chcete-li vynechat třetí prvek, napište `slova[-3]`. Chcete-li vybrat první a třetí, použijte `slova[c(1, 3)]`.
+
+### Výběr podle podmínky a chybějící hodnoty
+
+Logický index přiřazuje jednotlivým pozicím rozhodnutí: `TRUE` ponechat, `FALSE` vynechat, `NA` neznámé. U atomického vektoru vrátí neznámé rozhodnutí chybějící hodnotu:
+
+```{r}
+#| label: l04-logicky-index
+hodnoty <- c(10, 3, NA, 5, 8, 1, NA)
+hodnoty > 5
+hodnoty[hodnoty > 5]
+hodnoty[!is.na(hodnoty) & hodnoty > 5]
+```
+
+Podmínka obsahuje dvě `TRUE` a dvě `NA`. První výběr proto vrátí `10, NA, 8, NA`. V druhém výběru požadujeme současně známou hodnotu a hodnotu větší než 5; zůstanou pouze `10` a `8`. `!` obrací logickou hodnotu, takže `!is.na(hodnoty)` označuje dostupné údaje. U chybějícího prvku je první část podmínky `FALSE`; celé `FALSE & NA` je `FALSE`.
+
+Zde je podstatný rozdíl proti `filter()` z předchozí lekce: **`filter()` ponechává pouze řádky s podmínkou `TRUE`, zatímco `[` s logickým indexem `NA` může do výsledku vložit chybějící hodnotu.**
+
+Kratší logický index se také opakuje. Výraz `hodnoty[c(TRUE, FALSE)]` vybere první, třetí, pátou a sedmou pozici. Při výběru osob je však přehlednější vytvořit podmínku přímo z hodnot vektoru, aby měla odpovídající délku.
+
+### Jména prvků
+
+Prvky můžeme pojmenovat už při vytvoření nebo dodatečně pomocí `names()`. Jména jsou **atribut**, tedy doplňující informace připojená k objektu:
+
+```{r}
+#| label: l04-jmena
+skore_osob <- c(P01 = 12, P02 = 18, P03 = 9)
+names(skore_osob)
+attributes(skore_osob)
+skore_osob[c("P03", "P01")]
+```
+
+`names()` vrací názvy a `attributes()` přehled atributů; zde obsahuje právě `names`. Výběr podle jmen vrací skóry 9 a 12 v požadovaném pořadí, včetně jmen osob. Názvy se v indexu zapisují jako text v uvozovkách.
+
+```{r}
+#| label: l04-jmena-dodatecne
+skore_dalsi <- c(12, 18, 9)
+names(skore_dalsi) <- c("P01", "P02", "P03")
+skore_dalsi
+```
+
+Zápis s `names()` nalevo od `<-` nastavuje jména existujícímu objektu. V tidyverse lze stejný úkol vyřešit jako `c(12, 18, 9) |> purrr::set_names(c("P01", "P02", "P03"))`; tuto alternativu nemusíte používat, pokud vám základní zápis vyhovuje.
+
+Jednoduché závorky `[` vybírají podmnožinu. Dvojité závorky `[[` při výběru jednou pozicí nebo jedním jménem **vytahují jeden prvek**:
+
+```{r}
+#| label: l04-vektor-dvojite
+skore_osob["P02"]
+skore_osob[["P02"]]
+```
+
+Oba výsledky obsahují číslo 18. První si ponechá jméno `P02`, druhý jej nemá. U seznamů bude rozdíl zásadnější: `[` vrátí seznam, zatímco `[[` jeho obsah (@sec-struktury-seznamy). Pravidla výběru popisuje [dokumentace R](https://stat.ethz.ch/R-manual/R-devel/library/base/html/Extract.html).
+
+### Cvičení 5: Vyberte dostupné reakční časy {.exercise}
+
+Vytvořte `casy_ms <- c(P01 = 420, P02 = NA, P03 = 610, P04 = 390)`. Vyberte časy delší než 400 ms bez chybějících hodnot. Potom vyberte osoby `P04` a `P01` v tomto pořadí a samostatně vytáhněte číselnou hodnotu pro `P03` bez jejího jména.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l04-reseni-vyber
+casy_ms <- c(P01 = 420, P02 = NA, P03 = 610, P04 = 390)
+casy_ms[!is.na(casy_ms) & casy_ms > 400]
+casy_ms[c("P04", "P01")]
+casy_ms[["P03"]]
+```
+
+První výběr obsahuje osoby P01 a P03 s časy 420 a 610 ms. Druhý vrací 390 a 420 ms, protože pořadí určuje index. Poslední příkaz vrátí samotné číslo 610. Chybějící čas P02 jsme neoznačili za krátký: pouze jej nelze zahrnout mezi známé časy nad hranicí.
+:::
+
+## Faktory: kategorie a jejich úrovně {#sec-struktury-faktory}
+
+Textový vektor může obsahovat libovolné řetězce. Pro kategorickou proměnnou, například experimentální podmínku nebo kategorii odpovědi, je často vhodnější **faktor**. Ten ukládá hodnoty jako odkazy na předem vymezené **úrovně** (*levels*). Úrovně určují přípustné kategorie i jejich pořadí například na ose grafu.
+
+Představme si sedm výukových odpovědí na otázku, jak náročný byl úkol:
+
+```{r}
+#| label: l04-faktor
+narocnost_text <- c("nízká", "vysoká", "vysoká", "střední",
+                   "nízká", "nízká", "střední")
+narocnost <- factor(
+  narocnost_text,
+  levels = c("nízká", "střední", "vysoká")
+)
+narocnost
+levels(narocnost)
+```
+
+Argument `levels` určuje pořadí „nízká, střední, vysoká“, ale **nepřeskládává odpovědi osob**: druhá odpověď zůstává „vysoká“. Bez tohoto argumentu by R standardně použilo setříděné přítomné hodnoty, u textu podle jazykového nastavení. Takové pořadí nemusí odpovídat významu kategorií.
+
+### Vnitřní typ není totéž co třída
+
+**Třída** (*class*) říká funkcím R, jak mají s objektem zacházet. Není totožná s vnitřním typem, který jsme zjišťovali pomocí `typeof()`:
+
+```{r}
+#| label: l04-faktor-struktura
+typeof(narocnost)
+class(narocnost)
+attributes(narocnost)
+as.integer(narocnost)
+```
+
+Faktor má vnitřní typ `integer`, ale třídu `factor` a atribut `levels`. Kódy `1, 3, 3, 2, 1, 1, 2` odkazují na pozice v seznamu úrovní. **Nejsou to naměřená čísla ani důkaz stejných vzdáleností mezi kategoriemi.** Průměr těchto kódů by závisel na zvoleném kódování; nevystihoval by automaticky průměrnou náročnost.
+
+Pouhé pořadí v `levels` ještě nevytváří uspořádaný faktor třídy `ordered`:
+
+```{r}
+#| label: l04-usporadany-faktor
+is.ordered(narocnost)
+narocnost_ord <- factor(
+  narocnost_text,
+  levels = c("nízká", "střední", "vysoká"),
+  ordered = TRUE
+)
+class(narocnost_ord)
+```
+
+První výsledek je `FALSE`. Teprve `ordered = TRUE` přidá třídu `ordered` a výslovně označí pořadový vztah. Některé analýzy s takovým faktorem zacházejí jinak než s běžným faktorem, proto jej nepřidávejte pouze kvůli pořadí sloupců v grafu. Ani uspořádaný faktor neurčuje vzdálenosti mezi kategoriemi. [Dokumentace faktorů](https://stat.ethz.ch/R-manual/R-devel/library/base/html/factor.html)
+
+### Číselné kódy a slovní popisky
+
+Jestliže jsou ve vstupu kódy kategorií, argument `labels` jim přiřadí popisky. První popisek patří k první hodnotě v `levels`, druhý k druhé a tak dále:
+
+```{r}
+#| label: l04-faktor-popisky
+kody_skupin <- c(2, 1, 2, 1)
+skupiny <- factor(
+  kody_skupin,
+  levels = c(1, 2),
+  labels = c("kontrola", "trénink")
+)
+skupiny
+```
+
+Kód 2 nyní znamená „trénink“ a kód 1 „kontrola“. Takto zvolený převod musí odpovídat dokumentaci dat. R význam čísel samo nezná.
+
+Pozor také na hodnoty, které v `levels` chybějí:
+
+```{r}
+#| label: l04-faktor-neznama
+neuplne_kategorie <- factor(
+  c("nízká", "stredni", "vysoká"),
+  levels = c("nízká", "střední", "vysoká")
+)
+neuplne_kategorie
+sum(is.na(neuplne_kategorie))
+```
+
+Text `"stredni"` neodpovídá úrovni `"střední"`, a proto se převede na `NA` **bez varování**. Počet chybějících hodnot je 1. Před převodem zkontrolujte různé zápisy kategorií a po převodu ověřte, zda nepřibylo chybění.
+
+### Faktor v tabulce četností a grafu
+
+Známé `count()` a `geom_bar()` nám umožní ověřit, kolik odpovědí jednotlivé kategorie obsahují:
+
+```{r}
+#| label: l04-cetnosti
+odpovedi_narocnost <- tibble(narocnost = narocnost)
+odpovedi_narocnost |> count(narocnost)
+```
+
+Nízkou náročnost uvedly tři osoby, střední dvě a vysokou dvě. Tabulka se řídí pořadím úrovní. Funkci `tibble()` podrobněji rozebereme v oddílu [-@sec-struktury-tibble]; zde vytváří jednosloupcovou tabulku z připraveného vektoru.
+
+```{r}
+#| label: fig-l04-narocnost
+#| fig-cap: "Četnosti sedmi fiktivních odpovědí v pořadí úrovní faktoru."
+#| fig-alt: "Sloupce nízké, střední a vysoké náročnosti s četnostmi 3, 2 a 2."
+graf_narocnosti <- ggplot(odpovedi_narocnost, aes(x = narocnost)) +
+  geom_bar(fill = "steelblue") +
+  labs(x = "Hodnocená náročnost", y = "Počet osob")
+graf_narocnosti
+```
+
+Na obrázku [-@fig-l04-narocnost] je nejvyšší sloupec nízké náročnosti, zatímco zbývající dva mají stejnou výšku. Faktor zajišťuje smysluplné pořadí kategorií; nemění jejich četnosti. Ze sedmi smyšlených odpovědí nevyvozujeme závěr o běžné náročnosti úkolu v populaci.
+
+### Cvičení 6: Pořadí kategorií {.exercise}
+
+Vytvořte faktor z odpovědí `c("spokojená", "nespokojená", "neutrální", "spokojená")`. Nastavte úrovně v pořadí „nespokojená, neutrální, spokojená“. Zkontrolujte úrovně a vnitřní kódy. Jsou odpovědi osob po vytvoření faktoru automaticky seřazené? Jde o vlastní procvičení inspirované [R4DS: základy faktorů](https://r4ds.hadley.nz/factors.html#factor-basics).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l04-reseni-faktor
+spokojenost <- factor(
+  c("spokojená", "nespokojená", "neutrální", "spokojená"),
+  levels = c("nespokojená", "neutrální", "spokojená")
+)
+levels(spokojenost)
+spokojenost
+as.integer(spokojenost)
+```
+
+Kódy jsou `3, 1, 2, 3`. Pořadí odpovědí se nezměnilo: první i čtvrtá osoba zůstávají spokojené. Nastavili jsme pořadí kategorií, nikoli pořadí osob. Bez `ordered = TRUE` jde stále o běžný faktor; jeho úrovně však už budou v požadovaném pořadí například v grafu.
+:::
+
+### Nepovinně: když faktor obsahuje číselné popisky {#sec-struktury-faktor-cisla}
+
+Přímý převod faktoru na čísla vrací jeho interní kódy. Pokud popisky opravdu představují číselná měření, musíme nejprve získat text popisků:
+
+```{r}
+#| label: l04-faktor-cisla
+faktor_cisla <- factor(c("10", "20", "10"), levels = c("10", "20"))
+as.numeric(faktor_cisla)
+as.numeric(as.character(faktor_cisla))
+```
+
+První příkaz vrací `1, 2, 1`, druhý skutečné hodnoty popisků `10, 20, 10`. Druhý postup má smysl jen tehdy, když popisky znamenají čísla, se kterými chceme počítat. Kódy experimentálních skupin nejsou měřené hodnoty, i kdyby byly původně zapsány číslicemi.
+
+## Seznamy: různé objekty pohromadě {#sec-struktury-seznamy}
+
+Atomický vektor potřebuje společný typ. **Seznam** (*list*) dovoluje uložit do jednoho objektu například identifikátor osoby, několik skórů a poznámku. Každá položka seznamu je samostatný objekt a může mít jinou délku či typ:
+
+```{r}
+#| label: l04-seznam
+zaznam <- list(
+  id = "P01",
+  skore = c(12, 15, 11),
+  dokonceno = TRUE,
+  poznamka = "bez přerušení"
+)
+zaznam
+typeof(zaznam)
+length(zaznam)
+str(zaznam)
+```
+
+Typ je `list` a délka `4`, protože seznam má čtyři položky. Tři skóry uvnitř druhé položky se do délky seznamu počítají jako **jedna položka**. Funkce `str()` přehledně ukazuje strukturu: názvy položek, jejich typy a hodnoty. Například `num [1:3]` označuje číselný vektor se třemi prvky a `chr` text. Seznamy tak umožňují uchovávat dohromady související informace, aniž by je převáděly na společný atomický typ.
+
+### `[` zachová seznam, `[[` vytáhne obsah, `$` použije jméno
+
+```{r}
+#| label: l04-seznam-vyber
+zaznam["skore"]
+zaznam[["skore"]]
+typeof(zaznam["skore"])
+typeof(zaznam[["skore"]])
+zaznam$skore
+```
+
+Výběr `zaznam["skore"]` vrací **jednopoložkový seznam**. Výběr `zaznam[["skore"]]` vrací **číselný vektor** `12, 15, 11`. V tomto příkladu stejný vektor získáme pomocí `zaznam$skore`. Za `$` píšeme přímo název bez uvozovek; při výběru uloženém v textovém objektu používejte `[[`:
+
+```{r}
+#| label: l04-seznam-jmeno
+vybrana_polozka <- "skore"
+zaznam[[vybrana_polozka]]
+mean(zaznam$skore)
+zaznam[c("id", "dokonceno")]
+```
+
+První příkaz najde položku podle hodnoty v `vybrana_polozka`. Průměr tří skórů je přibližně 12,67. Poslední příkaz vrací seznam se dvěma vybranými položkami. Zápis `zaznam$vybrana_polozka` by hledal položku doslova nazvanou `vybrana_polozka`, nikoli `skore`.
+
+| Zápis | Co dostaneme z tohoto seznamu |
+|:---|:---|
+| `zaznam[2]` | Seznam s druhou položkou. |
+| `zaznam[[2]]` | Obsah druhé položky: vektor tří skórů. |
+| `zaznam$skore` | Tentýž obsah vybraný jménem. |
+| `zaznam$skore[2]` | Druhou hodnotu uvnitř vektoru skórů, tedy 15. |
+
+Při výběru jménem používejte úplné názvy. Základní R totiž u `$` za určitých okolností přijímá i jednoznačný začátek názvu, zatímco `[["skore"]]` standardně požaduje přesnou shodu. Úplná jména jsou čitelnější a snižují riziko záměny.
+
+### Přidání položky a vnořené seznamy
+
+```{r}
+#| label: l04-seznam-pridani
+zaznam$prumer <- mean(zaznam$skore)
+length(zaznam)
+zaznam$prumer
+```
+
+Přiřazení do nového jména vytvořilo pátou položku. Uložený průměr se ale po pozdější změně `zaznam$skore` sám nepřepočítá; je to výsledek dosavadního výpočtu.
+
+Položkou seznamu může být i další seznam. Takové struktuře říkáme **vnořená**:
+
+```{r}
+#| label: l04-vnoreni
+studie <- list(
+  popis = list(nazev = "Nácvik pozornosti", rok = 2026),
+  osoba = zaznam
+)
+str(studie)
+studie$popis$nazev
+```
+
+Vnější seznam má dvě položky. Výběr postupuje po úrovních: nejdříve `popis`, potom `nazev`. Při prvním setkání s neznámým seznamem proto nejdříve použijte `str()` a teprve potom vybírejte jeho obsah.
+
+::: {.callout-note title="Nepovinná podrobnost: více indexů uvnitř [[ ]]"}
+U seznamu může například `studie[[c("popis", "nazev")]]` znamenat sestup přes dvě úrovně, stejně jako `studie[["popis"]][["nazev"]]`. Nejde o současný výběr dvou položek. Pro ten slouží `[c(...)]`. V této lekci preferujeme čitelnější postupný výběr; pravidlo, že `[[` vždy přijímá pouze jediný index, by nebylo obecně správné.
+:::
+
+### Cvičení 7: Výsledky jednoho účastníka {.exercise}
+
+Vytvořte seznam `ucastnik` s položkami `body = c(10, 14, 12)`, `dny = c("pondělí", "středa", "pátek")` a `online = c(TRUE, TRUE, FALSE)`. Poslední položka říká, zda dané měření proběhlo online. Vytáhněte druhou položku pomocí `[[`. Přidejte položku `prumer_bodu` a vysvětlete rozdíl mezi `ucastnik[1]` a `ucastnik[[1]]`.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l04-reseni-seznam
+ucastnik <- list(
+  body = c(10, 14, 12),
+  dny = c("pondělí", "středa", "pátek"),
+  online = c(TRUE, TRUE, FALSE)
+)
+ucastnik[[2]]
+ucastnik$prumer_bodu <- mean(ucastnik$body)
+ucastnik$prumer_bodu
+str(ucastnik[1])
+str(ucastnik[[1]])
+```
+
+Druhá položka je textový vektor tří dnů a přidaný průměr bodů je 12. `ucastnik[1]` vrátí seznam, `ucastnik[[1]]` číselný vektor. Výpočet průměru proto potřebuje obsah položky, například `mean(ucastnik[[1]])`, nikoli jednopoložkový seznam.
+:::
+
+## Datová tabulka: sloupce propojené po řádcích {#sec-struktury-tabulky}
+
+Seznam může mít položky libovolné délky. **Datová tabulka** (*data frame*) organizuje proměnné do sloupců se stejným počtem řádků. V naší ukázce bude jeden řádek představovat jednu osobu. V jiném výzkumu může řádek představovat například jedno měření osoby nebo jeden pokus; tuto jednotku musíme vždy určit.
+
+Vytvořme šest fiktivních záznamů pomocí funkce `data.frame()` ze základního R:
+
+```{r}
+#| label: l04-data-frame
+ucastnici <- data.frame(
+  id = c("P01", "P02", "P03", "P04", "P05", "P06"),
+  vek = c(21, 28, NA, 32, 24, 27),
+  skupina = c("kontrola", "trénink", "kontrola",
+              "trénink", "kontrola", "trénink"),
+  skore = c(12, 18, NA, 25, 9, 16),
+  dokonceno = c(TRUE, TRUE, FALSE, TRUE, TRUE, TRUE)
+)
+ucastnici
+str(ucastnici)
+```
+
+Osobě P03 chybí věk i skór a úkol nedokončila. Ostatní mají číselné skóry a známý stav dokončení. Každý sloupec zachovává svůj typ: `id` a `skupina` jsou text, `vek` a `skore` čísla a `dokonceno` logické hodnoty. Čísla při levém okraji výpisu jsou jména řádků; identifikátory účastníků máme výslovně ve sloupci `id`.
+
+Od R 4.0.0 `data.frame()` standardně nepřevádí text na faktor. Pro kategorickou proměnnou tedy podle potřeby použijeme `factor()` sami. Tabulka je vnitřně seznam sloupců s třídou `data.frame`, názvy sloupců a jmény řádků. V této ukázce jsou sloupce atomické vektory; obecně mohou datové tabulky obsahovat i složitější sloupce, například seznamy. [Dokumentace data.frame()](https://stat.ethz.ch/R-manual/R-devel/library/base/html/data.frame.html)
+
+```{r}
+#| label: l04-rozmery
+typeof(ucastnici)
+class(ucastnici)
+length(ucastnici)
+nrow(ucastnici)
+ncol(ucastnici)
+dim(ucastnici)
+names(ucastnici)
+```
+
+Vnitřní typ je `list`, třída `data.frame`. `length(ucastnici)` vrátí **5 sloupců**, nikoli 6 osob ani 30 buněk. Počet řádků zjistíte pomocí `nrow()`, počet sloupců pomocí `ncol()`; `dim()` vrací oba rozměry v pořadí řádky, sloupce. `names()` zde vrací názvy sloupců.
+
+### Řádky a sloupce v hranatých závorkách {#sec-struktury-tabulky-vyber}
+
+Pro dva rozměry používáme zápis `tabulka[radky, sloupce]`. **Čárka odděluje řádky od sloupců.** Prázdné místo znamená zachovat všechny prvky daného rozměru:
+
+```{r}
+#| label: l04-vyber-tabulky
+ucastnici[1, 2]
+ucastnici[1:2, ]
+ucastnici[, c("id", "skore")]
+```
+
+První příkaz vrátí věk první osoby, tedy 21. Druhý vybere první dvě osoby se všemi sloupci. Třetí ponechá všechny osoby a jen identifikátor a skór. Názvy sloupců jsou odolnější vůči změně jejich pořadí než číselné pozice.
+
+Bez čárky se datová tabulka chová při výběru jako seznam sloupců:
+
+```{r}
+#| label: l04-vyber-sloupce
+ucastnici[c("id", "skore")]
+ucastnici["skore"]
+ucastnici[["skore"]]
+ucastnici$skore
+```
+
+První dva příkazy vracejí tabulku se dvěma, respektive jedním sloupcem. Poslední dva vytahují číselný vektor skórů. Takto získaný vektor můžeme předat například do `mean(ucastnici$skore, na.rm = TRUE)`; zároveň je třeba uvést počet dostupných skórů.
+
+U běžného `data.frame` pozor na zjednodušování při výběru s čárkou:
+
+```{r}
+#| label: l04-drop
+ucastnici[, "skore"]
+ucastnici[, "skore", drop = FALSE]
+```
+
+První příkaz vrací vektor, protože byl vybrán jediný sloupec. Argument `drop = FALSE` zjednodušení zakáže a zachová tabulku. To je důležité, když následující funkce očekává tabulku. Zápisy `ucastnici["skore"]` a `ucastnici[, "skore", drop = FALSE]` zde dávají stejný výsledek.
+
+### Podmínka pro výběr řádků a srovnání s dplyr
+
+Vyberme osoby starší 25 let a ponechme jejich identifikátor a skór. Nejprve si ověříme logický index:
+
+```{r}
+#| label: l04-podminka-tabulka
+ucastnici$vek > 25
+ucastnici[ucastnici$vek > 25, c("id", "skore")]
+```
+
+Vedle P02, P04 a P06 se objeví i řádek se samými `NA`. Ten vzniká z neznámého rozhodnutí u chybějícího věku P03. Nejde o nového účastníka ani o vyplnění chybějících údajů. Proto v základním R požadujeme známý věk:
+
+```{r}
+#| label: l04-vyber-base-dplyr
+starsi_base <- ucastnici[
+  !is.na(ucastnici$vek) & ucastnici$vek > 25,
+  c("id", "skore")
+]
+starsi_base
+
+starsi_dplyr <- ucastnici |>
+  filter(vek > 25) |>
+  select(id, skore)
+starsi_dplyr
+```
+
+Oba postupy nyní vybírají P02, P04 a P06 se skóry 18, 25 a 16. Liší se pouze jména řádků při levém okraji výpisu; identifikátory ve sloupci `id` i hodnoty zůstávají stejné. `filter()` neznámou podmínku vyřazuje automaticky. V hranatých závorkách píšeme `ucastnici$vek`, protože potřebujeme výslovně říci, odkud vektor bereme. Funkce dplyr pracují s názvy sloupců uvnitř zadané tabulky, a proto stačí `vek`.
+
+V obou postupech jsou důležité stejné otázky: koho vybíráme, co uděláme s chyběním a jaké sloupce potřebujeme. Znalost `[` vám pomůže číst základní R; pro delší řetězce úprav budeme dál používat přehledné funkce dplyr. [R4DS: výběr a jeho ekvivalenty v dplyr](https://r4ds.hadley.nz/base-R.html#dplyr-equivalents)
+
+### Cvičení 8: Dvě cesty ke stejné tabulce {.exercise}
+
+Z tabulky `ucastnici` vyberte osoby se známým skórem alespoň 16 a ponechte jen `id` a `skupina`. Vyřešte úkol pomocí `[` i dplyr. Které osoby ve výsledku budou? Jde o vlastní úlohu inspirovanou [R4DS: výběr z tabulek](https://r4ds.hadley.nz/base-R.html#subsetting-data-frames).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l04-reseni-tabulka
+vyber_base <- ucastnici[
+  !is.na(ucastnici$skore) & ucastnici$skore >= 16,
+  c("id", "skupina")
+]
+vyber_base
+
+vyber_dplyr <- ucastnici |>
+  filter(skore >= 16) |>
+  select(id, skupina)
+vyber_dplyr
+```
+
+Vybrané osoby jsou P02, P04 a P06; všechny patří do skupiny „trénink“. Podmínka `>= 16` zahrnuje také P06 se skórem přesně 16. P03 nemá známý skór, a proto ji mezi osoby splňující hranici nezařazujeme.
+:::
+
+### Nepovinně: funkce `subset()`
+
+V cizích skriptech můžete potkat další funkci základního R:
+
+```{r}
+#| label: l04-subset
+subset(ucastnici, subset = vek > 25, select = c(id, skore))
+```
+
+Argument `subset` určuje podmínku pro řádky, `select` sloupce. Zde nemusíme před názvy psát `ucastnici$`; funkce je vyhledává v tabulce. Neznámou podmínku považuje při výběru za nesplněnou, takže dostaneme stejné tři osoby jako výše. Jde o další platný zápis, který se nemusíte učit jako hlavní postup. [Dokumentace subset()](https://stat.ethz.ch/R-manual/R-devel/library/base/html/subset.html)
+
+## Tibble: datová tabulka používaná v tidyverse {#sec-struktury-tibble}
+
+**Tibble** je datová tabulka s upraveným chováním, kterou znáte například z výpisu `flights`. Není novým atomickým typem: je také seznamem sloupců a zároveň patří do třídy `data.frame`. Stávající tabulku převedeme pomocí `as_tibble()`:
+
+```{r}
+#| label: l04-tibble
+ucastnici_tbl <- as_tibble(ucastnici)
+ucastnici_tbl
+class(ucastnici_tbl)
+typeof(ucastnici_tbl)
+```
+
+Výpis začíná `A tibble: 6 × 5` a pod názvy ukazuje typy sloupců. Třídy jsou `tbl_df`, `tbl` a `data.frame`; vnitřní typ zůstává `list`. Převod nezměnil hodnoty, počet osob ani chybějící údaje.
+
+Tibble zachovává při běžném výběru pomocí `[` tabulku i pro jediný sloupec. Pro získání samotného vektoru používejte `[[` nebo `$`:
+
+```{r}
+#| label: l04-tibble-vyber
+ucastnici_tbl[, "skore"]
+ucastnici_tbl[["skore"]]
+```
+
+První výstup je jednosloupcová tibble, druhý číselný vektor. Právě tento rozdíl vysvětluje, proč stejný zápis s `[` může u `data.frame` a tibble vrátit jinou strukturu. Tibble navíc při výběru názvem nepoužívá částečnou shodu názvů. [Výběr z tibble](https://tibble.tidyverse.org/reference/subsetting.html)
+
+Novou tibble vytvoříme přímo funkcí `tibble()`. Stejně jako u `data.frame()` pojmenováváme sloupce a předáváme jejich hodnoty:
+
+```{r}
+#| label: l04-tibble-nova
+nova_mereni <- tibble(
+  id = c("P01", "P02", "P03"),
+  reakce_ms = c(420, 510, 380),
+  sezeni = 1
+)
+nova_mereni
+```
+
+Tři osoby mají tři reakční časy. Jediná hodnota `sezeni = 1` se zopakuje do všech tří řádků. Tibble při tvorbě opakuje pouze vstup délky 1; jiné neslučitelné délky odmítá. Následující příklad proto záměrně skončí chybou, přestože je 4 násobkem 2:
+
+```{r}
+#| label: l04-chyba-tibble
+#| error: true
+tibble(id = 1:4, skupina = c("A", "B"))
+```
+
+Hlášení o neslučitelných velikostech sloupců chrání před nechtěným opakováním skupin. Pokud skutečně chceme střídání A, B, A, B, napíšeme všechny čtyři hodnoty výslovně:
+
+```{r}
+#| label: l04-tibble-oprava
+tibble(id = 1:4, skupina = c("A", "B", "A", "B"))
+```
+
+Výsledná tabulka má čtyři řádky. Běžné `data.frame(id = 1:4, skupina = c("A", "B"))` by vzor automaticky zopakovalo; proto nelze z pravidel jedné funkce odvozovat chování všech ostatních. [Pravidla tibble](https://tibble.tidyverse.org/articles/invariants.html)
+
+### Cvičení 9: Vektor, nebo tabulka? {.exercise}
+
+Před spuštěním určete, co vrátí následující výběry: `ucastnici[, "vek"]`, `ucastnici["vek"]`, `ucastnici_tbl[, "vek"]` a `ucastnici_tbl$vek`. Které výsledky můžete přímo předat do `mean()`? Ověřte své odpovědi pomocí `str()`.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l04-reseni-tibble
+str(ucastnici[, "vek"])
+str(ucastnici["vek"])
+str(ucastnici_tbl[, "vek"])
+str(ucastnici_tbl$vek)
+mean(ucastnici_tbl$vek, na.rm = TRUE)
+sum(!is.na(ucastnici_tbl$vek))
+```
+
+První a čtvrtý výběr vracejí číselný vektor vhodný pro `mean()`. Druhý vrací jednosloupcový `data.frame`, třetí jednosloupcovou tibble. Průměr známých věků je 26,4 roku a vychází z pěti osob. Šestá osoba nemá známý věk, nikoli věk nula.
+:::
+
+### Nepovinně: zkrácený výpis velké tabulky
+
+Při větším počtu řádků tibble vypíše jen náhled. Ukážeme si to na náhodných číslech. Funkce `runif()` vytváří hodnoty z rovnoměrného rozdělení; zde jde pouze o technickou ukázku rozsáhlejší tabulky. `set.seed()` nastavuje výchozí stav generátoru pro opakovatelný příklad:
+
+```{r}
+#| label: l04-velka-tibble
+set.seed(104)
+velka_tabulka <- tibble(x = runif(10000))
+velka_tabulka
+nrow(velka_tabulka)
+```
+
+Tabulka má 10 000 řádků, i když je všechny nevidíme. Zkrácený výpis data nemaže. Pro kontrolu několika prvních řádků lze použít známé `slice_head(velka_tabulka, n = 5)` a pro přehled sloupců `glimpse(velka_tabulka)`.
+
+## Závěrečná úloha: připravte údaje k souhrnu {#sec-struktury-samostatne .exercise}
+
+Následující tabulka obsahuje osm **fiktivních** účastníků. Kód skupiny 1 znamená kontrolu, kód 2 trénink. Skór je záměrně uložen jako text. `dokonceno` uvádí, zda osoba dokončila úkol; neznámý stav není potvrzením dokončení. Vyšší skór zde označuje lepší výkon ve výukovém úkolu.
+
+```{r}
+#| label: l04-zadani-samostatne
+vstup <- tibble(
+  id = c("P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08"),
+  skupina_kod = c(1, 2, 1, 2, 1, 2, 1, 2),
+  skore_text = c("12", "18", NA, "25", "9", "16", "20", "14"),
+  dokonceno = c(TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, NA)
+)
+```
+
+1. Zkontrolujte strukturu. Vytvořte číselný sloupec `skore` a faktor `skupina` s popisky „kontrola“ a „trénink“ v tomto pořadí. Původní sloupce zachovejte pro kontrolu.
+2. Pro souhrn ponechte jen osoby s potvrzeným dokončením a známým skórem. Určete, kolik osob zůstalo a proč byly ostatní vynechány.
+3. Za každou skupinu vypočítejte počet zahrnutých osob a průměr skórů. Připomeňte si oddíl [-@sec-upravy-souhrny], pokud potřebujete.
+4. Mezi zahrnutými osobami spočítejte podíl skórů alespoň 18. Určete jmenovatel tohoto podílu.
+5. Uložte použitá data a souhrnnou tabulku do seznamu `vysledek` s položkami `data` a `souhrn`. Vytáhněte souhrnnou tabulku pomocí `[[`. Co by změnil výběr pomocí `[`?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Následující řešení je úplný skript: lze jej spustit i v nové relaci R.
+
+```{r}
+#| label: l04-reseni-samostatne
+library(tidyverse)
+
+# Ručně vytvořená výuková data, nikoli výzkumné výsledky.
+vstup <- tibble(
+  id = c("P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08"),
+  skupina_kod = c(1, 2, 1, 2, 1, 2, 1, 2),
+  skore_text = c("12", "18", NA, "25", "9", "16", "20", "14"),
+  dokonceno = c(TRUE, TRUE, FALSE, TRUE, TRUE, TRUE, TRUE, NA)
+)
+glimpse(vstup)
+
+pripravena_data <- vstup |>
+  mutate(
+    skore = as.numeric(skore_text),
+    skupina = factor(
+      skupina_kod,
+      levels = c(1, 2),
+      labels = c("kontrola", "trénink")
+    )
+  )
+glimpse(pripravena_data)
+sum(is.na(pripravena_data$skore_text))
+sum(is.na(pripravena_data$skore))
+
+pouzita_data <- pripravena_data |>
+  filter(dokonceno, !is.na(skore))
+pouzita_data |> select(id, skupina, skore)
+
+souhrn_skupin <- pouzita_data |>
+  group_by(skupina) |>
+  summarise(
+    pocet = n(),
+    prumer = mean(skore),
+    .groups = "drop"
+  )
+souhrn_skupin
+
+podil_alespon_18 <- mean(pouzita_data$skore >= 18)
+podil_alespon_18
+
+vysledek <- list(data = pouzita_data, souhrn = souhrn_skupin)
+vysledek[["souhrn"]]
+```
+
+Převod zachoval jednu chybějící hodnotu a nevytvořil novou. Faktor přiřadil popisky podle dokumentovaných kódů. `filter(dokonceno, !is.na(skore))` ponechá pouze `TRUE` v první podmínce a dostupný skór ve druhé; čárka znamená současné splnění obou podmínek.
+
+Zůstalo šest osob. P03 úkol nedokončila a nemá skór; P08 skór má, ale její dokončení není potvrzené. **Data P08 jsme nesmazali ze vstupu**: pouze ji nezahrnujeme do tohoto konkrétního souhrnu. V reálném výzkumu musí takové pravidlo vycházet z cíle analýzy a dokumentace dat, nikoli z toho, jak se po výběru změní výsledky.
+
+V každé skupině zůstaly tři osoby. Kontrola má průměr $41/3 \approx 13{,}67$ bodu, trénink $59/3 \approx 19{,}67$ bodu. Tibble ve výpisu tyto hodnoty zobrazuje zaokrouhlené na 13,7 a 19,7; uložené výsledky jsme nezaokrouhlovali. Rozdíl činí 6 bodů ve prospěch tréninku v těchto smyšlených datech. Samotný popis neprokazuje účinek tréninku; neznáme podmínky rozdělení do skupin ani nejistotu odhadu.
+
+Hranice alespoň 18 dosahují P02, P04 a P07: tři ze šesti zahrnutých osob, tedy `0.5` neboli 50 %. Jmenovatelem není všech osm původních záznamů. `vysledek[["souhrn"]]` vytahuje přímo souhrnnou tabulku; `vysledek["souhrn"]` by vracelo jednopoložkový seznam, který tuto tabulku obsahuje.
+:::
+
+## Časté potíže {#sec-struktury-potize}
+
+| Situace | Co zkontrolovat |
+|:---|:---|
+| Čísla nejdou zprůměrovat. | Zjistěte `typeof()` a `class()`. Text i faktor mohou vypadat jako čísla, ale vyžadují jiný postup. |
+| Převodem přibyla `NA`. | Prohlédněte původní hodnoty a porovnejte počty chybění před převodem a po něm. |
+| `as.numeric(faktor)` dává nečekaná čísla. | Vrací kódy úrovní. Pokud potřebujete číselné popisky, nejprve použijte `as.character()`. |
+| `length(tabulka)` neodpovídá počtu osob. | Délka tabulky je počet sloupců; řádky spočítá `nrow()`. |
+| Výběr vrací seznam místo čísel. | Rozlište `[` pro podmnožinu a `[[` nebo `$` pro obsah položky. |
+| Po výběru sloupce zmizela struktura tabulky. | U `data.frame` použijte `drop = FALSE`, výběr bez čárky nebo `select()`. |
+| Po filtrování přes `[` přibyly chybějící řádky. | Ošetřete `NA` v logickém indexu; `filter()` je při výběru automaticky vynechává. |
+| Výpočet vrací hodnoty, ale varuje o délce. | Zkontrolujte délky a párování; výsledek vznikl recyklací kratšího vektoru. |
+
+## Co si odnést {#sec-struktury-shrnuti}
+
+Atomický vektor má jeden společný typ; seznam může uchovávat různorodé objekty. Faktor přidává kategoriím úrovně a pravidla zacházení, nikoli automaticky číselný význam. Datová tabulka propojuje sloupce do řádků se společnou pozorovací jednotkou a tibble je její varianta používaná v tidyverse.
+
+Před převodem nebo výběrem si ověřte strukturu pomocí `typeof()`, `class()`, `str()` či `glimpse()` a rozměry pomocí `length()` nebo `dim()`. Potom zkontrolujte, zda výsledek zachoval zamýšlené hodnoty, osoby a význam proměnných. Tyto kontroly jsou součástí analýzy, nikoli pouze řešením chybových hlášení.
+
+## Zdroje a další procvičení {#sec-struktury-zdroje}
+
+Základním didaktickým zdrojem je *R for Data Science*, 2. vydání (Hadley Wickham, Mine Çetinkaya-Rundel a Garrett Grolemund): [Logical vectors](https://r4ds.hadley.nz/logicals.html), [Factors](https://r4ds.hadley.nz/factors.html) a [A field guide to base R](https://r4ds.hadley.nz/base-R.html). U označených cvičení jde o vlastní obměny nebo inspiraci příslušným oddílem, nikoli doslovné překlady zadání.
+
+Přesné chování funkcí popisují dokumentace R pro [číselné převody](https://stat.ethz.ch/R-manual/R-devel/library/base/html/numeric.html), [výběr prvků](https://stat.ethz.ch/R-manual/R-devel/library/base/html/Extract.html) a [výběr z data.frame](https://stat.ethz.ch/R-manual/R-devel/library/base/html/Extract.data.frame.html), dále [dokumentace tibble](https://tibble.tidyverse.org/articles/tibble.html). Pro tuto lekci stačí jejich úvodní příklady; přehled pokročilých výjimek není nutné memorovat.
