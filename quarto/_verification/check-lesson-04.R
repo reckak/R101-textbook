@@ -73,8 +73,12 @@ stopifnot(identical(po - pred, c(-3, 0, -5)),
           identical(1:10 + 1:2, c(2L, 4L, 4L, 6L, 6L, 8L, 8L, 10L, 10L, 12L)),
           identical(hodnoty[hodnoty > 5], c(10, NA, 8, NA)),
           identical(hodnoty[!is.na(hodnoty) & hodnoty > 5], c(10, 8)),
+          identical(pozice, c(1L, 5L)),
+          identical(hodnoty[pozice],
+                    dplyr::filter(tibble::tibble(x = hodnoty), x > 5)$x),
           identical(names(casy_ms[!is.na(casy_ms) & casy_ms > 400]), c("P01", "P03")),
           identical(skore_osob, skore_dalsi),
+          identical(skore_osob, skore_purrr),
           identical(skore_osob, purrr::set_names(c(12, 18, 9), c("P01", "P02", "P03"))))
 stopifnot(is.factor(narocnost), !is.ordered(narocnost), is.ordered(narocnost_ord),
           identical(as.character(narocnost), narocnost_text),
@@ -83,6 +87,14 @@ stopifnot(is.factor(narocnost), !is.ordered(narocnost), is.ordered(narocnost_ord
           sum(is.na(neuplne_kategorie)) == 1L,
           identical(as.numeric(faktor_cisla), c(1, 2, 1)),
           identical(as.numeric(as.character(faktor_cisla)), c(10, 20, 10)))
+stopifnot(identical(as.character(narocnost_obracene), as.character(narocnost)),
+          identical(levels(narocnost_obracene), rev(levels(narocnost))),
+          identical(as.integer(narocnost_obracene), c(3L, 1L, 1L, 2L, 3L, 3L, 2L)),
+          identical(as.character(skupiny_obracene), as.character(skupiny)),
+          identical(levels(skupiny_obracene), rev(levels(skupiny))),
+          identical(popisky_cisla, c("10", "20", "10")),
+          identical(as.integer(popisky_cisla), c(10L, 20L, 10L)),
+          identical(as.double(popisky_cisla), c(10, 20, 10)))
 plot_data <- ggplot_build(graf_narocnosti)$data[[1]]
 stopifnot(identical(as.numeric(plot_data$count), c(3, 2, 2)),
           identical(graf_narocnosti$data$narocnost, narocnost))
