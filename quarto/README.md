@@ -1,5 +1,21 @@
 # Autorská dokumentace učebnice R101
 
+## Výběry, faktory, seznamy a výpis tabulek v kapitole 4, 4. 10. 2026
+
+Další redakce kapitoly navazuje na místní uživatelské změny, které zůstávají zachovány. Původní `scripts/week_04.R` se nemění.
+
+- **Indexování a pojmenování:** výklad označuje index jako další vektor a rozlišuje číselné pozice, logické podmínky a textová jména. U číselných indexů připouští zápis celých čísel typu `double`. `which()` má spustitelnou ukázku pozic 1 a 5 a výběru hodnot 10 a 8, včetně rozdílu oproti přímému logickému indexování a shody s `filter()` při vynechání neznámého výsledku podmínky. `purrr::set_names()` je samostatná spustitelná alternativa se stejným výsledkem jako `names()`.
+- **Logické podmínky:** zachováno vysvětlení `FALSE & NA`, odstraněno jeho opakování a propojen vznik logického indexu s porovnáním původního vektoru. Výslovný srovnávací index má nyní sedm prvků místo šesti; druhý zápis tak již sám nevyužívá recyklaci. Oba výběry dávají stejné hodnoty včetně `NA`.
+- **Faktory:** doplněno, proč obvykle popisujeme četnosti kategorií místo průměru interních kódů. Nepovinná poznámka odlišuje věcné pořadí kategorií od volby `ordered` a výchozího regresního kódování: běžný faktor používá treatment/dummy kontrasty, uspořádaný polynomické. Nejde o obecný zákaz uspořádaných faktorů; nastavení kontrastů lze změnit. Výchozí argument `ordered = FALSE` je vztažen k vytváření z textu, protože `factor()` může u již uspořádaného vstupu zachovat jeho třídu.
+- **Pořadí a popisky:** dvě nové ukázky obracejí pořadí pomocí argumentu `levels`, případně společně s `labels`. Kontroluje se zachování odpovědí osob a změna interních kódů. Výklad upozorňuje, že přímé přiřazení do `levels()` přejmenovává úrovně a může zaměnit jejich význam. Převod číselných popisků nyní výslovně ukazuje mezikrok `as.character()`, jeho výstup a následné `as.integer()` i `as.double()`.
+- **Seznamy a průměr:** přidáno přirovnání vytažení obsahu jedné položky přes `[[`/`$` a zachování seznamu přes `[`. Výběr nemaže položky z původního objektu; zachována je nepovinná poznámka k rekurzivnímu indexu. V řešení cvičení 7 je vysvětlen vstup pro `mean()`, automatický převod logických hodnot i nutnost výslovného převodu textových čísel. Funkce není popsána jako omezená pouze na číselné vektory, protože má také metody pro jiné třídy.
+- **Tabulky a konzole:** `data.frame` je vysvětlen jako seznam sloupců se společným počtem řádků, u běžných vektorových sloupců tedy se stejnou délkou. Výklad připouští i složitější sloupce. U tibble přidána spustitelná ukázka `print(..., n = 20)` a vysvětlení rozdílu mezi omezením výpisu a výběrem dat.
+- **Další opravy:** v interpretaci průměru věku identifikována osoba P03 místo chybného označení šesté osoby; příčina chybění není domýšlena. `filter()` vyřazuje řádky podle chybějícího výsledku podmínky, nikoli automaticky podle libovolného chybění. V poznámce k vnořenému seznamu opraven název položky `nazev`; opraven také pád ve spojení „kvůli chybějícímu věku“ a popis nově vzniklých řádků vyplněných `NA` v přehledu potíží.
+
+Odborná kontrola vychází z oficiální dokumentace `which()`, `factor()`, `mean()`, kontrastů, `data.frame()` a výpisu tibble. Samostatné ověření v čistém R potvrdilo výchozí `contr.treatment`/`contr.poly` i to, že `mean()` číselné texty a seznam automaticky nerozbalí ani nepřevede. Nové porovnávací kontroly v `check-lesson-04.R` ověřují zachování hodnot po změně pořadí faktorů, převod popisků, shodu pojmenování a shodu výběru přes `which()` s `filter()`.
+
+Ověření: prošel render celé knihy, samostatná kontrola kapitoly 4 i projektová kontrola R včetně všech vzorových řešení. HTML kontrola prošla pro všechny čtyři kapitoly. V kapitole 4 ověřila deset zpočátku skrytých a rozbalitelných řešení, skutečné kopírování všech 185 vykreslených úseků kódu, jeden načtený graf a 387 místních cílů odkazů. Mobilní šířka 390 px nepřetéká, bez chyb JavaScriptu. Nové příklady a pasáže byly vizuálně prohlédnuty ve vykresleném HTML. Kontrola rozdílů prošla. R 4.5.1 upozorňuje na některé balíčky sestavené pod R 4.5.3; kontroly však uspěly. Veřejné nasazení tato kontrola nepotvrzuje.
+
 ## Upřesnění typů a recyklace v kapitole 4, 4. 10. 2026
 
 Na uživatelovu průběžnou redakci kapitoly navazují tato doplnění:
