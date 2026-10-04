@@ -1,0 +1,99 @@
+::Společný typ vektoru::Vytvoříte objekt hodnoty příkazem hodnoty <- c(12, 18, "neuvedeno"). Jaký typ bude mít tento atomický vektor?
+ :r1 První dva prvky zůstanou číselné a třetí bude textový.
+ :r2 Všechny prvky budou textové, tedy typu character.
+ :r3 Všechny prvky budou číselné a text se automaticky nahradí nulou.
+ :r4 Vektor nevznikne, protože funkce c() neumí spojit číslo s textem.
+:r1 0 Atomický vektor má jeden společný typ. R v tomto případě převede na text i původně číselné hodnoty.
+:r2 ok Přítomnost textu vede ke společnému typu character. Výsledkem jsou textové hodnoty "12", "18" a "neuvedeno". Typ ověříme pomocí typeof(hodnoty).
+:r3 0 Text se při spojení pomocí c() nenahrazuje nulou. Naopak se všechny hodnoty převedou na text.
+:r4 0 Funkce c() toto spojení umožní a vybere společný typ. Pro uchování samostatných objektů různých typů bychom mohli použít seznam.
+--
+::Převod textu na čísla::Vektor skore_text obsahuje fiktivní skóry zapsané jako c("12", "neuvedeno", "18"). Co vrátí as.numeric(skore_text)?
+ :r1 Číselné hodnoty 12, 0 a 18 bez varování.
+ :r2 Pouze číselné hodnoty 12 a 18; prostřední prvek se odstraní.
+ :r3 Původní textové hodnoty beze změny typu.
+ :r4 Číselné hodnoty 12, NA a 18 a varování o vzniku chybějící hodnoty.
+:r1 0 Nepřevoditelný text se nemění na nulu. Nula by byla konkrétní naměřená hodnota, zatímco NA označuje chybění.
+:r2 0 Převod zachová délku i pořadí vektoru. Na místě nepřevoditelného textu vznikne NA.
+:r3 0 Funkce as.numeric() vrací číselný vektor. Původní objekt skore_text ale zůstane textový, pokud mu výsledek nepřiřadíme.
+:r4 ok Text "neuvedeno" nelze převést na číslo, proto vznikne NA a varování. Po převodu je třeba zkontrolovat, které hodnoty se nepodařilo převést a proč.
+--
+::Porovnávání vypočtených čísel::Dvě vypočtené hodnoty typu double vypadají v běžném výpisu stejně, ale porovnání pomocí == vrací FALSE. Proč může být vhodné použít funkci near() z dplyr?
+ :r1 Porovnává čísla s tolerancí, a může tak zohlednit drobné odchylky způsobené omezenou přesností výpočtu.
+ :r2 Převede obě čísla na text a porovná jen jejich vytištěnou podobu.
+ :r3 Zaokrouhlí obě čísla na celá čísla a přepíše původní objekty.
+ :r4 Nahradí případné chybějící hodnoty nulami před přesným porovnáním.
+:r1 ok Čísla typu double mají konečnou přesnost a běžný výpis může malé rozdíly skrýt. Near() porovnává hodnoty s tolerancí, místo aby vyžadovala přesnou rovnost.
+:r2 0 Near() porovnává číselné hodnoty. Shodný zaokrouhlený výpis sám o sobě přesnou rovnost nezaručuje.
+:r3 0 Near() vrací výsledek porovnání. Nezaokrouhluje vstupy na celá čísla ani nepřepisuje původní objekty.
+:r4 0 Near() chybějící hodnoty nulami nenahrazuje. Slouží k porovnání blízkosti čísel, nikoli k doplňování dat.
+--
+::Výpočet po prvcích a recyklace::Fiktivní reakční časy v sekundách jsou uložené jako casy_s <- c(0.4, 0.5, 0.6). Co vrátí příkaz casy_s * 1000?
+ :r1 Jediné číslo 1500, tedy součet všech časů v milisekundách.
+ :r2 Vektor se 1000 kopiemi každého původního času.
+ :r3 Vektor 400, 500 a 600, tedy jednotlivé časy v milisekundách.
+ :r4 Chybu, protože vektor délky 3 nelze násobit jediným číslem.
+:r1 0 Násobení se provádí pro každý prvek zvlášť. Součet by bylo potřeba vypočítat samostatně pomocí sum().
+:r2 0 Číslo 1000 je násobitel, nikoli počet kopií výsledku. Délka výsledného vektoru zůstane 3.
+:r3 ok Jediná hodnota 1000 se použije pro každý prvek; jde o recyklaci vektoru délky 1. Výsledek převádí sekundy na milisekundy a bez přiřazení nemění původní casy_s.
+:r4 0 Recyklace jediné hodnoty je při běžných matematických operacích v R povolená. Zde se všechny tři časy násobí stejným číslem.
+--
+::Výběr podle pozice::Máte fiktivní skóry skore <- c(12, 18, 9, 25). Co vrátí skore[c(3, 1)]?
+ :r1 Hodnoty 12 a 9 v původním pořadí vektoru.
+ :r2 Hodnoty 9 a 12 v pořadí zadaných indexů.
+ :r3 Hodnoty 18 a 25, protože uvedené pozice se vynechají.
+ :r4 Hodnoty 12, 18 a 9, tedy všechny prvky od první do třetí pozice.
+:r1 0 Při výběru kladnými pozicemi určuje pořadí výsledku index. Nejdříve je uvedena třetí pozice a potom první.
+:r2 ok Pozice v R začínají od 1. Třetí prvek je 9 a první 12, takže výsledek je 9, 12. Záporné indexy by naopak označovaly pozice k vynechání.
+:r3 0 Vynechání první a třetí pozice by zajistil zápis skore[-c(3, 1)]. V zadání jsou indexy kladné, takže se tyto pozice vybírají.
+:r4 0 Vektor c(3, 1) obsahuje jen dvě konkrétní pozice. Souvislý rozsah první až třetí pozice by se zapsal 1:3.
+--
+::Logické hodnoty a podíl dokončení::Ve fiktivním souboru pěti účastníků je dokonceno <- c(TRUE, TRUE, FALSE, NA, TRUE). Jak interpretujete mean(dokonceno, na.rm = TRUE)?
+ :r1 Výsledek 0.6 znamená, že úkol dokončilo 60 % všech pěti osob, a chybějící stav byl zahrnut jako FALSE.
+ :r2 Výsledek 3 znamená, že úkol dokončily tři osoby.
+ :r3 Výsledek NA znamená, že kvůli jedné chybějící hodnotě nelze spočítat ani podíl mezi osobami se známým stavem.
+ :r4 Výsledek 0.75 znamená, že úkol dokončilo 75 % ze čtyř osob se známým stavem.
+:r1 0 Na.rm = TRUE chybějící stav při výpočtu vynechá, nenahrazuje jej hodnotou FALSE. Jmenovatelem jsou čtyři známé stavy.
+:r2 0 Počet tří dokončení by vrátilo sum(dokonceno, na.rm = TRUE). Mean() jej dělí počtem dostupných hodnot a vrací podíl.
+:r3 0 Díky na.rm = TRUE se průměr spočítá z dostupných hodnot. Bez tohoto nastavení by výsledkem skutečně bylo NA.
+:r4 ok TRUE se při výpočtu počítá jako 1 a FALSE jako 0. Tři dokončení ze čtyř známých stavů dávají 0.75. O stavu zbývající osoby tento výsledek nic nedoplňuje.
+--
+::Faktor a pořadí úrovní::Z fiktivních odpovědí c("vysoká", "nízká", "střední") vytvoříte faktor s levels = c("nízká", "střední", "vysoká"). Co nastavení levels udělá?
+ :r1 Nastaví přípustné kategorie a jejich pořadí, ale pořadí odpovědí jednotlivých osob zachová.
+ :r2 Přesune první osobu na konec, aby odpovědi byly seřazené od nízké po vysokou.
+ :r3 Převede odpovědi na naměřené hodnoty 1, 2 a 3 se stejnými vzdálenostmi mezi kategoriemi.
+ :r4 Automaticky vytvoří uspořádaný faktor třídy ordered.
+:r1 ok Levels určuje úrovně a jejich pořadí například pro osu grafu. První odpověď nadále zůstává "vysoká"; mění se reprezentace kategorií, nikoli pořadí osob.
+:r2 0 Pořadí úrovní není pořadím pozorování. Pro přeskládání osob by byl potřeba další krok řazení.
+:r3 0 Interní celočíselné kódy faktoru pouze odkazují na úrovně. Samy neznamenají naměřená čísla ani stejné vzdálenosti mezi kategoriemi.
+:r4 0 Samotné levels třídu ordered nepřidává. Ta vznikne až při výslovném nastavení ordered = TRUE.
+--
+::Seznam a obsah položky::Fiktivní záznam je zaznam <- list(id = "P01", skore = c(10, 14, 12)). Jaký je rozdíl mezi zaznam["skore"] a zaznam[["skore"]]?
+ :r1 Oba zápisy vracejí jednopoložkový seznam.
+ :r2 První zápis vrací číslo 10 a druhý číslo 14.
+ :r3 První zápis vrací jednopoložkový seznam, druhý číselný vektor 10, 14, 12.
+ :r4 První zápis položku vybere, zatímco druhý ji ze zaznam trvale odstraní.
+:r1 0 Jednoduché závorky zachovají seznam. Dvojité závorky vytáhnou přímo obsah jedné položky, zde číselný vektor.
+:r2 0 Oba zápisy vybírají položku pojmenovanou skore, nikoli různá měření uvnitř ní. Druhý skór bychom získali například jako zaznam$skore[2].
+:r3 ok Jednoduché závorky zachovávají obal seznamu, dvojité vracejí uložený objekt. Zde stejný číselný vektor poskytne i zaznam$skore a lze z něj spočítat průměr 12.
+:r4 0 Ani jeden způsob výběru původní seznam nemění. Dvojité závorky pouze vracejí obsah položky.
+--
+::Řádky a sloupce datové tabulky::Objekt ucastnici je běžný data.frame se šesti řádky osob a třemi sloupci id, vek a skore. Co vybere ucastnici[1:2, c("id", "skore")]?
+ :r1 Všechny osoby a první dva sloupce id a vek.
+ :r2 První dvě osoby a pouze sloupce id a skore.
+ :r3 První a druhou hodnotu z každého ze tří sloupců jako jediný číselný vektor.
+ :r4 Všechny osoby, jejichž skór je 1 nebo 2.
+:r1 0 Před čárkou vybíráme řádky, za čárkou sloupce. Zápis 1:2 tedy omezuje osoby, nikoli proměnné.
+:r2 ok Čárka odděluje výběr řádků a sloupců. Výsledkem je tabulka se dvěma řádky a dvěma sloupci. Funkce nrow() počítá řádky, zatímco length() u datové tabulky počítá sloupce.
+:r3 0 Výběr více sloupců zde zachová datovou tabulku. Identifikátor a skór zůstanou v samostatných sloupcích se svými typy.
+:r4 0 Čísla 1 a 2 zde označují pozice řádků. Nejde o podmínku na hodnoty skóru.
+--
+::Výběr sloupce z tibble::Objekt mereni_tbl je tibble se třemi řádky a číselným sloupcem skore. Co při běžném výchozím nastavení vrátí mereni_tbl[, "skore"]?
+ :r1 Samotný číselný vektor skórů.
+ :r2 Jediné číslo, průměr tří skórů.
+ :r3 Chybu, protože tibble neumožňuje výběr hranatými závorkami.
+ :r4 Tibble se třemi řádky a jediným sloupcem skore.
+:r1 0 Tibble při tomto výběru zachovává tabulku. Samotný vektor bychom získali pomocí mereni_tbl[["skore"]] nebo mereni_tbl$skore.
+:r2 0 Výběr sloupce žádný průměr nepočítá. Pro průměr bychom předali vytažený číselný vektor funkci mean().
+:r3 0 Tibble výběr hranatými závorkami podporuje. Její chování se ale při výběru jediného sloupce liší od běžného data.frame.
+:r4 ok Tibble zachovává při běžném výběru pomocí [ strukturu tabulky i pro jeden sloupec. Běžný data.frame by se při stejném zápisu s čárkou zjednodušil na vektor; tomu lze zabránit argumentem drop = FALSE.
