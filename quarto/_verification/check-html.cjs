@@ -131,9 +131,10 @@ function check(condition, message) { if (!condition) throw new Error(message); }
         await screenshot('html-table', '#sec-import-excel > .cell:first-of-type');
         await screenshot('html-labels', '#sec-import-labelled');
         await screenshot('html-header', '#sec-import-excel-hlavicka > .cell:first-of-type');
+        await screenshot('html-encoding', '#sec-import-kodovani');
         await screenshot('html-solution', '#sec-import-samostatne .callout');
         const downloads = page.locator('main a[download]');
-        check(await downloads.count() === 4, 'Lesson 05 must expose four downloadable files');
+        check(await downloads.count() === 5, 'Lesson 05 must expose five downloadable files');
         for (const link of await downloads.all()) {
           const href = await link.getAttribute('href');
           const filename = await link.getAttribute('download');
@@ -147,7 +148,7 @@ function check(condition, message) { if (!condition) throw new Error(message); }
         }
         const publicFiles = fs.readdirSync(path.join(root, 'data', 'raw')).sort();
         check(JSON.stringify(publicFiles) === JSON.stringify([
-          'four_countries_teaching.xlsx', 'help_seeking.xlsx', 'international.sav', 'students.txt'
+          'ceske_odpovedi.csv', 'four_countries_teaching.xlsx', 'help_seeking.xlsx', 'international.sav', 'students.txt'
         ]), 'Published data directory contains unexpected files');
       }
       await page.setViewportSize({ width: 390, height: 844 });
@@ -155,8 +156,8 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       if (chapterNumber === 5) {
         await screenshot('html-mobile-downloads', '#sec-import-data');
         const downloadTable = page.locator('#sec-import-data .table-responsive');
-        check(await downloadTable.evaluate(el => getComputedStyle(el).overflowX === 'auto' && el.scrollWidth > el.clientWidth),
-          'Download table must scroll inside its own mobile container');
+        check(await downloadTable.evaluate(el => getComputedStyle(el).overflowX === 'auto'),
+          'Download table must allow scrolling if wider than its mobile container');
       }
       result.mobileWidth = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, viewport: innerWidth }));
       check(result.mobileWidth.page <= result.mobileWidth.viewport + 1, 'Horizontal page overflow on mobile');

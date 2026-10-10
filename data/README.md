@@ -2,11 +2,13 @@
 
 Veřejné vstupy lekce jsou výslovně vyjmenované v `_quarto.yml`. Kopírují se do
 `_book/data/raw/`, odkud je lze stáhnout i bez přístupu do IS MUNI. Kapitola
-navíc uvádí přímé adresy GitHubu s pevnou revizí. Render používá místní soubory
+v online ukázkách navíc používá přímé adresy GitHubu s pevnou revizí. Tabulka
+ke stažení uvádí jeden odkaz pro každý soubor. Render používá místní soubory
 a nestahuje data ze sítě.
 
 | Soubor | Původ a použití |
 | --- | --- |
+| `raw/ceske_odpovedi.csv` | Šest fiktivních českých odpovědí vytvořených pro výuku kódování textu. Soubor je uložen v Windows-1250, nikoli UTF-8; tento rozdíl je záměrný. Generátor je `scripts/prepare_lesson_05_encoding.R`. `.gitattributes` zachovává přesné bajty souboru. |
 | `raw/students.txt` | Výukový příklad z [R4DS 2e, Data import](https://r4ds.hadley.nz/data-import.html). Dodaná kopie zachována včetně původních konců řádků; soubor je CSV navzdory příponě TXT. |
 | `raw/international.sav` | Dodaný kurzový soubor, 20 zemí a 7 proměnných. Slouží pouze k ukázce importu a metadat SPSS. Primární zdroj a období ukazatelů nebyly dodány; neprezentovat jako aktuální statistiku. |
 | `raw/help_seeking.xlsx` | Podle vyučujícího data z malého studentského seminárního projektu. 172 pozorování, 34 proměnných, listy `data` a `codebook`. Nesimulovaná data; metodika výběru nebyla dodána. Původní soubor se neupravuje. |

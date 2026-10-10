@@ -33,7 +33,27 @@ for (chunk in chunks) {
   } else if (length(relevant)) {
     stop("Unexpected warning in ", chunk$label, ": ", paste(relevant, collapse = "; "))
   }
+  if (chunk$label == "l05-nazvy-rucne") {
+    stopifnot(identical(names(students), names(students_raw)))
+    manual <- students |> rename(student_id = `Student ID`, full_name = `Full Name`,
+                                  favourite_food = favourite.food, meal_plan = mealPlan, age = AGE)
+    stopifnot(identical(manual, janitor::clean_names(students)))
+  }
+  if (chunk$label == "l05-hs-shoda-pred") {
+    stopifnot(setequal(names(hs), codebook$name), "finantial_situation" %in% names(hs))
+  }
+  if (chunk$label == "l05-hs-nazvy") {
+    stopifnot(identical(setdiff(names(hs), codebook$name), "financial_situation"),
+              identical(setdiff(codebook$name, names(hs)), "finantial_situation"))
+  }
 }
+
+# The fixture must demonstrate a real decoding error, then preserve correct Czech and IDs.
+stopifnot(identical(dim(odpovedi), c(6L, 2L)),
+          identical(odpovedi$id, sprintf("%03d", 1:6)),
+          identical(odpovedi$odpoved[1], "Při zkoušce se často cítím napjatě."),
+          all(validUTF8(odpovedi$odpoved)), !all(validUTF8(odpovedi_chybne$odpoved)),
+          "windows-1250" %in% tolower(odhad_kodovani$encoding))
 
 # Original input remains available and the cleaning conserves rows and values.
 stopifnot(identical(dim(students), c(6L, 5L)),
