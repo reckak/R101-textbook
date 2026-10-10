@@ -1,5 +1,31 @@
 # Autorská dokumentace učebnice R101
 
+## Chybějící kódy ve výpočtech a datum z Excelu, 10. 10. 2026
+
+- Doplněno skutečně spuštěné porovnání `mean(..., na.rm = TRUE)` pro
+  `haven_labelled_spss` s hodnotami 1, 2, 9, NA a pro vektor po
+  `user_na_to_na()`. Výsledky 4 a 1,5 dokládají zahrnutí kódu 9 před
+  převodem; `is.na()` přitom respektuje jeho definici jako chybějícího.
+  Jde o demonstraci výpočtu, nikoli věcnou interpretaci průměru Ne/Ano.
+- Rozšířen výklad sériového čísla dne v Excelu a rozdílu mezi číselnou
+  reprezentací a formátem buňky. Ukázka nyní vypisuje původní čísla,
+  převedená data i třídu `Date`. Vysvětluje, proč se mohou načíst čísla,
+  potřebu ověřit jejich význam, systém 1900/1904 i ztrátu času při převodu.
+- Začleněna uživatelská redakce navazujících oddílů o faktorech, popiscích,
+  hlavičkách, ukládání a závěrečné úloze. Opraveny drobné gramatické chyby,
+  mezery kolem inline kódu a koncové mezery. Výrok o reprodukovatelnosti
+  uloženého prostředí upřesněn: uložené objekty samy nedokládají postup
+  přípravy a nenahrazují skript. Původní `week_05.R` zůstává beze změny.
+
+Ověření této redakce: prošel render upravené kapitoly a její kontrola
+v čistém R včetně všech řešení a nových kontrol průměrů a kalendářních dat.
+Kontrola HTML všech pěti kapitol skončila bez chyb; v páté kapitole ověřila
+9 sbalených řešení, kopírování všech 101 bloků kódu, 391 místních odkazů
+a mobilní šířku 390 px bez přetékání. Nové výstupy a jejich okolní výklad
+byly zkontrolovány také vizuálně. Při spuštění se objevila pouze očekávaná
+varování o sestavení některých balíčků v novější verzi R a záměrná ukázka
+varování při parsování. Celá kniha se při této dílčí redakci znovu nerenderovala.
+
 ## Redakce páté kapitoly podle připomínek, 10. 10. 2026
 
 - Zachována a začleněna místní uživatelská redakce lekce. Opraveny drobné

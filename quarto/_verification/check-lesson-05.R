@@ -83,6 +83,8 @@ stopifnot(identical(dim(hs), c(172L, 34L)),
           identical(as.numeric(hs$help_01), as.numeric(help_01_cisla)),
           identical(as.numeric(hs_cv$vek), as.numeric(hs$age)),
           identical(is.na(odpoved_na), c(FALSE, FALSE, TRUE, TRUE)),
+          identical(as.numeric(mean(odpoved_spss, na.rm = TRUE)), 4),
+          identical(as.numeric(mean(odpoved_na, na.rm = TRUE)), 1.5),
           identical(is.na(x), c(FALSE, FALSE, TRUE)))
 # Across matches the explicit one-column conversions, including NA positions.
 for (name in c("partner", "college_title", "college_student")) {
@@ -101,6 +103,8 @@ stopifnot(identical(dim(four), c(1084L, 21L)), nrow(four_wrong) == 1085L,
           length(four_names) == length(four_labels), nrow(four_dictionary) == 21L,
           identical(as.integer(table(four$country)), c(361L, 258L, 216L, 249L)),
           identical(as.character(excel_numeric_to_date(c(45345, 45346))), c("2024-02-23", "2024-02-24")),
+          inherits(kalendarni_data, "Date"),
+          identical(as.character(kalendarni_data), c("2024-02-23", "2024-02-24")),
           identical(hs, hs_znovu), is.character(hs_z_csv$gender),
           is.null(val_labels(hs_z_csv$help_01)),
           identical(sort(obnovena_jmena), c("international", "students")),
