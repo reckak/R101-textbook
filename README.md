@@ -66,4 +66,12 @@ Pro sestavení se používá R 4.5.1 a Quarto 1.9.38. Seznam R balíčků v krok
 
 Po prvním nasazení zkontrolujte také veřejnou adresu, přechody mezi kapitolami a načítání obrázků. Lokální kontrola HTML sama neověřuje nastavení GitHub Pages ani chování pod veřejnou cestou `/R101-textbook/`.
 
+Akce `checkout@v7`, `setup-node@v7`, `configure-pages@v6` a `deploy-pages@v5`
+používají vlastní běhové prostředí Node.js 24. `upload-pages-artifact@v5`
+volá `upload-artifact@v7`, rovněž s Node.js 24. Toto prostředí je nezávislé
+na `node-version: '22'`, které určuje Node.js pro projektovou kontrolu HTML.
+Při varování o zastaralém Node.js u akce aktualizujte příslušnou akci
+(u vnořených akcí také její nadřazenou akci); samotná změna `node-version`
+takové varování neřeší. Viz [oznámení GitHubu o přechodu na Node.js 24](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/).
+
 Dokumentace: [GitHub Pages a vlastní workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), [Quarto v GitHub Actions](https://github.com/quarto-dev/quarto-actions).
