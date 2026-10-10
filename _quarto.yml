@@ -4,6 +4,7 @@ project:
   execute-dir: project
   resources:
     - data/raw/students.txt
+    - data/raw/ceske_odpovedi.csv
     - data/raw/international.sav
     - data/raw/help_seeking.xlsx
     - data/raw/four_countries_teaching.xlsx

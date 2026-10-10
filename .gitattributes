@@ -1,2 +1,4 @@
 # Preserve the supplied teaching file byte-for-byte, including original line endings.
 data/raw/students.txt -text
+# Deliberate Windows-1250 fixture for the encoding lesson.
+data/raw/ceske_odpovedi.csv -text whitespace=trailing-space,space-before-tab,cr-at-eol

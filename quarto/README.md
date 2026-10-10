@@ -1,5 +1,49 @@
 # Autorská dokumentace učebnice R101
 
+## Redakce páté kapitoly podle připomínek, 10. 10. 2026
+
+- Zachována a začleněna místní uživatelská redakce lekce. Opraveny drobné
+  překlepy v zadáních a výkladu (cesta, údaj, věk a jídlo, výsledný sloupec,
+  Asie) a neúplná věta o opětovném importu. Původní `week_05.R` se nemění.
+- Tabulka ke stažení má jeden odkaz pro každý vstup; GitHub URL zůstávají
+  v online příkladech. Nový pátý vstup `ceske_odpovedi.csv` je čistě fiktivní
+  výuková ukázka v Windows-1250, vytvořená samostatným reprodukovatelným
+  skriptem. Zařazen výslovně mezi publikované zdroje a kontrolované downloady.
+- Online ukázky používají `stringr::str_c()` místo `paste0()`. Vysvětlen
+  binární zápis `wb`, zachování bajtů, úprava konců řádků ve Windows
+  a možné poškození binárního souboru při textovém zápisu. Upřesněn dosah
+  `showWarnings` u `dir.create()`. Doplněn význam zkratek CSV a TSV.
+- Standardizaci názvů předchází ruční `rename()` bez přiřazení, následované
+  kontrolou nezměněného objektu; pak `clean_names()` a kombinace obou funkcí.
+  Rozveden význam každého argumentu `if_else()`, volba pro každou pozici,
+  zachování původních hodnot a chování při `NA`.
+- Nový oddíl ukazuje skutečně nesprávný výchozí import češtiny, odhad
+  `guess_encoding()` a opětovný import s doloženým kódováním. Odhad není
+  vydáván za jistotu a jeho confidence není interpretována jako přesnost.
+- Rozšířen rozdíl `as.factor()` a funkcí pro metadata haven; ponechání
+  číselných kódů ordinálních položek je vysvětleno ve vztahu k pravidlům
+  skórování, nikoli jako automatické oprávnění k průměrování.
+- Doplněn záměr seminárního projektu a význam předpon `help_` a `emo_`;
+  sjednoceno označení emoční otevřenosti podle upřesnění vyučujícího.
+- `setdiff()` je předvedeno před opravou, po změně pouze dat a po opravě
+  slovníku. Původní názvy se shodují včetně překlepu, takže první kontrola
+  správně nic nehlásí. Průběžná kontrola dokládá oba rozdíly po přejmenování.
+
+Ověření této redakce: prošel render celé knihy, projektová kontrola R
+v čistých relacích i síťové ukázky se `str_c()`. Rozšířená kontrola potvrzuje
+shodu ruční a automatické standardizace názvů, zachování objektu bez
+přiřazení, oba rozdíly po přejmenování jen dat a správný i chybný import
+fiktivního souboru. Odhad jeho kódování v ověřeném prostředí uvedl
+Windows-1250 s confidence 0,53; výklad na této číselné hodnotě nezávisí.
+HTML kontrola prošla pro všech pět kapitol: u páté 9 sbalených řešení,
+97 skutečně zkopírovaných úseků kódu, 383 místních cílů odkazů a všech
+5 stažení včetně bajtové shody s originály. Bez chyb JavaScriptu a bez
+přetékání stránky při 390 px. Nové výstupy a mobilní tabulka byly
+vizuálně prohlédnuty. Kontrola rozdílů prošla. Upozornění na balíčky
+sestavené pod novějším R a záměrné varování parseru zůstávají stejné
+jako v předchozím ověření. Nasazení nové redakce na veřejný web není
+součástí lokálních kontrol.
+
 ## Pátá kapitola: import a základní příprava dat, 10. 10. 2026
 
 Podkladem je `scripts/week_05.R`, zachovaný beze změny (SHA-256
