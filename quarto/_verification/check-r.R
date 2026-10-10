@@ -127,3 +127,10 @@ status_l04 <- system2(
   c("--vanilla", "quarto/_verification/check-lesson-04.R")
 )
 stopifnot(status_l04 == 0L)
+
+# Execute lesson 05 independently, including import diagnostics and metadata round trips.
+status_l05 <- system2(
+  file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript"),
+  c("--vanilla", "quarto/_verification/check-lesson-05.R")
+)
+stopifnot(status_l05 == 0L)

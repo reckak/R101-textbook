@@ -34,9 +34,9 @@ function check(condition, message) { if (!condition) throw new Error(message); }
     const homeLink = page.locator('#quarto-sidebar a.sidebar-link').first();
     check(['/', '/index.html'].includes(new URL(await homeLink.getAttribute('href'), page.url()).pathname), 'Home navigation missing');
     check((await page.locator('h1 .chapter-number').innerText()).trim() === '1', 'First lesson must be chapter 1');
-    for (const chapterNumber of [1, 2, 3, 4]) {
+    for (const chapterNumber of [1, 2, 3, 4, 5]) {
       await page.setViewportSize({ width: 1440, height: 1000 });
-      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat', 4: 'Vektory, faktory' };
+      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat', 4: 'Vektory, faktory', 5: 'Import dat' };
       await page.locator('#quarto-sidebar a.sidebar-link').filter({ hasText: titles[chapterNumber] }).click();
       await page.waitForLoadState('networkidle');
       check((await page.locator('h1 .chapter-number').innerText()).trim() === String(chapterNumber), 'Wrong chapter number');
@@ -49,7 +49,7 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       const mainBox = await page.locator('main').boundingBox();
       check(tocBox.x >= mainBox.x + mainBox.width - 1 && tocBox.y < 180, 'TOC not at top right');
       check(await toc.locator('a[data-scroll-target]').count() > 5, 'TOC incomplete');
-      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny', 4: '#sec-struktury-faktory' }[chapterNumber];
+      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny', 4: '#sec-struktury-faktory', 5: '#sec-import-labelled' }[chapterNumber];
       await toc.locator('a[data-scroll-target="' + tocTarget + '"]').click();
       await page.waitForFunction(id => Math.abs(document.querySelector(id).getBoundingClientRect().top) < 200, tocTarget);
       await page.evaluate(() => window.scrollTo(0, 0));
@@ -122,13 +122,42 @@ function check(condition, message) { if (!condition) throw new Error(message); }
         await screenshot('html-table', '#sec-upravy-mesicni .cell');
         await screenshot('html-graph', '#fig-l03-hodiny');
         await screenshot('html-solution', '#fig-l03-reseni-samostatne');
-      } else {
+      } else if (chapterNumber === 4) {
         await screenshot('html-table', '#sec-struktury-tabulky-vyber > .cell:first-of-type');
         await screenshot('html-graph', '#fig-l04-narocnost');
         await screenshot('html-solution', '#sec-struktury-samostatne .callout');
+      } else {
+        await screenshot('html-downloads', '#sec-import-data');
+        await screenshot('html-table', '#sec-import-excel > .cell:first-of-type');
+        await screenshot('html-labels', '#sec-import-labelled');
+        await screenshot('html-header', '#sec-import-excel-hlavicka > .cell:first-of-type');
+        await screenshot('html-solution', '#sec-import-samostatne .callout');
+        const downloads = page.locator('main a[download]');
+        check(await downloads.count() === 4, 'Lesson 05 must expose four downloadable files');
+        for (const link of await downloads.all()) {
+          const href = await link.getAttribute('href');
+          const filename = await link.getAttribute('download');
+          const response = await context.request.get(new URL(href, page.url()).href);
+          const bytes = await response.body();
+          const original = fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'raw', filename));
+          check(response.ok() && bytes.equals(original), 'Download differs from source: ' + filename);
+          const [download] = await Promise.all([page.waitForEvent('download'), link.click()]);
+          check(await download.failure() === null, 'Download click failed: ' + filename);
+          check(download.suggestedFilename() === filename, 'Wrong download filename');
+        }
+        const publicFiles = fs.readdirSync(path.join(root, 'data', 'raw')).sort();
+        check(JSON.stringify(publicFiles) === JSON.stringify([
+          'four_countries_teaching.xlsx', 'help_seeking.xlsx', 'international.sav', 'students.txt'
+        ]), 'Published data directory contains unexpected files');
       }
       await page.setViewportSize({ width: 390, height: 844 });
       await screenshot('html-mobile');
+      if (chapterNumber === 5) {
+        await screenshot('html-mobile-downloads', '#sec-import-data');
+        const downloadTable = page.locator('#sec-import-data .table-responsive');
+        check(await downloadTable.evaluate(el => getComputedStyle(el).overflowX === 'auto' && el.scrollWidth > el.clientWidth),
+          'Download table must scroll inside its own mobile container');
+      }
       result.mobileWidth = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, viewport: innerWidth }));
       check(result.mobileWidth.page <= result.mobileWidth.viewport + 1, 'Horizontal page overflow on mobile');
       result.chapters.push({ chapter: chapterNumber, solutions: result.solutions, codeBlocks: result.codeBlocks, copyChecks: result.copyChecks, images: result.images.length, localLinks: checkedLinks.size, mobileWidth: result.mobileWidth });

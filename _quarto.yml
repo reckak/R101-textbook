@@ -2,6 +2,11 @@ project:
   type: book
   output-dir: _book
   execute-dir: project
+  resources:
+    - data/raw/students.txt
+    - data/raw/international.sav
+    - data/raw/help_seeking.xlsx
+    - data/raw/four_countries_teaching.xlsx
 book:
   title: "R101: Praktický úvod do R"
   chapters:
@@ -10,6 +15,7 @@ book:
     - quarto/lekce_02.qmd
     - quarto/lekce_03.qmd
     - quarto/lekce_04.qmd
+    - quarto/lekce_05.qmd
 lang: cs
 language:
   code-copy-button-tooltip: "Zkopírovat"

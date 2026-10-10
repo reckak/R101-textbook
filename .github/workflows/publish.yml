@@ -34,6 +34,10 @@ jobs:
             any::palmerpenguins
             any::ggthemes
             any::nycflights13
+            any::readxl
+            any::haven
+            any::janitor
+            any::labelled
             any::knitr
             any::rmarkdown
       - name: Render complete book

@@ -1,0 +1,2 @@
+# Preserve the supplied teaching file byte-for-byte, including original line endings.
+data/raw/students.txt -text

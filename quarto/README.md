@@ -1,5 +1,123 @@
 # Autorská dokumentace učebnice R101
 
+## Pátá kapitola: import a základní příprava dat, 10. 10. 2026
+
+Podkladem je `scripts/week_05.R`, zachovaný beze změny (SHA-256
+`1643c71fb5f9f113acaf9ec3480233140afb8f7ef1b7957c8f5317a6e72e7ce1`).
+Lekce navazuje na projekty, dplyr, typy, faktory a pojmenované seznamy.
+Zahrnuje osm průběžných cvičení a samostatně spustitelnou závěrečnou úlohu.
+Všechna řešení jsou ve výchozím stavu sbalená. Skórování škál a reliabilita
+nejsou předmětem této lekce.
+
+### Úpravy podkladu a jejich důvody
+
+- **Vstupy a dostupnost:** místo IS MUNI používá kapitola čtyři místní vstupy
+  v `data/raw`, tlačítka ke stažení z výsledného webu a přímé GitHub URL
+  s pevným datovým commitem. Online varianty se při renderu nespouštějí;
+  hlavní postup funguje bez internetu. `_quarto.yml` zveřejňuje výslovný
+  seznam čtyř souborů, nikoli celou složku s dalšími místními daty.
+- **Původ dat:** vyučující doložil seminární projekt pro `help_seeking.xlsx`
+  a článek s DOI `10.1080/29974100.2025.2561692` pro data čtyř zemí. Obojí
+  je uvedeno v kapitole a `data/README.md`. U `international.sav` nebyl
+  dodán primární zdroj ani rok ukazatelů; využití je omezeno na nácvik
+  metadat, nikoli současné faktografické závěry.
+  Vyučující výslovně potvrdil veřejné sdílení `help_seeking.xlsx` se
+  172 záznamy; pro data čtyř zemí schválil pouze uvedený výukový výřez.
+- **Výřez čtyř zemí:** na výslovný pokyn vyučujícího vznikl nový soubor
+  `four_countries_teaching.xlsx` pouze s 20 uzavřenými položkami a zemí.
+  Neobsahuje identifikátory, IP, geolokaci, časové údaje, demografii ani
+  otevřené odpovědi. Zachovává 1 084 řádků a všechny hodnoty i tři řádky
+  metadat vybraných sloupců; není prezentován jako kompletní vzorek článku.
+  Původní exporty zůstaly lokálně beze změny a jsou ignorované Gitem.
+  Autorský generátor vytváří nový sešit z povoleného seznamu sloupců;
+  nepublikuje skryté listy, vazby ani vlastnosti původního sešitu.
+- **Textový import:** soubor `students.txt` se čte jako CSV podle obsahu,
+  zachovává se ukázka `five`, explicitní kódy chybění a sjednocení názvů.
+  Přidána ukázka zachování počátečních nul ID, desetinné čárky a rozdílu
+  mezi plánovaným `NA` a `NA` z neúspěšného čtení. Vložený CSV text se
+  předává přes `I()`. Jediné záměrné varování je jasně označené.
+- **Kódování a cesty:** vysvětleny pracovní adresář, relativní cesty, raw URL,
+  `download.file(mode = "wb")`, oddělovač, desetinný znak a znakové kódování.
+  Hlavní vstupy se při renderu nepřepisují. Odvozené soubory patří do
+  ignorované `data/clean/`, nikoli do původní místní `data/cleaned/`.
+- **Nesoulad názvu finanční situace:** dodaný sešit i codebook používají
+  `finantial_situation`, zatímco skript očekává `financial_situation`.
+  Kapitola oba názvy sjednocuje v paměti a kontroluje soulad pomocí
+  `setdiff()` v obou směrech. Původní XLSX se nemění. Typografické chyby
+  v původních popiscích odpovědí (`Ohter`, `Accptable`) nenapodobuje;
+  používá české pracovní popisky odpovídajících kategorií.
+- **Chybění a faktory:** `-99` se při importu převádí na `NA`, žádný řádek
+  se plošně nevyřazuje. Převody na faktor předchází četnosti. `across()`
+  a význam `~` a `.x` jsou vysvětleny na společném kódování tří sloupců.
+  Pořadí úrovní není ztotožněno s ekvidistancí ani automaticky s `ordered`.
+- **Metadata:** rozšířen výklad `var_label()`, `set_variable_labels()`,
+  `val_labels()`, `haven::labelled()`, `look_for()` a `generate_dictionary()`.
+  Popisky proměnných se přebírají z codebooku bez duplicitního ručního
+  přepisu; výchozí přísná kontrola názvů zůstává zapnutá. U `lifeexpt`
+  je výslovně interpretován skutečný popisek školní délky vzdělávání.
+- **Převod před analýzou:** `to_factor()` předvádí kategoriální reprezentaci,
+  `remove_val_labels()` číselnou. Vektory s popisky nejsou vydávány za
+  univerzální vstup modelů ani za důkaz intervalové úrovně měření.
+  Je vysvětlen rozdíl od `as.factor()` a chování `unlabelled()`.
+  Nepovinný příklad používá `na_values()` a `user_na_to_na()` a rozlišuje
+  slovní popisek neodpovědi od skutečné definice chybění.
+- **Neuspořádaný Excel:** zachován samostatný import názvů, popisků a dat,
+  výslovné `col_names` chrání první odpověď. Kontrolní chybný `skip = 2`
+  demonstruje 1 085 řádků a textový typ. Datum z Excelu je ukázáno na
+  fiktivním vektoru, protože časové sloupce nejsou ve veřejném výřezu.
+  Doplněna ztráta času při převodu na `Date` a závislost na datovém systému.
+  `remove_empty()` a `remove_constant()` jsou vysvětleny jako volitelné
+  nástroje; sloupce se neodstraňují bez posouzení jejich významu.
+- **Ukládání:** RDS zachovává typy a metadata, CSV ne. Doplněn původní
+  codebook a výslovné upozornění na odlišné kódování připraveného CSV
+  (české kategorie faktorů, kódy číselných položek, chybění `NA`). U
+  `load()` je vysvětlen návrat jmen a možné přepsání existujících objektů.
+  Původní soubor `my_data.Rdata` se nenačítá ani nepublikuje.
+- **Rozsah a styl:** nepoužitý `psych` a opakované načítání balíčků nejsou
+  v lekci. Pipe `|>` odpovídá dosavadním kapitolám; analytický záměr
+  přípravy zůstává stejný. Obráceně skórované položky se nyní neskórují,
+  pouze se čte informace `reversed`. Česká odpovědní škála není vydávána
+  za validovaný překlad nástroje.
+
+### Ověření
+
+`check-lesson-05.R` spouští každý prováděný blok a všechna řešení v čisté
+relaci. Kontroluje konkrétní interpretace, záměrné varování parseru,
+zachování čísel při doplnění popisků, shodu `across()` s jednotlivými
+převody, počty chybění a metadata při uložení a načtení. Závěrečné řešení
+spouští navíc v další čisté relaci. Je součástí `check-r.R`.
+Kontrola výřezu porovnává přesný seznam povolených sloupců a při dostupném
+místním originálu všechny hodnoty a popisky ponechaných sloupců.
+
+Síťová kontrola `check-lesson-05-downloads.R` je oddělená od offline CI:
+stahuje všechny čtyři pevné GitHub URL, porovnává soubory bajtově a spouští
+obě nepovinné online ukázky z kapitoly. Kontrola HTML je rozšířena na pátou
+lekci a skutečné klikání na odkazy ke stažení. Zároveň vyžaduje, aby
+publikovaná datová složka obsahovala právě čtyři schválené soubory.
+
+Prošel render celé knihy i projektová kontrola R včetně všech řešení.
+Po závěrečné úpravě mobilní tabulky byla pátá lekce znovu vykreslena.
+Kontrola HTML prošla pro všech pět kapitol; v páté ověřila devět zpočátku
+skrytých a rozbalitelných řešení, skutečné kopírování všech 87 vykreslených
+úseků kódu, 351 místních cílů odkazů a kliknutí na čtyři soubory ke stažení.
+Všechny kapitoly mají při šířce 390 px šířku stránky 390 px, bez chyb
+JavaScriptu. Široká tabulka ke stažení se na mobilu posouvá uvnitř svého
+kontejneru. Nové tabulky, výstupy, řešení a mobilní zobrazení byly vizuálně
+prohlédnuty. Síťová kontrola potvrdila bajtovou shodu všech čtyř veřejných
+GitHub souborů s místními vstupy a spustila obě online ukázky z lekce.
+Kontrola rozdílů nových zdrojů prošla. Veřejné nasazení knihy tato lokální
+kontrola nepotvrzuje.
+
+R 4.5.1 upozorňuje na tři balíčky sestavené pod R 4.5.3. Tato upozornění
+zůstala viditelná, nezpůsobila selhání. Importní varování z ukázky tečky
+místo čísla je záměrné a vyžadované testem.
+
+Původní `week_05.R` obsahuje koncové mezery a `students.txt` neobvyklé
+konce řádků. Kvůli zachování podkladů nebyly normalizovány; kontrola
+rozdílů tyto původní soubory posuzuje odděleně od nového autorského kódu.
+`.gitattributes` chrání přesný obsah textového vstupu. Nesouvisející
+`tests/test_03.txt` a ostatní místní datasety nebyly upraveny ani přidány.
+
 ## Výběry, faktory, seznamy a výpis tabulek v kapitole 4, 4. 10. 2026
 
 Další redakce kapitoly navazuje na místní uživatelské změny, které zůstávají zachovány. Původní `scripts/week_04.R` se nemění.

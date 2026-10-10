@@ -16,5 +16,9 @@
 /quarto/_verification/html-check.json
 /quarto/_verification/standalone-solution.R
 /node_modules/
+/data/clean/
+# Original research exports contain identifying fields; publish only the approved subset.
+/data/raw/four_countries_data.xlsx
+/data/raw/four_countries_data2.xlsx
 
 **/*.quarto_ipynb
