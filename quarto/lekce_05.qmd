@@ -1,0 +1,865 @@
+---
+title: "Import dat a jejich základní příprava"
+subtitle: "Od souboru k přehledné tabulce s popisky a zkontrolovanými hodnotami"
+---
+
+## Co se naučíte {#sec-import-cile}
+
+Soubor s odpověďmi z dotazníku ještě není tabulka připravená k analýze. Čísla mohou být uložená jako text, kód `-99` může znamenat neodpověď a nad vlastními daty mohou být další řádky s popisem otázek. Úspěšné načtení souboru proto představuje začátek kontroly, nikoli její konec.
+
+V této lekci načtete textový soubor, sešit Excelu i data SPSS. Ověříte rozměry a typy sloupců, upravíte jejich názvy a rozlišíte skutečné hodnoty od kódů chybění. Pomocí balíčku **`labelled`** připojíte popisky proměnných a hodnot, vytvoříte datový slovník a připravíte vhodné typy pro další práci. Nakonec data uložíte tak, abyste je mohli znovu načíst.
+
+Navazujeme na práci s projektem v oddílu [-@sec-projekt], na `select()`, `rename()`, `mutate()` a `count()` z [lekce o dplyr](lekce_03.qmd) a na [vektory, faktory a seznamy](lekce_04.qmd). Zejména rozdíl mezi číselným vektorem a faktorem využijeme při práci s odpověďmi na dotazníkové položky. Novou konstrukci `across()` vysvětlíme před jejím použitím.
+
+## Příprava projektu a stažení dat {#sec-import-priprava}
+
+Otevřete svůj projekt `r101` a založte skript `scripts/05_import_dat.R`. V hlavní složce projektu budete potřebovat `data/raw` pro vstupy a `data/clean` pro výsledky přípravy. Původní soubory ponecháme beze změn; každou opravu zaznamenáme kódem.
+
+### Soubory k této lekci {#sec-import-data}
+
+Stáhněte následující čtyři soubory a uložte je do `data/raw`. Názvy zachovejte včetně přípon. Pokud se textový soubor otevře v prohlížeči, použijte **Uložit odkaz jako…**; neukládejte místo něj webovou stránku.
+
+::: {.table-responsive}
+| Soubor | Stažení z učebnice | Přímý soubor na GitHubu | Použití |
+|:---|:---|:---|:---|
+| `students.txt` | [Stáhnout TXT](../data/raw/students.txt){download="students.txt"} | [GitHub – TXT](https://raw.githubusercontent.com/reckak/R101-textbook/31239f3e68847248799fdf4f45a45052b247a5d2/data/raw/students.txt) | Text oddělený čárkami, názvy a typy. |
+| `international.sav` | [Stáhnout SAV](../data/raw/international.sav){download="international.sav"} | [GitHub – SAV](https://raw.githubusercontent.com/reckak/R101-textbook/31239f3e68847248799fdf4f45a45052b247a5d2/data/raw/international.sav) | Popisky uložené v SPSS. |
+| `help_seeking.xlsx` | [Stáhnout XLSX](../data/raw/help_seeking.xlsx){download="help_seeking.xlsx"} | [GitHub – dotazník](https://raw.githubusercontent.com/reckak/R101-textbook/31239f3e68847248799fdf4f45a45052b247a5d2/data/raw/help_seeking.xlsx) | Dotazníková data a datový slovník. |
+| `four_countries_teaching.xlsx` | [Stáhnout XLSX](../data/raw/four_countries_teaching.xlsx){download="four_countries_teaching.xlsx"} | [GitHub – čtyři země](https://raw.githubusercontent.com/reckak/R101-textbook/31239f3e68847248799fdf4f45a45052b247a5d2/data/raw/four_countries_teaching.xlsx) | Export s víceřádkovou hlavičkou. |
+:::
+
+`students.txt` je malý výukový příklad z [R for Data Science, oddílu Data import](https://r4ds.hadley.nz/data-import.html). Nejde o údaje o studentech našeho kurzu. `international.sav` je kurzový soubor s údaji o zemích; použijeme jej k nácviku importu, nikoli jako aktuální přehled ekonomických či vzdělávacích ukazatelů.
+
+`help_seeking.xlsx` pochází z malého studentského seminárního projektu. Obsahuje odpovědi na otázky o vyhledávání odborné psychologické pomoci a emoční expresivitě. Jde o výzkumná data, nikoli simulaci; bez podrobnějšího popisu výběru účastníků z nich nelze vyvozovat závěry o celé populaci.
+
+Soubor čtyř zemí je výukovým výřezem dat souvisejících s článkem [Marmolejo-Ramos a kol. (2025), *From human artefact to machine output: automating the “art” of psychological measurement*](https://doi.org/10.1080/29974100.2025.2561692). Obsahuje uzavřené položky o umělé inteligenci a zemi; identifikátory, IP adresy, souřadnice a otevřené odpovědi v něm nejsou. Zachována je víceřádková hlavička. Tato výuková verze není úplným datovým souborem článku.
+
+### Balíčky a kontrola cest
+
+Balíčky `readr`, `dplyr` a `purrr` se načtou s tidyverse. `readxl`, `haven`, `janitor` a `labelled` načteme zvlášť. Pokud některý chybí, spusťte jednorázově v konzoli:
+
+```{r}
+#| label: l05-instalace
+#| eval: false
+install.packages(c("tidyverse", "readxl", "haven", "janitor", "labelled"))
+```
+
+Skript začněte načtením balíčků v nové relaci R:
+
+```{r}
+#| label: l05-balicky
+library(tidyverse)
+library(readxl)
+library(haven)
+library(janitor)
+library(labelled)
+```
+
+Relativní cesta začíná v pracovním adresáři R, při otevření projektu obvykle v jeho hlavní složce. `file.exists()` ověří existenci souboru na zadané cestě:
+
+```{r}
+#| label: l05-kontrola-cesty
+file.exists("data/raw/students.txt")
+```
+
+Výsledek má být `TRUE`. Při `FALSE` zkontrolujte pomocí `getwd()` pracovní adresář, na kartě Files umístění souboru a jeho přesný název. Procházení složek na kartě Files samo pracovní adresář R nemění. V cestách používejte `/`, také ve Windows.
+
+### Alternativa: přímé načtení z URL
+
+**URL** je webová adresa zdroje. U přímého odkazu na soubor GitHub vrací obsah dat, zatímco běžná stránka s náhledem souboru vrací HTML. Pro `read_csv()` potřebujeme první z těchto možností. Odkazy v této lekci ukazují na pevnou verzi dat, takže pozdější změny repozitáře nezmění vstup příkladu.
+
+Následující alternativu můžete spustit, máte-li připojení k internetu:
+
+```{r}
+#| label: l05-url-csv
+#| eval: false
+students_url <- paste0(
+  "https://raw.githubusercontent.com/reckak/R101-textbook/",
+  "31239f3e68847248799fdf4f45a45052b247a5d2/data/raw/students.txt"
+)
+students_online <- read_csv(students_url)
+```
+
+`paste0()` spojí textové části bez mezery. `read_csv()` přijme URL místo místní cesty, ale samo nevytvoří trvalou kopii v `data/raw`. Tu lze uložit pomocí `download.file()`. Například pro Excel:
+
+```{r}
+#| label: l05-url-download
+#| eval: false
+dir.create("data/raw", recursive = TRUE, showWarnings = FALSE)
+help_url <- paste0(
+  "https://raw.githubusercontent.com/reckak/R101-textbook/",
+  "31239f3e68847248799fdf4f45a45052b247a5d2/data/raw/help_seeking.xlsx"
+)
+download.file(
+  url = help_url,
+  destfile = "data/raw/help_seeking.xlsx",
+  mode = "wb"
+)
+```
+
+`recursive = TRUE` vytvoří i chybějící nadřazenou složku. `showWarnings = FALSE` zde pouze vypíná upozornění, že složka již existuje; netýká se chyb importu. `destfile` určuje místo uložení a `mode = "wb"` binární zápis, důležitý zejména pro `.xlsx` a `.sav` ve Windows. Stahování může existující soubor stejného jména přepsat. Další výklad pracuje s místními kopiemi a při opakovaném spouštění nevyžaduje internet.
+
+### Cvičení 1: Soubor a objekt {.exercise}
+
+Po stažení `students.txt` je v `data/raw`, ale v Environment žádný objekt `students` nevidíte. Je něco špatně? Co byste zkontrolovali, kdyby `file.exists("data/raw/students.txt")` vrátilo `FALSE`?
+
+Vlastní úloha inspirovaná [R4DS, Data import](https://r4ds.hadley.nz/data-import.html).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Stažení vytvoří soubor na disku. Objekt v paměti R vznikne až po načtení a přiřazení, například `students <- read_csv("data/raw/students.txt")`. Při `FALSE` zkontrolujeme pracovní adresář, složky, název i příponu. Soubor mohl zůstat ve složce Stažené soubory nebo mít doplněné `(1)` v názvu. Restart R soubor nesmaže, ale objekt je potřeba znovu vytvořit importem.
+:::
+
+## Textové soubory: nejprve správně přečíst {#sec-import-csv}
+
+### Oddělovač a desetinný znak
+
+Textová tabulka ukládá hodnoty jako text; hranice sloupců označuje **oddělovač**. CSV obvykle používá čárku, TSV tabulátor. Přípona je vodítko, nikoli záruka: náš `students.txt` má sloupce oddělené čárkami, proto jej načteme funkcí `read_csv()`.
+
+| Funkce z readr | Typické použití |
+|:---|:---|
+| `read_csv()` | Čárka mezi poli, desetinná tečka. |
+| `read_csv2()` | Středník mezi poli, desetinná čárka. |
+| `read_tsv()` | Tabulátor mezi poli. |
+| `read_delim()` | Oddělovač zadáme argumentem `delim`. |
+
+Příkaz `read.csv()` s tečkou patří do základního R a má jiné výchozí nastavení než `read_csv()` s podtržítkem. V této lekci používáme funkce readr. [Dokumentace čtení textových tabulek](https://readr.tidyverse.org/reference/read_delim.html)
+
+```{r}
+#| label: l05-students-prvni
+#| message: true
+students_raw <- read_csv("data/raw/students.txt")
+students_raw
+```
+
+Načtena je tabulka o **6 řádcích a 5 sloupcích**. Hlášení `chr` označuje textové a `dbl` číselné sloupce. Věk `AGE` je textový kvůli hodnotě `five`; `N/A` ve sloupci s jídlem zůstalo textem, zatímco prázdný věk čtvrté osoby je `NA`. Prázdné řádky mezi záznamy import přeskočí. Hlášení o odhadnutých typech není chyba.
+
+Po importu obvykle použijeme známé funkce:
+
+```{r}
+#| label: l05-prvni-kontrola
+dim(students_raw)
+names(students_raw)
+glimpse(students_raw)
+```
+
+`dim()` vrací počet řádků a sloupců v tomto pořadí. Názvy upozorní například na mezery a `glimpse()` ukáže typ i několik hodnot každé proměnné. Žádná z těchto kontrol sama neprokazuje správnost hodnot; věk uložený jako text však odhalíme hned.
+
+### Chybějící hodnoty a názvy sloupců {#sec-import-csv-upravy}
+
+Z dokumentace dat musí být jasné, co znamenají kódy jako `N/A`, tečka nebo `-99`. V tomto výukovém souboru `N/A` znamená chybějící údaj. Přidáme jej do argumentu `na` spolu s prázdným textem a řetězcem `NA`:
+
+```{r}
+#| label: l05-students-na
+students <- read_csv(
+  "data/raw/students.txt",
+  na = c("", "NA", "N/A")
+)
+students <- students |> clean_names()
+names(students)
+```
+
+`clean_names()` z balíčku janitor převede názvy do jednotné podoby s malými písmeny a podtržítky: `Student ID` na `student_id`, `favourite.food` na `favourite_food` a `mealPlan` na `meal_plan`. Nemění odpovědi ani význam proměnných a neopravuje překlepy ve slovech. Pro jednotlivou záměrnou změnu názvu nadále slouží `rename(novy_nazev = stary_nazev)` z oddílu [-@sec-upravy-sloupce].
+
+Hodnota `five` v tomto příkladu označuje pět let. Převedeme nejprve text `five` na text `5`, teprve potom celý sloupec na celá čísla:
+
+```{r}
+#| label: l05-students-prevody
+students <- students |>
+  mutate(age = if_else(age == "five", "5", age))
+students <- students |>
+  mutate(
+    age = as.integer(age),
+    meal_plan = factor(meal_plan)
+  )
+students |> select(student_id, age, meal_plan)
+```
+
+`if_else(podminka, ano, ne)` pro každý prvek vybere druhý nebo třetí argument. Zde oba poskytují text; `as.integer()` následuje až po sjednocení zápisu. `NA` ve věku zůstane `NA`. Pátá osoba má nyní věk `5`, sloupec `age` typ `integer` a stravovací plán je faktor. Při práci s reálnými daty bychom nejasnou hodnotu opravovali podle ověřitelného podkladu, nikoli odhadem podle ostatních osob.
+
+### Cvičení 2: Kontrola po opravě {.exercise}
+
+V tabulce `students` zjistěte počet chybějících věků a údajů o oblíbeném jídle. Spočítejte četnosti stravovacích plánů. Ztratila se při přípravě některá osoba?
+
+Vlastní obměna příkladu z [R4DS, Data import](https://r4ds.hadley.nz/data-import.html).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l05-reseni-students
+students |>
+  summarise(
+    pocet_osob = n(),
+    chybi_vek = sum(is.na(age)),
+    chybi_jidlo = sum(is.na(favourite_food))
+  )
+students |> count(meal_plan)
+```
+
+Zůstává všech šest osob. Jeden věk a jeden údaj o jídle chybějí, nikoli nutně u stejné osoby. Čtyři osoby mají jen oběd a dvě snídani i oběd. Oprava typů a kódů chybění nevyžadovala mazání řádků.
+:::
+
+## Typy sloupců a problémy při importu {#sec-import-typy}
+
+Automatický odhad typu vychází z hodnot, které importující funkce prozkoumá. Nezná význam proměnné: číselně zapsané ID může potřebovat textový typ kvůli počátečním nulám. Dlouhý sloupec navíc může obsahovat problematický zápis až mimo zkoumanou část. Důležité typy proto můžeme určit předem.
+
+Malé ukázky si vytvoříme přímo v R. **Následující údaje jsou fiktivní výukové příklady.** Funkce `I()` zde říká readr, že předáváme přímo obsah textové tabulky, nikoli název souboru.
+
+```{r}
+#| label: l05-typy-id
+kratky_csv <- "id,skore
+001,10
+002,20"
+kratka_data <- read_csv(
+  I(kratky_csv),
+  col_types = cols(id = col_character(), skore = col_double())
+)
+kratka_data
+```
+
+ID zůstává `001` a `002`, skór je číselný. `cols()` sestaví předpis typů; `col_character()` požaduje text a `col_double()` čísla. Jde o nastavení importu, ne o převod už existujícího vektoru pomocí `as.*()`.
+
+| Předpis typu | Co očekává |
+|:---|:---|
+| `col_character()` | Text, například identifikátory. |
+| `col_integer()` | Celá čísla. |
+| `col_double()` | Čísla včetně desetinných. |
+| `col_logical()` | Logické hodnoty. |
+| `col_date()` | Kalendářní datum. |
+| `col_skip()` | Sloupec nenačte. |
+
+Nepovinně lze nastavit `cols(.default = col_character())`, aby se všechny neurčené sloupce načetly jako text. `cols_only(id = col_character())` načte pouze vyjmenované sloupce. Základní postup je ale stejný: předpis musí odpovídat obsahu a významu dat.
+
+### Varování má být podnětem ke kontrole
+
+V následujícím příkladu tečka zastupuje chybějící skór. Zatím ji ale importu takto nevysvětlíme. Tento blok **záměrně vyvolá varování**:
+
+```{r}
+#| label: l05-chyba-parser
+text_skore <- "skore
+10
+.
+20
+30"
+skore_problem <- read_csv(
+  I(text_skore),
+  col_types = cols(skore = col_double())
+)
+skore_problem
+problems(skore_problem)
+```
+
+Tečku nelze přečíst jako číslo, a tak vznikne `NA` a záznam v `problems()`. Ve výpisu problémů si všimněte očekávaného typu ve sloupci `expected` a skutečného zápisu ve sloupci `actual`. To je jiná situace než správně rozpoznaná neodpověď: R neví, co tečka znamená, pouze hlásí neúspěšný převod.
+
+```{r}
+#| label: l05-oprava-parser
+skore_ok <- read_csv(
+  I(text_skore),
+  na = c("", "NA", "."),
+  col_types = cols(skore = col_double())
+)
+problems(skore_ok)
+```
+
+Nyní je tečka výslovně definovaný kód chybění. Tabulka problémů má nula řádků. Samotné hodnoty v `skore_ok` a `skore_problem` jsou přitom stejné: `10, NA, 20, 30`. Rozdíl spočívá v tom, zda `NA` vzniklo plánovaně, nebo neúspěšným čtením. Prázdný výsledek `problems()` neodhalí například věcně nemožný věk `250`, pokud jej lze bez potíží přečíst jako číslo.
+
+### Cvičení 3: Český textový export {.exercise}
+
+Máte fiktivní tabulku, v níž jsou sloupce oddělené středníkem, desetinným znakem je čárka a tečka znamená chybějící reakční čas. Načtěte ji, zachovejte nuly na začátku ID a zkontrolujte problémy importu.
+
+```{r}
+#| label: l05-zadani-csv2
+cesky_export <- "id;cas_s
+001;0,45
+002;.
+003;0,62"
+```
+
+Vlastní úloha inspirovaná [R4DS, oddíly o typech souborů a kontrole typů](https://r4ds.hadley.nz/data-import.html#controlling-column-types).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l05-reseni-csv2
+reakce <- read_csv2(
+  I(cesky_export),
+  na = c("", "NA", "."),
+  col_types = cols(id = col_character(), cas_s = col_double())
+)
+reakce
+problems(reakce)
+```
+
+`read_csv2()` rozpozná středník a desetinnou čárku. Časy jsou `0.45`, `NA` a `0.62` sekundy; R je vypisuje s desetinnou tečkou. Nuly v ID zůstaly zachovány a `problems()` je prázdné. Přejmenování přípony souboru by nastavení oddělovače nenahradilo.
+:::
+
+Poškozená diakritika představuje jiný problém: nesprávně určené **kódování textu**, tedy pravidla převodu bajtů na znaky. Pro soubor doloženě uložený v kódování Windows-1250 lze do `read_csv()` přidat `locale = locale(encoding = "Windows-1250")`. Nepřepínejte kódování naslepo; naše textová data jsou v UTF-8. Nastavení `locale(decimal_mark = ",")` zase řeší desetinný znak, nikoli diakritiku.
+
+## SPSS a význam popisků {#sec-import-spss}
+
+Soubor SPSS s příponou `.sav` může spolu s hodnotami uchovávat popis proměnných, význam číselných kódů i definice chybění. K načtení použijeme `read_sav()` z balíčku haven:
+
+```{r}
+#| label: l05-spss
+international_raw <- read_sav("data/raw/international.sav")
+dim(international_raw)
+international_raw |> select(country, contint) |> slice_head(n = 6)
+```
+
+Soubor má 20 řádků a 7 sloupců; jeden řádek představuje zemi. U `contint` vidíme například `2 [Americas]`: uložená hodnota je `2` a připojený slovní popisek `Americas`. Zápis `<dbl+lbl>` označuje číselný sloupec s popisky. Nejde ještě o faktor.
+
+### Popisek proměnné není popisek hodnoty {#sec-import-labels}
+
+**Metadata** jsou informace o datech. Popisek proměnné (*variable label*) vysvětluje, co měří celý sloupec, například „Věk v letech“. Popisky hodnot (*value labels*) popisují jednotlivé kódy, například `1 = Ne`, `2 = Ano`. Název sloupce používáme v kódu; jeho delší popisek slouží člověku.
+
+Balíček `labelled` umožňuje tato metadata číst a upravovat. Pro začátek použijeme dvě funkce:
+
+```{r}
+#| label: l05-popisky-spss
+var_label(international_raw$contint)
+val_labels(international_raw$contint)
+class(international_raw$contint)
+```
+
+Popisek proměnné je `Continent`. Popisky hodnot přiřazují kódům 1 až 4 Afriku, Ameriku, Asii a Evropu. Třída obsahuje `haven_labelled`: vektor uchovává číselné hodnoty a přídavné informace. Samotný popisek nemění hodnotu ani neurčuje, zda s ní máme počítat průměr. [Úvod do labelled](https://larmarange.github.io/labelled/articles/labelled.html)
+
+Pro kontinent dává smysl faktor. Funkce `to_factor()` z labelled převezme popisky jako názvy kategorií:
+
+```{r}
+#| label: l05-spss-faktor
+international <- international_raw |>
+  mutate(contint = to_factor(contint))
+international |> count(contint)
+```
+
+V souboru je 9 afrických, 5 amerických, 3 asijské a 3 evropské země. Jde o složení tohoto souboru, nikoli o zastoupení zemí ve světě. Zachování původního objektu `international_raw` umožňuje porovnat kódy a výsledné kategorie.
+
+Funkce `haven::as_factor()` představuje příbuznou možnost; `as.factor()` ze základního R není její synonymum. Pro práci s metadaty v této lekci zůstaneme u `labelled::to_factor()`. **Nepřevádějte automaticky všechny popsané sloupce na faktory**: věk nebo číselný skór zpravidla potřebují zůstat číselné. Naopak průměr z kódů kontinentů nemá věcný význam. [Dokumentace převodu](https://larmarange.github.io/labelled/reference/to_factor.html)
+
+### Cvičení 4: Co nám říká popisek? {.exercise}
+
+Pomocí `var_label()` zjistěte význam `lifeexpt` v `international_raw`. Znamená název očekávanou délku života? A dávalo by smysl tento sloupec převést na faktor jen proto, že má popisek?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l05-reseni-popisek
+var_label(international_raw$lifeexpt)
+```
+
+Popisek je `School Life Expectancy (Years)`: jde o očekávanou délku školního vzdělávání v letech, nikoli o očekávanou délku života. Popisek sloupce není důvod k vytvoření faktoru. Tento příklad ukazuje, proč význam proměnné nemáme odhadovat pouze ze zkráceného názvu; pro odbornou analýzu bychom potřebovali také přesnou definici ukazatele a dobu sběru.
+:::
+
+## Excel: data a datový slovník {#sec-import-excel}
+
+Excelový sešit může obsahovat více **listů**. Funkce `excel_sheets()` vrátí jejich názvy a `read_excel()` načte zvolený list do tabulky R. Základní použití nepotřebuje spuštěný Excel. Importuje tabulkové hodnoty, nikoli barevné rozlišení buněk jako informaci pro analýzu. [Dokumentace readxl](https://readxl.tidyverse.org/reference/read_excel.html)
+
+```{r}
+#| label: l05-excel-listy
+excel_sheets("data/raw/help_seeking.xlsx")
+hs_raw <- read_excel("data/raw/help_seeking.xlsx", sheet = "data")
+hs_raw |> select(id, gender, age, help_01) |> slice_head(n = 6)
+```
+
+Sešit obsahuje listy `data` a `codebook`. V prvním řádku načtených dat je u `help_01` hodnota `-99`. Není to velmi nízká odpověď: v tomto souboru jde o kód neodpovědi. Bez jeho ošetření by R s číslem mohlo běžně počítat.
+
+**Datový slovník** neboli *codebook* popisuje proměnné, jejich kódování, případné chybějící hodnoty a další pravidla. Načteme jej samostatně:
+
+```{r}
+#| label: l05-codebook
+codebook <- read_excel("data/raw/help_seeking.xlsx", sheet = "codebook")
+codebook |>
+  select(name, instrument, reversed) |>
+  slice_head(n = 10)
+codebook |>
+  filter(name == "help_01") |>
+  pull(value_labels)
+```
+
+`name` je název proměnné, `instrument` označuje dotazník a `reversed` informaci o obráceném směru položky. `pull()` ze známé tabulky vytáhne jeden sloupec jako vektor. Výpis kódování `help_01` ukazuje odpovědi 1 až 4 a `-99 = Nonresponse`. Číslo mimo škálu tedy nesmíme zaměnit za platnou odpověď. U věku soubor rovněž používá `-99`; pravidlo chybění uplatníme na celý datový list, nikoli na list se slovním popisem kódů.
+
+```{r}
+#| label: l05-hs-import
+hs <- read_excel(
+  "data/raw/help_seeking.xlsx",
+  sheet = "data",
+  na = c("", "-99")
+)
+dim(hs)
+hs |> summarise(chybi_vek = sum(is.na(age)), chybi_help_01 = sum(is.na(help_01)))
+```
+
+Máme **172 řádků a 34 sloupců**. Chybí 5 věků a 7 odpovědí na první položku. Počty osob se nezmenšily: `na` mění kódy na chybějící hodnoty, nemaže řádky. V jiné studii by `-99` mohlo být platné číslo; kódy chybění vždy určujeme podle dokumentace konkrétních dat.
+
+### Sjednocení názvů v datech i slovníku
+
+Soubor používá název `finantial_situation`. Pro přehledný skript jej přejmenujeme na `financial_situation`; odpovídající záznam musíme změnit i ve slovníku. Jinak bychom později připojovali popisek k neexistujícímu sloupci.
+
+```{r}
+#| label: l05-hs-nazvy
+hs <- hs |> rename(financial_situation = finantial_situation)
+codebook <- codebook |>
+  mutate(
+    name = if_else(name == "finantial_situation", "financial_situation", name),
+    reversed = as.logical(reversed)
+  )
+setdiff(names(hs), codebook$name)
+setdiff(codebook$name, names(hs))
+```
+
+`setdiff(a, b)` vrátí hodnoty, které jsou v `a`, ale nejsou v `b`. Dva výpisy `character(0)` zde znamenají, že žádný název není navíc ani na jedné straně. Neověřují však, zda je každý popisek obsahově správný. `as.logical()` převádí zápisy `TRUE` a `FALSE` ze slovníku na logický vektor. **Převod této informace nepřevrací skórování položek.** Výpočet celkového skóru by vyžadoval další rozhodnutí, která nyní neděláme.
+
+### Cvičení 5: Neodpověď a neplatný kód {.exercise}
+
+Zkontrolujte četnosti `gender` v tabulce `hs`. Podle slovníku mají platné odpovědi kódy 1, 2 a 3. Vyhledejte případné jiné neprázdné kódy. Znamená přítomnost `NA`, že máte automaticky vyřadit celou osobu?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l05-reseni-kody
+hs |> count(gender)
+hs |> filter(!is.na(gender), !(gender %in% 1:3)) |> select(id, gender)
+```
+
+Četnosti jsou 129 pro kód 1, 35 pro kód 2, 3 pro kód 3 a 5 chybějících údajů. Druhý výpis nemá žádný řádek: nebyl nalezen jiný neprázdný kód. Operátor `%in%` testuje příslušnost k povoleným hodnotám, `!` výsledek neguje. Chybění jedné proměnné není samo o sobě důvodem zahodit všechny odpovědi dané osoby. O zařazení rozhodujeme podle konkrétní analýzy a pravidel zacházení s chyběním.
+:::
+
+## Základní příprava dotazníkových proměnných {#sec-import-priprava-promennych}
+
+### Kategorie převádíme podle známého kódování
+
+Před převodem na faktor je užitečné prohlédnout si četnosti. Hodnota mimo zadané `levels` by se při převodu mohla tiše změnit na `NA` (viz oddíl [-@sec-struktury-faktory]). Nejprve proto zkontrolujeme i finanční situaci:
+
+```{r}
+#| label: l05-hs-kategorie
+hs |> count(financial_situation)
+hs <- hs |>
+  mutate(
+    gender = factor(gender, levels = 1:3, labels = c("Žena", "Muž", "Jiné")),
+    financial_situation = factor(
+      financial_situation,
+      levels = 1:3,
+      labels = c("Špatná", "Přijatelná", "Dobrá")
+    )
+  )
+hs |> count(financial_situation)
+```
+
+Četnosti se převodem nemění: finanční situaci hodnotí 13 osob jako špatnou, 114 jako přijatelnou a 40 jako dobrou; u 5 osob údaj chybí. Kódy nahradily čitelné kategorie. Úrovně nyní mají zvolené pořadí, ale bez `ordered = TRUE` jde o běžný faktor. Pořadí úrovní samo o sobě neříká, že rozdíl mezi sousedními kategoriemi je všude stejně velký.
+
+### Stejná úprava více sloupců pomocí `across()` {#sec-import-across}
+
+Proměnné `partner`, `college_title` a `college_student` sdílejí kódování `1 = Ne`, `2 = Ano`. Ověříme jej v datovém slovníku i četnostech:
+
+```{r}
+#| label: l05-hs-binarni-kontrola
+codebook |>
+  filter(name %in% c("partner", "college_title", "college_student")) |>
+  select(name, value_labels)
+hs |> count(partner)
+hs |> count(college_title)
+hs |> count(college_student)
+```
+
+V datech se vyskytují pouze kódy 1, 2 a chybějící hodnoty. Nemusíme třikrát opisovat stejný převod. **`across()` použije stejnou funkci na každý vybraný sloupec**. Uvnitř `mutate()` vrátí upravené sloupce do tabulky:
+
+```{r}
+#| label: l05-hs-across
+hs <- hs |>
+  mutate(
+    across(
+      c(partner, college_title, college_student),
+      ~ factor(.x, levels = 1:2, labels = c("Ne", "Ano"))
+    )
+  )
+hs |> select(partner, college_title, college_student) |> slice_head(n = 6)
+```
+
+První argument vybírá sloupce stejným způsobem jako `select()`. Zápis `~ factor(...)` představuje krátkou bezejmennou funkci; `.x` zastupuje sloupec, který se právě zpracovává. R tak postupně provede `factor(partner, ...)`, `factor(college_title, ...)` a `factor(college_student, ...)`. `across()` zde nepracuje po osobách, ale po sloupcích. Použít jeden předpis je správné jen proto, že všechny tři proměnné skutečně sdílejí stejné kódování. [Dokumentace across](https://dplyr.tidyverse.org/reference/across.html)
+
+## Popisky a datový slovník s `labelled` {#sec-import-labelled}
+
+### Přiřazení popisku proměnné
+
+Funkci `var_label()` už jsme použili ke čtení popisku. Ve spojení s `<-` jej můžeme také nastavit:
+
+```{r}
+#| label: l05-var-label
+var_label(hs$age) <- "Věk v letech"
+var_label(hs$age)
+names(hs)[4]
+```
+
+Název zůstává `age`, jeho popisek zní „Věk v letech“. Tento způsob přiřazení mění doplňkovou informaci uloženou u vektoru, tedy **atribut**, nikoli hodnoty věku. Pro více sloupců použijeme `set_variable_labels()`, které se dobře zapojuje do pipe:
+
+```{r}
+#| label: l05-set-variable-labels
+hs <- hs |>
+  set_variable_labels(
+    age = "Věk v letech",
+    gender = "Gender",
+    financial_situation = "Subjektivní hodnocení finanční situace"
+  )
+var_label(hs$financial_situation)
+```
+
+Popisek upřesňuje význam finanční situace, ale nezměnil její tři kategorie ani z ní nevytvořil objektivní údaj o příjmu. [Dokumentace popisků proměnných](https://larmarange.github.io/labelled/reference/var_label.html)
+
+### Přiřazení popisků hodnot
+
+U dotazníkových položek nyní ponecháme původní číselné kódy a doplníme význam odpovědí. Je to užitečné pro kontrolu a dokumentaci. Neznamená to rozhodnutí, že všechny položky mají intervalovou škálu nebo že lze bez dalšího zprůměrovat celý dotazník.
+
+```{r}
+#| label: l05-val-labels
+val_labels(hs$help_01) <- c(
+  "Nesouhlasím" = 1,
+  "Spíše nesouhlasím" = 2,
+  "Spíše souhlasím" = 3,
+  "Souhlasím" = 4
+)
+hs$help_01[1:6]
+val_labels(hs$help_01)
+```
+
+Jména prvků vektoru představují popisky, jejich hodnoty představují kódy. Čísla `1` až `4` v datech zůstala stejná a první hodnota zůstala `NA`. Sloupec nyní patří do třídy `haven_labelled`. **Připojit popisek není totéž co překódovat hodnotu**: například změna textu u kódu 1 nezmění jedničky na čtyřky. [Dokumentace popisků hodnot](https://larmarange.github.io/labelled/reference/val_labels.html)
+
+Pro více položek si uložíme společný předpis a použijeme `across()`. Funkce `haven::labelled()` vytvoří z číselného vektoru vektor s popisky; dvojtečky výslovně určují balíček funkce.
+
+```{r}
+#| label: l05-items-labels
+help_labels <- c(
+  "Nesouhlasím" = 1, "Spíše nesouhlasím" = 2,
+  "Spíše souhlasím" = 3, "Souhlasím" = 4
+)
+emo_labels <- c(
+  "Nikdy" = 1, "Zřídka" = 2, "Někdy" = 3,
+  "Často" = 4, "Téměř vždy" = 5, "Vždy" = 6
+)
+hs <- hs |>
+  mutate(
+    across(starts_with("help_"), ~ haven::labelled(.x, labels = help_labels)),
+    across(starts_with("emo_"), ~ haven::labelled(.x, labels = emo_labels))
+  )
+val_labels(hs$emo_01)
+```
+
+`starts_with("help_")` vybere názvy začínající daným textem. Deset položek `help_` sdílí odpovědi 1–4, sedmnáct položek `emo_` odpovědi 1–6. Poslední výpis potvrzuje šest popisků emoční expresivity. Kód `-99` do těchto popisků už nezařazujeme, protože při importu přešel na `NA`.
+
+### Převzetí popisků ze slovníku
+
+Delší znění položek je v `codebook$label`. Místo jejich ručního přepisování vytvoříme **pojmenovaný seznam**: obsahem každé položky seznamu bude popisek, jejím jménem odpovídající název sloupce. Navazujeme na oddíl [-@sec-struktury-seznamy].
+
+```{r}
+#| label: l05-label-list
+variable_labels_list <- as.list(codebook$label)
+names(variable_labels_list) <- codebook$name
+variable_labels_list[c("age", "help_01")]
+hs <- hs |> set_variable_labels(.labels = variable_labels_list)
+var_label(hs$age)
+```
+
+`as.list()` vytvoří seznam a `names()` přiřadí názvy. Argument `.labels` předá celý seznam; `set_variable_labels()` jej přiřazuje podle jmen sloupců. Výchozí přísná kontrola odhalí název, který v datech není, proto ji nevypínáme. Popisek věku nyní zní `Age (years)`: byl přepsán popiskem ze slovníku. **Pokud chcete vlastní české popisky upřednostnit, nastavte je až po převzetí slovníku.** Znění položek zde ponecháváme v angličtině; pracovní překlad popisků odpovědí není validovaným překladem dotazníku.
+
+### Vyhledávání v datech
+
+Funkce `look_for()` vyhledává v názvech a popiscích proměnných a ukazuje jejich typy, chybění i popisky hodnot. Pro první orientaci lze omezit podrobnosti:
+
+```{r}
+#| label: l05-look-for
+look_for(hs, "help_01", details = FALSE)
+look_for(hs, "age", details = FALSE)
+```
+
+První výpis najde první položku o odborné pomoci. Druhý vyhledává text `age`, nemusí tedy obecně hledat pouze přesný název sloupce. Vyhledávání nám pomáhá v dlouhých tabulkách; správný význam stále ověřujeme čtením popisku. `look_for(hs)` bez hledaného textu zobrazí přehled všech proměnných. [Dokumentace vyhledávání a slovníku](https://larmarange.github.io/labelled/articles/look_for.html)
+
+### Cvičení 6: Popisek, který přežije přejmenování {.exercise}
+
+Vytvořte kopii tabulky `hs` se jménem `hs_cv`. Nastavte popisek `age` na „Věk respondenta v letech“ a přejmenujte sloupec na `vek`. Zkontrolujte jeho popisek. Změnil se tím věk některé osoby?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l05-reseni-var-label
+hs_cv <- hs |> set_variable_labels(age = "Věk respondenta v letech")
+hs_cv <- hs_cv |> rename(vek = age)
+var_label(hs_cv$vek)
+identical(hs_cv$vek, hs$age)
+all.equal(as.numeric(hs_cv$vek), as.numeric(hs$age))
+```
+
+Popisek se zachoval i po přejmenování. `identical()` vrací `FALSE`, protože porovnává i atributy a český popisek se liší od anglického. Porovnání číselných hodnot vrací `TRUE`: věky ani jejich chybění se nezměnily. Nový název používáme v příkazech, popisek nese význam pro čtenáře.
+:::
+
+### Příprava pro konkrétní analýzu {#sec-import-analyza}
+
+Třídy `haven_labelled` a `haven_labelled_spss` jsou užitečné při importu a přípravě, ale analytické funkce nemusí jejich metadata vykládat stejným způsobem. Před analýzou zvolte podle významu proměnné faktor, nebo obyčejný číselný vektor. Na kopii ukážeme dvě možnosti pro jednu položku:
+
+```{r}
+#| label: l05-analyza-typy
+help_01_kategorie <- to_factor(hs$help_01)
+help_01_cisla <- remove_val_labels(hs$help_01)
+table(help_01_kategorie, useNA = "ifany")
+class(help_01_cisla)
+```
+
+První varianta se hodí pro přehled odpovědí po kategoriích; `useNA = "ifany"` zobrazí i chybějící odpovědi. Nejčastější je „Spíše nesouhlasím“ (58 osob), následuje „Spíše souhlasím“ (54 osob); 7 odpovědí chybí. Druhá varianta má třídu `numeric`: odstranila popisky hodnot a třídu `haven_labelled`, ale ponechala původní číselné kódy i popisek celé proměnné. Používáme výslovně `remove_val_labels()`: příbuzná funkce `unlabelled()` může u kompletně popsaných hodnot vytvořit faktor. Samotná číselná reprezentace nezdůvodňuje výpočet průměru ani součtu položek. Nejprve potřebujeme pravidla skórování včetně obrácených položek a zacházení s neodpověďmi. [Dokumentace odstraňování popisků](https://larmarange.github.io/labelled/reference/remove_labels.html)
+
+### Nepovinně: zvláštní kódy chybění v SPSS
+
+`read_sav()` standardně převádí uživatelské kódy chybění definované v souboru na `NA`. Argument `user_na = TRUE` je zachová i s jejich definicí. To může být vhodné pro dokumentaci důvodů chybění, ale před výpočty je potřeba zajistit, aby nebyly považovány za platná čísla. [Dokumentace importu SPSS](https://haven.tidyverse.org/reference/read_spss.html)
+
+Následující vektor je **ručně vytvořený výukový příklad**, nikoli část některého staženého souboru:
+
+```{r}
+#| label: l05-user-na
+odpoved_spss <- haven::labelled_spss(
+  c(1, 2, 9, NA),
+  labels = c("Ne" = 1, "Ano" = 2, "Bez odpovědi" = 9),
+  na_values = 9
+)
+na_values(odpoved_spss)
+is.na(odpoved_spss)
+odpoved_na <- user_na_to_na(odpoved_spss)
+odpoved_na
+```
+
+`na_values()` vrací definovaný kód `9`. `is.na()` rozpozná jako chybějící třetí i čtvrtý prvek, ale číslo 9 je před převodem stále uložené ve vektoru. `user_na_to_na()` je skutečně nahradí `NA`. Pouhý slovní popisek „Bez odpovědi“ by toto pravidlo nenastavil. Také pouhé odstranění definice chybění není totéž jako převod kódu na `NA`. [Dokumentace chybějících hodnot](https://larmarange.github.io/labelled/reference/na_values.html)
+
+### Cvičení 7: Proč nestačí přidat popisek? {.exercise}
+
+Ve fiktivním příkladu `x <- c(1, 2, 9)` má 9 znamenat neodpověď. Kolega připojí pouze `val_labels(x) <- c("Ne" = 1, "Ano" = 2, "Bez odpovědi" = 9)`. Rozpozná nyní `is.na(x)` třetí hodnotu jako chybějící? Ukažte správný převod.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l05-reseni-user-na
+x <- c(1, 2, 9)
+val_labels(x) <- c("Ne" = 1, "Ano" = 2, "Bez odpovědi" = 9)
+is.na(x)
+na_values(x) <- 9
+x <- user_na_to_na(x)
+is.na(x)
+```
+
+První výpis obsahuje třikrát `FALSE`: popisek je jen text. Po výslovném určení kódu chybění a převodu dostaneme `FALSE FALSE TRUE`. Kód 9 volíme podle významu tohoto příkladu; v jiných datech může označovat platnou odpověď.
+:::
+
+## Excel s víceřádkovou hlavičkou {#sec-import-excel-hlavicka}
+
+Dotazníkový systém může nad odpovědi vložit názvy proměnných, celé znění otázek a technické informace. Pokud tyto řádky načteme jako odpovědi, ovlivní odhad typů a mohou se započítat jako další osoby. V souboru `four_countries_teaching.xlsx` mají první tři řádky právě tento význam: názvy, popisky a technická metadata. Data začínají až ve čtvrtém řádku.
+
+Nejprve se podíváme na malý výřez. Argument `range` určuje obdélník buněk stejným zápisem jako v Excelu:
+
+```{r}
+#| label: l05-four-nahled
+four_preview <- read_excel(
+  "data/raw/four_countries_teaching.xlsx",
+  range = "A1:C5",
+  col_names = FALSE
+)
+four_preview
+```
+
+`col_names = FALSE` říká, že první načtený řádek nemá být použit jako záhlaví. Proto R přidá pomocné názvy `...1` až `...3`. V prvních třech řádcích výpisu vidíme informace o proměnných, teprve poslední dva řádky obsahují odpovědi. Směs textu a čísel vede k textovým sloupcům; takto tabulku analyzovat nechceme.
+
+### Názvy, popisky a hodnoty načteme odděleně
+
+Pomocí `n_max = 0` přečteme pouze záhlaví. Při druhém čtení přeskočíme první řádek a jako záhlaví získáme delší popisky. `names()` z obou pomocných tabulek vybere vektor názvů:
+
+```{r}
+#| label: l05-four-metadata
+four_names <- read_excel(
+  "data/raw/four_countries_teaching.xlsx", n_max = 0
+) |> clean_names() |> names()
+
+four_labels <- read_excel(
+  "data/raw/four_countries_teaching.xlsx", skip = 1, n_max = 0
+) |> names()
+
+four_names[1:3]
+four_labels[1]
+```
+
+Názvy jsou po sjednocení `q1_prop_1`, `q2_prop_1` a `q3_prop_1`. Druhý výpis obsahuje znění první položky. Argument `skip` znamená počet přeskočených řádků, nikoli číslo řádku, na kterém máme skončit.
+
+Nyní přeskočíme všechny tři řádky metadat a názvy předáme výslovně. Díky vektoru v `col_names` se první řádek odpovědí stane daty, nikoli novým záhlavím:
+
+```{r}
+#| label: l05-four-import
+four <- read_excel(
+  "data/raw/four_countries_teaching.xlsx",
+  skip = 3,
+  col_names = four_names
+)
+four_description <- as.list(four_labels)
+names(four_description) <- four_names
+four <- four |> set_variable_labels(.labels = four_description)
+dim(four)
+four |> count(country)
+```
+
+Výsledkem je **1 084 řádků a 21 sloupců**, tedy dvacet uzavřených položek a země. Četnosti ověřují složení našeho souboru; nepředstavují počty všech účastníků popsaných v článku. Přiřazení popisků spoléhá na stejné pořadí sloupců v obou řádcích hlavičky. Kdyby některá hlavička chyběla nebo měla duplicitní znění, bylo by potřeba mapování ručně zkontrolovat.
+
+Slovník lze uchovat i jako objekt. `generate_dictionary()` vytvoří tabulku s popisem proměnných; samotná funkce ještě nezapisuje soubor na disk:
+
+```{r}
+#| label: l05-four-dictionary
+four_dictionary <- generate_dictionary(four)
+four_dictionary |> as_tibble() |> select(variable, label) |> slice_head(n = 3)
+look_for(four, "prop", details = FALSE)
+```
+
+Pro stručný výpis jsme slovník převedli pomocí `as_tibble()` na běžnou tibble. První tabulka obsahuje názvy a popisky prvních tří sloupců. Hledání `prop` najde šest položek se společnou částí názvu. Metadata nám tak umožňují dohledat znění otázky, aniž bychom museli znovu otevírat původní hlavičku.
+
+### Cvičení 8: O jeden řádek vedle {.exercise}
+
+Co by se stalo, kdybyste při importu posledního souboru použili `skip = 2` a `col_names = four_names`? Proč není bezpečné problém řešit až smazáním prvního řádku z načtené tabulky?
+
+Vlastní úloha inspirovaná [R4DS, Spreadsheets](https://r4ds.hadley.nz/spreadsheets.html).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l05-reseni-skip
+four_wrong <- read_excel(
+  "data/raw/four_countries_teaching.xlsx",
+  skip = 2,
+  col_names = four_names
+)
+nrow(four_wrong)
+class(four_wrong$q1_prop_1)
+```
+
+Načte se 1 085 řádků, protože se technická metadata započítají jako jedna další odpověď. První položka má typ `character`: textový řádek už ovlivnil odhad typu. Pozdější odstranění řádku samo číselný typ neobnoví. Vhodnější je opravit import na `skip = 3` a data znovu načíst.
+:::
+
+### Nepovinně: prázdné sloupce a data z Excelu {#sec-import-excel-navic}
+
+Exporty někdy obsahují prázdné sloupce nebo sloupce s jedinou hodnotou. `janitor::remove_empty(which = "cols")` odstraní zcela prázdné sloupce. `remove_constant()` odstraňuje sloupce bez variability. **Konstantní ale neznamená nepotřebný:** například stejná hodnota „dokončeno“ u všech osob může dokumentovat podmínku zařazení. Nejprve zjistěte význam sloupce a až potom rozhodněte o jeho odstranění. Naše dotazníkové položky proto plošně neodstraňujeme.
+
+Datum může být v některých exportech uložené jako pořadové číslo dne v excelovém datovém systému. Následující hodnoty jsou výslovně vytvořené pro ukázku systému s počátkem v roce 1900:
+
+```{r}
+#| label: l05-excel-datum
+excel_dny <- c(45345, 45346)
+excel_numeric_to_date(excel_dny, date_system = "modern")
+```
+
+Výsledkem jsou data 23. a 24. února 2024. Převod na třídu `Date` zachovává kalendářní den, ale ne čas uvnitř dne. Některé sešity používají jiný datový systém; pokud `read_excel()` už sloupec rozpoznalo jako datum a čas, tento číselný převod na něj znovu nepoužívejte. Pro rozdíl přesných časových okamžiků nestačí převést oba na pouhé datum. [Dokumentace excel_numeric_to_date](https://sfirke.github.io/janitor/reference/excel_numeric_to_date.html)
+
+## Uložení připravených dat {#sec-import-ulozeni}
+
+### RDS: jeden objekt včetně metadat
+
+Připravená tabulka není totéž co původní vstup. Uložíme ji do `data/clean`. Formát **RDS** je určený pro jeden objekt R a zachovává jeho strukturu, typy a atributy včetně popisků.
+
+```{r}
+#| label: l05-rds
+dir.create("data/clean", recursive = TRUE, showWarnings = FALSE)
+write_rds(hs, "data/clean/help_seeking_prepared.rds")
+hs_znovu <- read_rds("data/clean/help_seeking_prepared.rds")
+identical(hs, hs_znovu)
+```
+
+Výsledek `TRUE` potvrzuje shodu celého objektu včetně popisků a faktorů. Při načítání si jméno určujeme sami: stejný soubor lze přiřadit do `hs_znovu`, `dotaznik` nebo jiného vhodného názvu. RDS slouží pro další práci v R; nenahrazuje skript, který vysvětluje, jak tabulka vznikla.
+
+### CSV: přenosná tabulka s menším množstvím informací
+
+CSV je užitečné pro předání hodnot jinému programu, ale neuchová automaticky popisky, definice faktorů ani další atributy R. U faktorů se zapisují jejich slovní hodnoty; u číselných položek s popisky zůstávají číselné kódy. Proto k exportu připojíme také slovník.
+
+```{r}
+#| label: l05-csv-export
+write_csv(hs, "data/clean/help_seeking_prepared.csv", na = "NA")
+write_csv(codebook, "data/clean/help_seeking_codebook.csv", na = "NA")
+hs_z_csv <- read_csv(
+  "data/clean/help_seeking_prepared.csv",
+  na = "NA",
+  show_col_types = FALSE
+)
+class(hs_z_csv$gender)
+val_labels(hs_z_csv$help_01)
+```
+
+Gender se načte jako text, popisky hodnot `help_01` chybějí (`NULL`). To není porucha zápisu, ale vlastnost formátu. Slovník uchovává původní kódování a znění položek; připravené CSV má u demografických faktorů již české slovní kategorie a chybění zapsané jako `NA`. Při předávání musíme tuto odlišnost uvést. Chceme-li navázat přesně na připravený objekt v R, použijeme RDS.
+
+### Nepovinně: více objektů přes `save()` a `load()`
+
+`save()` může do souboru `.RData` uložit několik pojmenovaných objektů. `load()` je obnoví s jejich původními názvy a může tím přepsat stejnojmenné objekty v paměti. Na rozdíl od `read_rds()` nevrací samotnou datovou tabulku:
+
+```{r}
+#| label: l05-rdata
+save(students, international, file = "data/clean/import_examples.RData")
+obnovena_jmena <- load("data/clean/import_examples.RData")
+obnovena_jmena
+```
+
+Výpis obsahuje jména `students` a `international`, které se současně obnovily v prostředí. Příkaz `x <- load(...)` tedy do `x` uloží jména objektů, nikoli jejich společný obsah. Pro jednu připravenou tabulku je RDS přehlednější; soubor s objekty ani automaticky uložené pracovní prostředí nenahrazují reprodukovatelný postup importu.
+
+## Závěrečná úloha: od Excelu k doložené tabulce {#sec-import-samostatne .exercise}
+
+V nové relaci R připravte ze souboru `help_seeking.xlsx` tabulku s `id`, `age`, `gender` a `help_01`. Načtěte `-99` jako `NA`, převeďte gender na faktor a připojte první položce popisky čtyř odpovědí. Věku dejte popisek „Věk v letech“. Zjistěte počet řádků, počet chybějících odpovědí na `help_01` a počet různých ID. Tabulku uložte jako RDS, znovu načtěte a ověřte shodu. Nevyřazujte osoby a nepočítejte celkový dotazníkový skór.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Následující řešení načítá potřebné balíčky i vstup samo. Nepotřebuje objekty z předchozích oddílů; stačí mít soubor na uvedené cestě.
+
+```{r}
+#| label: l05-reseni-samostatne
+library(tidyverse)
+library(readxl)
+library(labelled)
+
+dotaznik <- read_excel(
+  "data/raw/help_seeking.xlsx",
+  sheet = "data",
+  na = c("", "-99")
+) |>
+  select(id, age, gender, help_01)
+
+dotaznik <- dotaznik |>
+  mutate(gender = factor(
+    gender,
+    levels = 1:3,
+    labels = c("Žena", "Muž", "Jiné")
+  )) |>
+  set_variable_labels(age = "Věk v letech")
+
+val_labels(dotaznik$help_01) <- c(
+  "Nesouhlasím" = 1, "Spíše nesouhlasím" = 2,
+  "Spíše souhlasím" = 3, "Souhlasím" = 4
+)
+
+dotaznik |>
+  summarise(
+    pocet_radku = n(),
+    chybi_help_01 = sum(is.na(help_01)),
+    ruznych_id = n_distinct(id),
+    chybi_id = sum(is.na(id))
+  )
+
+dir.create("data/clean", recursive = TRUE, showWarnings = FALSE)
+write_rds(dotaznik, "data/clean/dotaznik_cv.rds")
+dotaznik_znovu <- read_rds("data/clean/dotaznik_cv.rds")
+identical(dotaznik, dotaznik_znovu)
+```
+
+Tabulka obsahuje 172 řádků, 172 různých ID, žádné chybějící ID a 7 chybějících odpovědí na `help_01`. ID jsou v této tabulce jedinečná. `identical()` vrátí `TRUE`: soubor zachoval hodnoty i metadata. Závěr se týká správnosti provedených kroků; neprokazuje kvalitu měření ani reprezentativnost souboru.
+:::
+
+## Časté potíže {#sec-import-potize}
+
+| Projev | Co ověřit |
+|:---|:---|
+| Soubor nelze najít. | Pracovní adresář, cestu, název a příponu; začněte `file.exists()`. |
+| Všechno skončí v jednom sloupci. | Skutečný oddělovač souboru; `.csv` samo nastavení neurčuje. |
+| Místo dat se načte HTML. | URL vede na webovou stránku, nikoli přímo na datový soubor. |
+| Číselný sloupec má typ `character`. | Text mezi hodnotami, desetinný znak nebo řádky metadat. |
+| Po importu vznikne neočekávané `NA`. | `problems()` u readr, zdrojový zápis a definované kódy chybění. |
+| Po převodu na faktor přibude `NA`. | Platné hodnoty se musejí shodovat s `levels`; předem použijte `count()`. |
+| `set_variable_labels()` nenajde sloupec. | Názvy v tabulce a ve slovníku, například po přejmenování. |
+| Kód „Bez odpovědi“ vstupuje do výpočtu. | Popisek hodnoty není definice chybění; nejprve převeďte kód na `NA`. |
+| Po načtení CSV zmizely popisky. | CSV je neuchovává; pro objekt R použijte RDS, pro přenos připojte slovník. |
+
+## Co si odnést {#sec-import-shrnuti}
+
+Import je překlad obsahu souboru do objektů R. Při kontrole postupujeme od umístění a formátu přes řádky hlavičky a kódy chybění k typům sloupců a věcnému významu hodnot. Technicky bezchybný import sám nestačí: číselný kód nemusí být měřená veličina a popisek nemusí obsahovat úplnou definici.
+
+Původní vstupy zachováváme a přípravu zapisujeme do skriptu. `labelled` pomáhá udržet význam proměnných a odpovědí; faktor, číselný vektor a vektor s popisky však mají odlišné role. Pro další práci v R ukládáme připravenou tabulku jako RDS, při výměně CSV předáváme také popis kódování. Teprve na těchto základech lze bezpečně navázat skórováním a analýzou.
+
+## Zdroje a další procvičení {#sec-import-zdroje}
+
+- Wickham, H., Çetinkaya-Rundel, M., & Grolemund, G. *R for Data Science* (2. vydání): [Data import](https://r4ds.hadley.nz/data-import.html) a [Spreadsheets](https://r4ds.hadley.nz/spreadsheets.html). Základ pro textový import, kontrolu typů a vlastní obměny označených cvičení.
+- Larmarange, J. [Introduction to labelled](https://larmarange.github.io/labelled/articles/labelled.html) a [vyhledávání pomocí look_for](https://larmarange.github.io/labelled/articles/look_for.html). Popisky a příprava proměnných s metadaty.
+- Oficiální dokumentace [readr](https://readr.tidyverse.org/reference/read_delim.html), [readxl](https://readxl.tidyverse.org/reference/read_excel.html), [haven](https://haven.tidyverse.org/reference/read_spss.html) a [janitor](https://sfirke.github.io/janitor/).
+- Marmolejo-Ramos, F., a kol. (2025). [From human artefact to machine output: automating the “art” of psychological measurement](https://doi.org/10.1080/29974100.2025.2561692). *Journal of Psychology and AI, 1*(1), článek 2561692. Výzkumný kontext výukového souboru čtyř zemí.

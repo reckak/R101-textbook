@@ -1,6 +1,6 @@
 # R101: Praktický úvod do R
 
-Česká učebnice pro studenty psychologie bez předchozí zkušenosti s programováním. Projekt používá [Quarto Book](https://quarto.org/docs/books/); aktuálně obsahuje úvod a kapitoly o základech R/RStudia, grafech v ggplot2, úpravách dat v dplyr a datových strukturách.
+Česká učebnice pro studenty psychologie bez předchozí zkušenosti s programováním. Projekt používá [Quarto Book](https://quarto.org/docs/books/); aktuálně obsahuje úvod a kapitoly o základech R/RStudia, grafech v ggplot2, úpravách dat v dplyr, datových strukturách a importu a základní přípravě dat.
 
 ## Práce s projektem
 
@@ -27,6 +27,8 @@ Výstup vzniká ve složce `_book/`, úvodní stránka je `_book/index.html`. Pr
 - `quarto/lekce_02.qmd`: základy tvorby a interpretace grafů v ggplot2.
 - `quarto/lekce_03.qmd`: úpravy dat, chybějící hodnoty a skupinové souhrny v dplyr.
 - `quarto/lekce_04.qmd`: vektory, převody typů, faktory, seznamy a datové tabulky.
+- `quarto/lekce_05.qmd`: import CSV, Excelu a SPSS, příprava dat a metadata s labelled.
+- `data/README.md`: původ čtyř veřejných vstupů lekce 5 a pravidla výukového výřezu.
 - `_quarto.yml`: pořadí kapitol a společné nastavení knihy.
 - `quarto/lesson.css`: společné styly včetně tlačítek kopírování.
 - `scripts/`: původní podklady a samostatná instalace balíčků.
@@ -41,7 +43,9 @@ Novou kapitolu přidejte jako `.qmd` do `quarto/` a zapište ji do `book.chapter
 
 Po změně vykreslete celou knihu. Kontrolu výpočtů spusťte příkazem `Rscript --vanilla quarto/_verification/check-r.R`. Pro kontrolu HTML je potřeba Node.js a Playwright: jednorázově spusťte `npm install --no-save --package-lock=false playwright` a `npx playwright install chromium`, potom `node quarto/_verification/check-html.cjs`. Alternativně lze cestu k modulu Playwright předat proměnnou `PLAYWRIGHT_MODULE` a cestu k existujícímu prohlížeči proměnnou `CHROME_PATH`.
 
-Kontrola R ověřuje samostatná závěrečná řešení všech čtyř kapitol, číselné interpretace a vybrané grafické výpočty. Třetí a čtvrtou kapitolu navíc spouští celé v samostatných čistých relacích pomocí `check-lesson-03.R` a `check-lesson-04.R`, včetně všech řešení a očekávaných demonstračních chyb. U čtvrté kapitoly kontroluje také záměrná varování, význam kódů faktorů, strukturu výběrů, shodu vybraných dat v základním R a dplyr a jmenovatele podílů. Kontrola HTML prochází všechny čtyři kapitoly: ověřuje navigaci knihy, pravou osnovu, skrytí a rozbalení všech řešení, skutečné kopírování všech ukázek kódu, obrázky, odkazy uvnitř knihy a mobilní rozložení. Vytváří také snímky stránek a přehledy grafů ve `quarto/_verification/` pro vizuální kontrolu. Na úzkých obrazovkách se pravá osnova standardně skrývá, aby zůstal prostor pro text. Generované výstupy a lokální pracovní soubory se do Gitu neukládají.
+Kontrola R ověřuje samostatná závěrečná řešení všech pěti kapitol, číselné interpretace a vybrané grafické výpočty. Třetí až pátou kapitolu navíc spouští celé v samostatných čistých relacích pomocí `check-lesson-03.R`, `check-lesson-04.R` a `check-lesson-05.R`, včetně všech řešení a očekávaných demonstračních chyb či varování. U čtvrté kapitoly kontroluje význam kódů faktorů, strukturu výběrů, shodu základního R a dplyr a jmenovatele podílů. U páté ověřuje typy importu, kódy chybění, popisky, shodu hodnot před a po jejich přidání, exporty a přesný seznam sloupců veřejného výřezu. Je-li lokálně přítomen původní výzkumný export, porovná také každou ponechanou hodnotu. Kontrola HTML prochází všech pět kapitol: ověřuje navigaci knihy, pravou osnovu, skrytí a rozbalení všech řešení, skutečné kopírování všech ukázek kódu, obrázky, odkazy uvnitř knihy a mobilní rozložení. V páté kapitole klikne na všechny čtyři odkazy ke stažení a ověří i shodu stažených bajtů se vstupy a přesný obsah publikované datové složky. Vytváří snímky stránek a přehledy grafů ve `quarto/_verification/` pro vizuální kontrolu. Na úzkých obrazovkách se pravá osnova standardně skrývá. Generované výstupy a lokální pracovní soubory se do Gitu neukládají.
+
+Render páté lekce používá místní data a nepotřebuje síť. Čtyři veřejné soubory jsou výslovně vyjmenované v `project.resources`; nepřidávejte sem celou složku `data`, protože obsahuje i místní výzkumné exporty. Přímé GitHub URL v lekci používají pevný commit s daty. Volitelné online příklady nejsou vykonávány při renderu; při změně odkazů je ověřte samostatně pomocí `Rscript --vanilla quarto/_verification/check-lesson-05-downloads.R`.
 
 Další větší změny připravujte v samostatné větvi a před sloučením kontrolujte rozdíly a vykreslený výsledek.
 

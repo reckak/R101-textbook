@@ -17,3 +17,5 @@ Ve [druhé kapitole](quarto/lekce_02.qmd) se naučíte tvořit a číst grafy v 
 Ve [třetí kapitole](quarto/lekce_03.qmd) budete upravovat tabulky pomocí dplyr: vybírat řádky a sloupce, vytvářet nové proměnné a počítat souhrny podle skupin. Naučíte se také kontrolovat chybějící údaje a připravit souhrnnou tabulku pro graf.
 
 Ve [čtvrté kapitole](quarto/lekce_04.qmd) prozkoumáte, jak R ukládá data do vektorů, faktorů, seznamů a datových tabulek. Naučíte se kontrolovat a převádět typy, vybírat části objektů a rozpoznat chyby při práci s kategoriemi, chybějícími údaji a nestejně dlouhými vektory.
+
+V [páté kapitole](quarto/lekce_05.qmd) načtete data z textových souborů, Excelu a SPSS. Zkontrolujete jejich strukturu, typy a kódy chybění, připojíte popisky pomocí balíčku labelled a uložíte připravenou tabulku. Datové soubory si stáhnete přímo z kapitoly.
