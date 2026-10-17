@@ -8,6 +8,8 @@ project:
     - data/raw/international.sav
     - data/raw/help_seeking.xlsx
     - data/raw/four_countries_teaching.xlsx
+    - data/clean/help_seeking_data.rds
+    - data/clean/help_seeking_codebook.rds
 book:
   title: "R101: Praktický úvod do R"
   chapters:
@@ -17,6 +19,7 @@ book:
     - quarto/lekce_03.qmd
     - quarto/lekce_04.qmd
     - quarto/lekce_05.qmd
+    - quarto/lekce_06.qmd
 lang: cs
 language:
   code-copy-button-tooltip: "Zkopírovat"
