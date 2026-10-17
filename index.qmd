@@ -20,4 +20,4 @@ Ve [čtvrté kapitole](quarto/lekce_04.qmd) prozkoumáte, jak R ukládá data do
 
 V [páté kapitole](quarto/lekce_05.qmd) načtete data z textových souborů, Excelu a SPSS. Zkontrolujete jejich strukturu, typy a kódy chybění, připojíte popisky pomocí balíčku labelled a uložíte připravenou tabulku. Datové soubory si stáhnete přímo z kapitoly.
 
-V [šesté kapitole](quarto/lekce_06.qmd) spojíte odpovědi na dotazníkové položky do skórů: obrátíte reverzní položky, odhadnete reliabilitu pomocí Cronbachovy alfy a rozhodnete o chybějících odpovědích. Vztah dvou skórů zobrazíte v bodovém grafu a popíšete jej korelací a jednoduchou lineární regresí.
+V [šesté kapitole](quarto/lekce_06.qmd) spojíte odpovědi na dotazníkové položky do skórů: obrátíte reverzní položky, odhadnete reliabilitu pomocí Cronbachova alfa a rozhodnete o chybějících odpovědích. Vztah dvou skórů zobrazíte v bodovém grafu s trendovou přímkou a křivkou a tvar jejich rozdělení posoudíte histogramem a Q-Q grafem s pásem spolehlivosti.

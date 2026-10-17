@@ -49,7 +49,7 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       const mainBox = await page.locator('main').boundingBox();
       check(tocBox.x >= mainBox.x + mainBox.width - 1 && tocBox.y < 180, 'TOC not at top right');
       check(await toc.locator('a[data-scroll-target]').count() > 5, 'TOC incomplete');
-      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny', 4: '#sec-struktury-faktory', 5: '#sec-import-labelled', 6: '#sec-skory-korelace' }[chapterNumber];
+      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny', 4: '#sec-struktury-faktory', 5: '#sec-import-labelled', 6: '#sec-skory-rozdeleni' }[chapterNumber];
       await toc.locator('a[data-scroll-target="' + tocTarget + '"]').click();
       await page.waitForFunction(id => Math.abs(document.querySelector(id).getBoundingClientRect().top) < 200, tocTarget);
       await page.evaluate(() => window.scrollTo(0, 0));
@@ -154,7 +154,7 @@ function check(condition, message) { if (!condition) throw new Error(message); }
         await screenshot('html-downloads', '#sec-skory-data');
         await screenshot('html-table', '#sec-skory-alfa > .cell:first-of-type');
         await screenshot('html-graph', '#fig-skory-final');
-        await screenshot('html-intervals', '#fig-skory-intervaly');
+        await screenshot('html-qqbands', '#fig-skory-qqplotr-pasy');
         await screenshot('html-solution', '#sec-skory-samostatne .callout');
         const downloads = page.locator('main a[download]');
         check(await downloads.count() === 2, 'Lesson 06 must expose two downloadable files');

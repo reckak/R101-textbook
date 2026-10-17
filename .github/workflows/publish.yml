@@ -39,6 +39,7 @@ jobs:
             any::janitor
             any::labelled
             any::psych
+            any::qqplotr
             any::knitr
             any::rmarkdown
       - name: Render complete book
