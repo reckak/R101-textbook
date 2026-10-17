@@ -1,5 +1,105 @@
 # Autorská dokumentace učebnice R101
 
+## Šestá kapitola: skóry škál, korelace a regrese, 17. 10. 2026
+
+Podkladem je `scripts/week_06.R`, zachovaný beze změny (SHA-256
+`ce8e104469995a6de90d4916c7a4b82a7d52a47b82cc97a6acf4ea6c0ad1dd16`).
+Kapitola `lekce_06.qmd` navazuje na grafy (lekce 2), dplyr (3), vektory
+a recyklaci (4) a na data o vyhledávání pomoci, `across()` a popisky (5).
+Obsahuje osm průběžných cvičení a samostatně spustitelnou závěrečnou úlohu;
+všechna řešení jsou sbalená.
+
+### Rozsah a vstupy
+
+- **Vynechaná část podkladu:** na pokyn uživatele lekce končí jednoduchou
+  regresí. Část od ř. 705 (`Comparing men and women`: boxplot/violin
+  s `mean_cl_normal`, t-testy včetně rstatix, Cohenovo d, Levene,
+  Shapiro–Wilk) zůstává nezpracovaná pro případnou další lekci. Proto nejsou
+  potřeba balíčky rstatix ani Hmisc; nově je v instalaci a CI pouze `psych`.
+- **Data:** uživatel dodal `data/clean/help_seeking_data.rds`
+  (SHA-256 `9d37eb06777e119be5472c265ba47ca22e38e34e9ea193bfdfe1f9fd06eb1c0a`)
+  a `data/clean/help_seeking_codebook.rds`
+  (`7111a09afc3a937518ef59203fcd8887d586f72ba1b87bf0dbe056cd60c00991`).
+  Podklad je čte z `data/…`; kapitola používá skutečné umístění `data/clean/…`.
+  Shoda všech 33 sdílených sloupců s `help_seeking.xlsx` po převodu `-99`
+  byla ověřena. Kategorie jsou anglické, odlišné od české přípravy v lekci 5;
+  kapitola to studentům výslovně vysvětluje. Oba soubory jsou výjimkou
+  v `.gitignore`, publikované přes `project.resources` a ke stažení z kapitoly.
+
+### Úpravy podkladu a jejich důvody
+
+- **Popisky hodnot:** aritmetika i `psych::alpha()` s `haven_labelled`
+  fungují jen při načteném jmenném prostoru haven (zde přes labelled);
+  bez něj skončí chybou `<double> - <haven_labelled> is not permitted`,
+  resp. selháním převodu v psych. Kapitola proto po načtení výslovně volá
+  `remove_val_labels()`. Hodnoty se nemění; kontrola dokládá shodu skórů
+  s podkladem.
+- **Neúplný kód:** druhý histogram v podkladu (ř. 540) nemá `hs_rec %>%`
+  a skončil by chybou; opraveno. Duplicitní blok ř. 151–162 a druhý Q-Q graf
+  téže proměnné sloučeny. Pipe `%>%` nahrazen `|>` jako v lekcích 3–5;
+  `check-lesson-06.R` spouští skórování z podkladu (ř. 1–307) a ověřuje
+  identické `tot_help`, `tot_emo` i pořadí osob.
+- **Demonstrace chyb:** `mean(help_01:help_10)` je označená záměrná chyba
+  (`NA/NaN argument`). Text ukazuje i tiché chyby bez `na.rm` a bez
+  `rowwise()`; společný průměr bez `rowwise()` je 3,00 pro všechny.
+- **Alfa:** komentář „alfa kolem 0,82 je dobrá“ nahrazen výkladem výstupu
+  (`raw_alpha`, interval, `alpha if dropped`, `r.drop`) a omezení
+  s ověřenými zdroji (Sijtsma, 2009; McNeish, 2018) a dokumentací psych
+  (výchozí `check.keys = FALSE`, párové korelace). Slabá položka `help_04`
+  se nevyřazuje; pevné prahy nejsou vydávány za univerzální.
+- **Jitter:** `geom_jitter()` nemá v ggplot2 4.0 argument `seed`, takže by
+  grafy nebyly reprodukovatelné. Používá se `position_jitter(..., seed = 123)`
+  uložené v objektu `posun`; posun 0,05 jako v podkladu (variantu 0,1/0,3
+  pro ukázku motivu nahrazuje stejný posun). Od prvního grafu s vysvětleným
+  varováním „Removed 6 rows“ se pracuje s `hs_dvojice` (166 úplných dvojic).
+- **Trendové čáry:** `geom_smooth()` má výslovně `method` i `formula`, aby
+  nevznikaly zprávy o výchozí metodě; 99% pás z podkladu zachován.
+- **Spearman:** `exact = FALSE` místo nevysvětleného varování o shodách.
+  Formule s `conf.level = 0.99` sloučena s ukázkou zápisu přes `data`.
+  Korelační matice používá plné `"pairwise.complete.obs"` místo částečné
+  shody `"pairwise"`; doplněn rozsah n 156–166 a srovnání se 123 úplnými.
+- **Rozdělení:** z-skóry počítány výslovně v `mutate()` místo `scale()`
+  v `aes()` (matice). Doplněno, že normalita samotných proměnných není
+  podmínkou korelace/regrese; přidán Q-Q graf reziduí, který využívá
+  `na.exclude` (rezidua délky 172 lze připojit k tabulce).
+- **Predikce:** mřížka omezena na pozorovaný rozsah 1,24–5,65 místo 1–6
+  (extrapolace). Objekt `pi` přejmenován na `pi_tab`, protože zakrýval
+  konstantu π. `left_join(ci, pi, by = "fit")` (párování podle desetinného
+  odhadu) nahrazeno `bind_cols()`; kontrola dokládá shodu obou výsledků
+  na této mřížce. Výklad upozorňuje, že predikční pás přesahuje hranici 4.
+- **Závěrečná úloha:** nová, nevychází z podkladu: věk a postoj k pomoci
+  (165 osob, *r* = 0,01 [−0,14; 0,16]). Interpretace odlišuje nezjištěný
+  vztah od důkazu nulového vztahu.
+- **Popisky a jazyk:** české popisky os; škála emoční otevřenosti pojmenována
+  jako v lekci 5. Pracovní překlad položek v textu není validovaným překladem.
+
+### Ověření
+
+Nový `check-lesson-06.R` (zapojený do `check-r.R`) spouští všechny bloky
+a řešení v čisté relaci, vyžaduje jedinou označenou chybu a dvě očekávaná
+varování (psych před obrácením, „Removed 6 rows“ u prvního grafu; grafy
+se při kontrole skutečně vykreslují), ověřuje číselné interpretace, shodu
+`bind_cols()` s `left_join()`, shodu skórů s podkladem a samostatně spouští
+závěrečné řešení. `check-html.cjs` rozšířen na šestou kapitolu včetně dvou
+stažení s bajtovou shodou a přesného obsahu publikovaných `data/raw`
+a `data/clean`.
+
+Prošel render celé knihy (Quarto 1.9.38, R 4.5.1), `check-r.R` pro všech
+šest kapitol a po závěrečných textových úpravách znovu render šesté kapitoly
+a `check-lesson-06.R`. Kontrola HTML prošla pro všech šest kapitol: v šesté
+9 sbalených a rozbalitelných řešení, skutečné kopírování 70 úseků kódu,
+15 grafů, 496 místních cílů odkazů, šířka 390 px bez přetékání, bez chyb
+JavaScriptu. První běh odhalil přetékání dvou vzorců MathJax a dvou dlouhých
+inline kódů na mobilu; vzorce byly zkráceny a kód rozdělen. Všech 15 grafů
+bylo prohlédnuto a interpretace upraveny podle skutečného vzhledu (plochý
+začátek křivky loess, konce rozdělení, predikční pás nad 4). Externí odkazy
+vrátily HTTP 200; kotva R4DS opravena na `#sec-across`. Místní Playwright
+neměl svou verzi prohlížeče, kontrola proto běžela s `CHROME_PATH` na
+nainstalovaný Chrome. R hlásí obvyklá upozornění na balíčky sestavené
+pod R 4.5.3. Veřejné nasazení tato lokální kontrola nepotvrzuje.
+Kontrola rozdílů je čistá u všech autorských souborů; původní `week_06.R`
+obsahuje vlastní koncové mezery, které se kvůli zachování podkladu neupravují.
+
 ## Chybějící kódy ve výpočtech a datum z Excelu, 10. 10. 2026
 
 - Doplněno skutečně spuštěné porovnání `mean(..., na.rm = TRUE)` pro

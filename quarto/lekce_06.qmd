@@ -1,0 +1,1141 @@
+---
+title: "Skóry dotazníkových škál a vztah dvou proměnných"
+subtitle: "Od reverzních položek přes reliabilitu k bodovému grafu, korelaci a jednoduché regresi"
+---
+
+## Co se naučíte {#sec-skory-cile}
+
+Dotazník obvykle neměří postoj jedinou otázkou. Odpovědi na několik položek proto spojujeme do **celkového skóru**. Než je spojíme, musíme zajistit, aby všechny položky měřily stejným směrem. Měli bychom také zjistit, jak spolu položky souvisejí, a rozhodnout, kolik chybějících odpovědí ještě připustíme.
+
+V této lekci překódujete reverzní položky, spočítáte Cronbachovu alfu a vytvoříte průměrné skóry dvou škál. Potom ukážete vztah mezi skóry v bodovém grafu, popíšete jej korelací a jednoduchou lineární regresí a odlišíte interval spolehlivosti pro průměr od predikčního intervalu pro jednotlivce.
+
+Navazujeme na grafy v ggplot2 z [druhé lekce](lekce_02.qmd), zejména na trendové křivky v oddílu [-@sec-vrstvy]. Z [třetí lekce](lekce_03.qmd) využijeme `mutate()`, `summarise()` a `count()` a z [páté lekce](lekce_05.qmd) data o vyhledávání odborné pomoci a funkci `across()` (oddíl [-@sec-import-across]). Předpokládáme znalost průměru, směrodatné odchylky, korelace a základní myšlenky testování hypotéz. Statistické pojmy stručně připomeneme tam, kde je budeme potřebovat.
+
+## Příprava projektu a dat {#sec-skory-priprava}
+
+Otevřete projekt `r101` a založte skript `scripts/06_skory_a_vztahy.R`.
+
+### Soubory k této lekci {#sec-skory-data}
+
+Pracujeme se stejnými odpověďmi jako v páté lekci. Data pocházejí z malého studentského seminárního projektu o vztahu mezi postoji k vyhledání odborné psychologické pomoci a emoční otevřeností. Nejde o simulaci, ale ani o reprezentativní vzorek, proto výsledky popisují tento soubor respondentů a nelze je zobecnit na celou populaci.
+
+Data jsou již připravená. Stáhněte oba soubory a uložte je do složky `data/clean` svého projektu:
+
+::: table-responsive
+| Soubor ke stažení | Obsah |
+|:---|:---|
+| [help_seeking_data.rds](../data/clean/help_seeking_data.rds){download="help_seeking_data.rds"} | Odpovědi 172 osob: demografické údaje, 10 položek `help_` a 17 položek `emo_`. |
+| [help_seeking_codebook.rds](../data/clean/help_seeking_codebook.rds){download="help_seeking_codebook.rds"} | Datový slovník: název, dotazník, znění položky a informace o reverzní položce. |
+:::
+
+Oba soubory obsahují tytéž odpovědi jako sešit `help_seeking.xlsx` z páté lekce a jsou připravené podobně: kód `-99` je převedený na `NA`, demografické proměnné jsou faktory a položky mají popisky hodnot. **Kategorie a popisky jsou zde v angličtině** podle datového slovníku (například `Female`, `Male`). Nejde tedy o soubor, který jste si v páté lekci uložili sami; pro tuto lekci použijte stažené soubory.
+
+Položky `help_01` až `help_10` pocházejí ze škály postojů k vyhledání odborné psychologické pomoci (*Attitudes Toward Seeking Professional Psychological Help*) s odpověďmi 1 = nesouhlasím až 4 = souhlasím. Položky `emo_01` až `emo_17` patří ke škále emoční otevřenosti (*Emotional Expressiveness Scale*) s odpověďmi 1 = nikdy až 6 = vždy.
+
+### Balíčky a načtení dat
+
+Nově použijeme balíček **`psych`**, který obsahuje řadu funkcí pro psychometrii. Pokud jej ještě nemáte, nainstalujte jej jednorázově v konzoli:
+
+```{r}
+#| label: l06-instalace
+#| eval: false
+install.packages(c("tidyverse", "labelled", "psych"))
+```
+
+Ve skriptu balíčky načtěte. Formát RDS znáte z oddílu [-@sec-import-ulozeni]; `read_rds()` načte jeden uložený objekt R a přiřadíme jej do jména podle své volby:
+
+```{r}
+#| label: l06-nacteni
+library(tidyverse)
+library(labelled)
+library(psych)
+
+hs <- read_rds("data/clean/help_seeking_data.rds")
+codebook <- read_rds("data/clean/help_seeking_codebook.rds")
+dim(hs)
+hs |> select(id, gender, age, help_01:help_03) |> slice_head(n = 4)
+```
+
+Tabulka má 172 řádků a 34 sloupců. Pohlaví je faktor s anglickými kategoriemi a položky mají typ `<hvn_lbll>`, tedy vektor s popisky hodnot z balíčku haven. U první osoby chybí odpověď na `help_01`. Zápis `help_01:help_03` vybírá sousední sloupce od `help_01` po `help_03`, jak jsme to dělali v `select()` v třetí lekci.
+
+Balíček psych obsahuje funkci `alpha()` a stejnojmennou funkci (pro průhlednost barev) má i ggplot2. Funkci pro reliabilitu proto budeme volat s předponou `psych::alpha()`. Předpona `::` výslovně říká, ze kterého balíčku funkce pochází (oddíl [-@sec-balicky]).
+
+### Popisky hodnot před výpočtem odstraníme {#sec-skory-popisky}
+
+Popisky hodnot jsou užitečné při kontrole dat, ale v této lekci budeme s odpověďmi počítat: odečítat je, průměrovat a korelovat. V oddílu [-@sec-import-analyza] jsme si ukázali, že před analýzou máme zvolit buď faktor, nebo obyčejný číselný vektor. Pro součty a průměry odpovědí potřebujeme čísla.
+
+S vektorem třídy `haven_labelled` R počítat umí, ale jen tehdy, je-li načtený balíček haven; v naší relaci jej načetl balíček labelled. Kdybyste data načetli bez labelled (nebo haven), výpočet jako `5 - hs$help_02` by skončil chybou `<double> - <haven_labelled> is not permitted`. Výsledek by tedy závisel na tom, které balíčky jsou zrovna načtené. Navíc by po odečtení původní popisky už neodpovídaly hodnotám: kód 1 by po obrácení neznamenal „Disagree“. Popisky hodnot proto z celé tabulky odstraníme a s položkami budeme dále pracovat jako s obyčejnými čísly:
+
+```{r}
+#| label: l06-odstraneni-popisku
+hs <- hs |> remove_val_labels()
+class(hs$help_02)
+var_label(hs$help_02)
+```
+
+Položka má nyní třídu `numeric`. Popisek proměnné, tedy znění položky, zůstal zachován. Hodnoty odpovědí se nezměnily: odstranili jsme jen informaci, který kód odpovídá kterému slovnímu vyjádření. Ta zůstává v datovém slovníku. Faktory, jako je `gender`, zůstávají faktory.
+
+## Reverzní položky {#sec-skory-reverzni}
+
+### Proč některé položky obracíme
+
+Položka `help_01` zní (v překladu): „Kdybych měl(a) pocit, že se psychicky hroutím, nejprve bych pomyslel(a) na odbornou pomoc.“ Souhlas zde znamená **příznivý** postoj k odborné pomoci. Položka `help_02` naopak tvrdí, že rozhovor s psychologem je špatný způsob, jak se zbavit psychických potíží; souhlas tedy znamená **nepříznivý** postoj. Takové položce říkáme **reverzní** (*reverse-keyed*, *reversed item*). Autoři dotazníků je zařazují mimo jiné proto, aby odhalili odpovídání bez čtení otázek.
+
+Pokud bychom položky jen zprůměrovali, vysoký souhlas s `help_01` i `help_02` by se navzájem rušil. Nejprve se proto podívejme, co se stane, když reverzní položky necháme beze změny a spočítáme reliabilitu.
+
+### Cronbachova alfa jako první kontrola
+
+**Reliabilita** vyjadřuje, nakolik je skór přesný, tedy jak málo je ovlivněn chybou měření. Nejčastěji uváděným odhadem reliability z jediného měření je **Cronbachova alfa**. Vychází z korelací mezi položkami: čím více položky spolu souvisejí a čím je jich více, tím je alfa vyšší. Funkce `psych::alpha()` dostane tabulku obsahující pouze položky jedné škály:
+
+```{r}
+#| label: l06-alfa-pred
+alfa_pred <- hs |>
+  select(starts_with("help_")) |>
+  psych::alpha()
+alfa_pred$total
+```
+
+Funkce vypsala **varování** a zprávu: položky `help_02`, `help_04`, `help_08`, `help_09` a `help_10` korelují záporně s ostatními položkami (přesněji s první hlavní komponentou) a pravděpodobně by měly být obráceny. Alfa (`raw_alpha`) je −0,07. Záporná hodnota nevypovídá o „velmi nízké reliabilitě“, ale o tom, že položky jsou spojené s opačným znaménkem, což je typický příznak neobrácených reverzních položek. Z celkového výsledku jsme si nechali vypsat jen část `$total`; úplný výstup projdeme po opravě.
+
+Funkce by umožnila obrátit položky automaticky pomocí `check.keys = TRUE`. Tím by ale o obrácení rozhodla podle korelací v našem vzorku. Které položky jsou reverzní, je však dáno konstrukcí dotazníku, a proto je vyhledáme v datovém slovníku.
+
+### Které položky jsou reverzní: datový slovník
+
+```{r}
+#| label: l06-codebook-reverzni
+codebook |>
+  filter(
+    instrument == "Attitudes Toward Seeking Professional Psychological Help",
+    reversed
+  ) |>
+  select(name, reversed)
+```
+
+Sloupec `reversed` je logický, proto stačí napsat samotné `reversed` místo `reversed == TRUE`; `filter()` ponechá řádky, kde je hodnota `TRUE`. Podle slovníku jsou reverzní položky `help_02`, `help_04`, `help_08`, `help_09` a `help_10`, tedy právě ty, na které upozornila funkce `psych::alpha()`. Shoda je dobrou kontrolou, ale rozhodujícím zdrojem zůstává slovník.
+
+### Jak obrátit odpovědi na škále 1–4
+
+Obrácení má zaměnit nejnižší odpověď za nejvyšší a naopak: 1 → 4, 2 → 3, 3 → 2 a 4 → 1. Obecně pro původní odpověď $x$ platí:
+
+$$
+x_{\text{obrácená}} = (\text{min} + \text{max}) - x,
+$$
+
+kde min a max jsou nejnižší a nejvyšší možná odpověď škály.
+
+Pro škálu 1–4 je součet minima a maxima 5, proto počítáme `5 - x`: 5 − 1 = 4, 5 − 2 = 3, 5 − 3 = 2 a 5 − 4 = 1. Chybějící odpověď zůstane chybějící, protože 5 − `NA` je opět `NA`.
+
+Přímočaré řešení je zapsat výpočet pro každou položku zvlášť:
+
+```{r}
+#| label: l06-rucni-obraceni
+hs |>
+  mutate(
+    help_02 = 5 - help_02,
+    help_04 = 5 - help_04,
+    help_08 = 5 - help_08,
+    help_09 = 5 - help_09,
+    help_10 = 5 - help_10
+  ) |>
+  select(id, help_02, help_04) |>
+  slice_head(n = 3)
+```
+
+Výsledek je správný: první osoba původně u `help_02` odpověděla 1 („Disagree“), takže nyní má hodnotu 4. Výsledek jsme ale nepřiřadili do žádného objektu, proto se tabulka `hs` nezměnila. Opakovat stejný řádek pětkrát je zdlouhavé. U delší škály se snadno stane, že jednu položku vynecháme nebo do vzorce napíšeme jiný název, než měníme. Proto si nejprve vytvoříme vektor s názvy reverzních položek a potom použijeme `across()`.
+
+### Vektor s názvy položek
+
+Funkci `str_c()` znáte z páté lekce: spojí textové části bez mezery. Jedno ze spojovaných kusů může být vektor; kratší vstup se pak zopakuje (recyklace, oddíl [-@sec-struktury-recyklace]):
+
+```{r}
+#| label: l06-str-c
+str_c("help_", c(2, 4, 8, 9, 10))
+```
+
+To je skoro správně, ale názvy sloupců mají dvoumístná čísla: `help_02`, nikoli `help_2`. Pro sloupec `help_2` by R hlásilo, že neexistuje. Funkce `str_pad()` z balíčku stringr doplní text na požadovanou délku:
+
+```{r}
+#| label: l06-str-pad
+str_pad(
+  c(2, 4, 8, 9, 10),  # čísla položek
+  width = 2,          # požadovaná délka každého prvku
+  pad = "0",          # doplňovaný znak
+  side = "left"       # doplnit zleva
+)
+```
+
+Číslo 10 už má dva znaky, proto zůstalo beze změny; ostatní dostala úvodní nulu. Výsledkem je text, nikoli číslo. Obě funkce nyní spojíme:
+
+```{r}
+#| label: l06-rev-help
+rev_help <- str_c(
+  "help_",
+  str_pad(c(2, 4, 8, 9, 10), width = 2, pad = "0", side = "left")
+)
+rev_help
+```
+
+Názvy odpovídají sloupcům v datech. Tento postup je užitečný, když čísla položek známe například z manuálu dotazníku. Máme-li datový slovník, můžeme názvy vytáhnout přímo z něj pomocí `pull()` (oddíl [-@sec-import-excel]), a vyhnout se tak přepisování čísel:
+
+```{r}
+#| label: l06-rev-help-slovnik
+codebook |>
+  filter(
+    instrument == "Attitudes Toward Seeking Professional Psychological Help",
+    reversed
+  ) |>
+  pull(name)
+```
+
+Oba způsoby vedou ke stejnému vektoru. Postup se slovníkem je spolehlivější, pokud je slovník správný; ruční výčet se hodí, když slovník k dispozici nemáme.
+
+### Stejný výpočet pro všechny reverzní položky
+
+Funkce `across()` použije stejnou funkci na více sloupců. Tentokrát sloupce nevybíráme výčtem názvů v `c()`, ale textovým vektorem uloženým v objektu. K tomu slouží `all_of()` (oddíl [-@sec-upravy-sloupce]): vybere přesně sloupce s uvedenými názvy, a pokud některý chybí, ohlásí chybu. Zápis `~ 5 - .x` je krátká funkce, ve které `.x` zastupuje právě zpracovávaný sloupec:
+
+```{r}
+#| label: l06-across-obraceni
+hs_rec <- hs |>
+  mutate(across(all_of(rev_help), ~ 5 - .x))
+
+hs |> count(help_02)
+hs_rec |> count(help_02)
+```
+
+Výsledek ukládáme do nového objektu `hs_rec` (*recoded*), takže původní tabulka `hs` zůstává beze změny. Porovnání četností potvrzuje obrácení: 110 osob, které původně odpověděly 1, má nyní hodnotu 4, 7 osob s odpovědí 4 má nyní 1 a 7 chybějících odpovědí zůstalo chybějících. **Takovou kontrolu po každém překódování doporučujeme**, protože chybný vzorec by R neohlásilo; vytvořilo by jen nesprávná čísla.
+
+Pozor na opakované spuštění: kdybychom řádek `hs <- hs |> mutate(across(all_of(rev_help), ~ 5 - .x))` spustili dvakrát, položky by se vrátily do původního směru. Proto výsledek ukládáme do nového objektu.
+
+Pokud chceme v jedné tabulce ponechat původní i obrácené odpovědi, použijeme argument `.names`. Text `{.col}` v něm zastupuje původní název sloupce:
+
+```{r}
+#| label: l06-across-names
+hs |>
+  mutate(across(all_of(rev_help), ~ 5 - .x, .names = "{.col}_r")) |>
+  select(help_02, help_02_r, help_04, help_04_r) |>
+  slice_head(n = 4)
+```
+
+Vznikly nové sloupce s příponou `_r` a původní zůstaly vedle nich. Tato varianta se hodí pro kontrolu. Pro výpočet skóru ale musíme dávat pozor, abychom nezahrnuli původní i obrácenou verzi stejné položky: výběr `starts_with("help_")` by nyní zachytil obě.
+
+### Cvičení 1: Obrácení na jiné škále {.exercise}
+
+Jak byste obrátili položku se škálou 0–4 a jak položku se škálou 1–7? Potom vytvořte z tabulky `hs` objekt `hs_kontrola`, v němž bude kromě původních položek i obrácená verze reverzních položek s příponou `_r`. Pomocí `count(help_04, help_04_r)` ověřte, že se každá původní odpověď změnila na správnou novou hodnotu.
+
+Vlastní úloha inspirovaná [R4DS, oddílem Modifying multiple columns](https://r4ds.hadley.nz/iteration.html#sec-across).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Pro škálu 0–4 je součet minima a maxima 4, proto počítáme `4 - x` (0 → 4, 4 → 0). Pro škálu 1–7 je součet 8 a počítáme `8 - x`. Vzorec tedy neurčuje počet odpovědí, ale jejich nejnižší a nejvyšší možná hodnota.
+
+```{r}
+#| label: l06-reseni-kontrola
+hs_kontrola <- hs |>
+  mutate(across(all_of(rev_help), ~ 5 - .x, .names = "{.col}_r"))
+
+hs_kontrola |> count(help_04, help_04_r)
+```
+
+Každá kombinace se vyskytuje jen v jednom řádku a dvojice jsou 1–4, 2–3, 3–2 a 4–1. Žádná původní odpověď se tedy nezměnila na dvě různé hodnoty a součet každé dvojice je 5. Chybějící odpověď (`NA`) zůstala chybějící i po obrácení. Tento výpis nekontroluje jen správnost jednoho řádku; ukazuje převod pro všechny osoby najednou.
+:::
+
+## Reliabilita po obrácení položek {#sec-skory-alfa}
+
+Nyní spočítáme alfu znovu, tentokrát z tabulky s obrácenými položkami, a prohlédneme si celý výstup:
+
+```{r}
+#| label: l06-alfa-po
+hs_rec |>
+  select(starts_with("help_")) |>
+  psych::alpha()
+```
+
+Varování zmizelo a alfa je nyní **0,82** (`raw_alpha`), s 95% intervalem spolehlivosti přibližně 0,78 až 0,86 (řádky `Feldt` a `Duhachek` uvádějí dvě metody výpočtu intervalu). Průměrná korelace mezi položkami (`average_r`) je 0,32. Postupně si všimneme hlavních částí výstupu:
+
+- **`raw_alpha`** je Cronbachova alfa pro skór vypočtený z odpovědí v původních jednotkách. `std.alpha` by platila pro položky převedené na stejný rozptyl; obě hodnoty jsou zde téměř shodné.
+- **`Reliability if an item is dropped`** ukazuje, jaká by byla alfa bez dané položky. Pro většinu položek by mírně klesla, tedy každá k přesnosti skóru přispívá. Výjimkou je `help_04` („Obdivuji lidi, kteří své problémy zvládnou bez odborné pomoci“): bez ní by alfa vzrostla na 0,84.
+- **`Item statistics`** obsahuje mimo jiné `r.drop`, tedy korelaci položky se součtem ostatních položek. U `help_04` je nejnižší (0,19), u ostatních položek mezi 0,41 a 0,70. Sloupec `n` ukazuje počet odpovědí na položku (164 až 170).
+- **`Non missing response frequency`** uvádí podíly jednotlivých odpovědí. Po obrácení odpovídá u všech položek vyšší číslo příznivějšímu postoji k odborné pomoci.
+
+Slabší položku zde z výpočtu **nevyřazujeme**. Rozhodnutí o obsahu škály patří k validitě měření a k jeho teoretickému zdůvodnění. Mírné zvýšení alfy v jednom malém vzorku k vyřazení položky nestačí; museli bychom také zdůvodnit, proč se skór liší od publikované verze dotazníku.
+
+Při interpretaci alfy pamatujte na tři omezení:
+
+1. Alfa **nedokazuje, že škála měří jediný konstrukt**. Vysoká alfa může vzniknout i u skupiny položek, které měří několik příbuzných vlastností, zejména u delších škál ([Sijtsma, 2009](https://doi.org/10.1007/s11336-008-9101-0)).
+2. Alfa je odhadem reliability za určitých předpokladů, například že všechny položky souvisejí s měřenou vlastností přibližně stejně silně. Pokud předpoklady neplatí, reliabilitu obvykle podhodnocuje. Existují vhodnější koeficienty, například omega ([McNeish, 2018](https://doi.org/10.1037/met0000144)); v úvodním kurzu se jim nevěnujeme.
+3. Pevné hranice typu „0,7 je dostatečné“ nejsou univerzální. Potřebná přesnost závisí na účelu: pro popis skupin ve výzkumu stačí nižší přesnost než pro rozhodování o jednotlivém člověku.
+
+Funkce `psych::alpha()` ve výchozím nastavení počítá korelace mezi položkami z **dvojic dostupných odpovědí** (*pairwise*). Osoba, které chybí jedna položka, tedy přispívá do všech ostatních korelací. [Dokumentace funkce alpha v balíčku psych](https://search.r-project.org/CRAN/refmans/psych/html/alpha.html)
+
+### Cvičení 2: Reliabilita škály emoční otevřenosti {.exercise}
+
+Škála emoční otevřenosti má položky `emo_01` až `emo_17` s odpověďmi 1–6. Z datového slovníku zjistěte, které položky jsou reverzní, a uložte jejich názvy do vektoru `rev_emo`. Obraťte je v tabulce `hs_rec` a výsledek uložte jako `hs_emo`. Spočítejte alfu pro položky `emo_` a vysvětlete, proč tentokrát nepoužijeme `5 - x`.
+
+Vlastní úloha inspirovaná [R4DS, oddílem Modifying multiple columns](https://r4ds.hadley.nz/iteration.html#sec-across).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l06-reseni-alfa-emo
+rev_emo <- codebook |>
+  filter(instrument == "Emotional Expressiveness Scale", reversed) |>
+  pull(name)
+rev_emo
+
+hs_emo <- hs_rec |>
+  mutate(across(all_of(rev_emo), ~ 7 - .x))
+
+alfa_emo <- hs_emo |>
+  select(starts_with("emo_")) |>
+  psych::alpha()
+alfa_emo$total
+```
+
+Reverzních položek je 11 ze 17, například `emo_01` („Nesdílím své emoce s druhými lidmi“). Škála má odpovědi 1–6, proto počítáme (1 + 6) − x = `7 - x`. Vzorec `5 - x` by převedl odpověď 6 na −1 a odpověď 5 na 0, tedy na hodnoty mimo škálu; a R by nás na to neupozornilo. Funkce tentokrát nevypsala varování o záporně korelujících položkách. Alfa je 0,92 a průměrná korelace mezi položkami 0,40. Skór emoční otevřenosti je tedy v tomto vzorku vnitřně velmi konzistentní. Platí ale stejná omezení jako výše: vysoká alfa sama nedokládá, že škála měří jediný konstrukt, ani že měří právě emoční otevřenost.
+:::
+
+## Celkový skór pro každou osobu {#sec-skory-skor}
+
+### Průměr položek místo součtu
+
+Celkový skór vytvoříme jako **průměr odpovědí** každé osoby. Průměr má oproti součtu dvě výhody: zůstává na stejné stupnici jako odpovědi (zde 1–4), takže hodnotu 3 lze číst jako průměrnou odpověď „spíše souhlasím“. A při chybějící odpovědi jej lze spočítat z dostupných položek, aniž by se skór automaticky snížil. Průměr přitom předpokládá, že položky měří stejnou vlastnost a že rozdíly mezi sousedními odpověďmi lze přibližně považovat za stejně velké. Tento předpoklad je u dotazníkových škál běžný, ale není samozřejmý.
+
+### Průměr uvnitř řádku: tři časté chyby
+
+Zkusme nejprve zapsat výpočet stejně, jako bychom jej napsali v `select()`:
+
+```{r}
+#| label: l06-chyba-rozsah
+#| error: true
+hs_rec |>
+  mutate(tot_help = mean(help_01:help_10))
+```
+
+Toto je **záměrná chyba**. Zápis `help_01:help_10` vybírá rozsah sloupců jen ve funkcích, které výběr sloupců podporují, například `select()`. Funkce `mean()` ze základního R je nezná. R zde použije běžný operátor `:` pro posloupnost čísel (`1:10`) na hodnoty dvou sloupců. Protože první hodnota `help_01` chybí, skončí výpočet chybou `NA/NaN argument`.
+
+Uvnitř `mutate()` můžeme sloupce vybrat pomocí pomocné funkce `c_across()`. Ta podporuje stejný zápis jako `select()` a vrátí hodnoty vybraných sloupců:
+
+```{r}
+#| label: l06-c-across-na
+hs_rec |>
+  mutate(tot_help = mean(c_across(help_01:help_10)), .before = help_01) |>
+  select(id, tot_help) |>
+  slice_head(n = 4)
+```
+
+Argument `.before = help_01` umístí nový sloupec před `help_01` (oddíl [-@sec-upravy-mutate]). Výsledkem je ale u všech osob `NA`. Chybějící hodnota je „nakažlivá“: jakmile mezi zprůměrovanými hodnotami chybí byť jediná, průměr nelze spočítat (oddíl [-@sec-upravy-souhrny]). Doplníme `na.rm = TRUE`:
+
+```{r}
+#| label: l06-c-across-jeden
+hs_rec |>
+  mutate(
+    tot_help = mean(c_across(help_01:help_10), na.rm = TRUE),
+    .before = help_01
+  ) |>
+  select(id, tot_help) |>
+  slice_head(n = 4)
+```
+
+Nyní dostáváme číslo, ale **u všech osob stejné** (3,00). Funkce `mutate()` totiž standardně pracuje se sloupci jako celky: `c_across()` vrátila všechny odpovědi všech osob a `mean()` z nich spočítala jediný průměr ze všech dostupných odpovědí. Ten se pak opakuje v každém řádku. Výsledek nevyvolá chybu ani varování, a proto je tato chyba nebezpečnější než předchozí. Prozradí ji až kontrola, že se skóry mezi osobami neliší.
+
+### Výpočet po řádcích pomocí `rowwise()`
+
+Funkce `rowwise()` změní způsob výpočtu: následující `mutate()` počítá **zvlášť pro každý řádek**, tedy pro každou osobu. Současně spočítáme, kolik položek osobě chybí. `is.na()` vrátí `TRUE` pro každou chybějící odpověď a `sum()` sečte hodnoty `TRUE` jako jedničky:
+
+```{r}
+#| label: l06-rowwise
+hs_rec <- hs_rec |>
+  rowwise() |>
+  mutate(
+    tot_help = mean(c_across(help_01:help_10), na.rm = TRUE),
+    n_miss_help = sum(is.na(c_across(help_01:help_10))),
+    .before = help_01
+  ) |>
+  ungroup()
+
+hs_rec |> select(id, tot_help, n_miss_help) |> slice_head(n = 4)
+```
+
+Skóry se nyní liší mezi osobami. První osobě chybí jedna odpověď, proto je její skór průměrem z 9 položek; ostatní tři osoby odpověděly na všech 10 položek. `rowwise()` funguje podobně jako `group_by()`, kde každou skupinu tvoří jeden řádek. Proto po výpočtu voláme `ungroup()`: další funkce by jinak stále pracovaly po řádcích a třeba `summarise()` by vrátila jeden souhrn pro každou osobu. [Dokumentace výpočtů po řádcích v dplyr](https://dplyr.tidyverse.org/articles/rowwise.html)
+
+Proč funguje `c_across(help_01:help_10)`? Položky jsou v tabulce seřazené a mezi `help_01` a `help_10` neleží žádný jiný sloupec. Kdyby tam byl například vložený sloupec s poznámkou, rozsah by jej zachytil. Před výpočtem proto pořadí sloupců zkontrolujte pomocí `names()` nebo použijte `starts_with("help_")`. V našem případě by to ale vyžadovalo, aby v tabulce nebyly sloupce s příponou `_r`.
+
+### Kolik chybějících odpovědí připustíme?
+
+Průměr z dostupných odpovědí lze spočítat i osobě, která odpověděla jen na jednu položku. Takový skór by ale byl velmi nepřesný. Nejprve se proto podíváme, kolik odpovědí chybí:
+
+```{r}
+#| label: l06-pocty-chybeni
+hs_rec |> count(n_miss_help)
+```
+
+Odpovědi na všech 10 položek má 123 osob, 40 osobám chybí jedna odpověď, 7 osobám dvě a 2 osobám tři. Zvolíme pravidlo: **pokud chybí více než dvě odpovědi, skór nevypočítáme** a nahradíme jej `NA`. Skór tak vždy vychází alespoň z 8 z 10 položek. Funkci `if_else()` znáte z páté lekce: pro každý řádek otestuje podmínku a vybere jednu ze dvou hodnot.
+
+```{r}
+#| label: l06-pravidlo-chybeni
+hs_rec <- hs_rec |>
+  mutate(
+    tot_help = if_else(
+      n_miss_help > 2,
+      true = NA_real_,
+      false = tot_help
+    )
+  )
+
+hs_rec |>
+  summarise(
+    n = n(),
+    n_valid = sum(!is.na(tot_help)),
+    mean = mean(tot_help, na.rm = TRUE),
+    sd = sd(tot_help, na.rm = TRUE)
+  )
+```
+
+`NA_real_` je chybějící hodnota typu `double`. `if_else()` vyžaduje, aby obě možné hodnoty měly stejný typ, a skór je desetinné číslo; obyčejné `NA` je logické. Z 172 osob má skór 170. Průměrný skór je 3,00 se směrodatnou odchylkou 0,55. Průměrná odpověď se tedy pohybuje kolem „spíše souhlasím“: respondenti v průměru zaujímají spíše příznivý postoj k odborné pomoci. Shrnutí neříká, kolik osob by pomoc skutečně vyhledalo, protože měříme postoj, nikoli chování.
+
+Hranice „více než dvě chybějící“ není univerzální pravidlo. Měla by být zvolena **předem**, nejlépe v plánu analýzy, a uvedena ve zprávě. Kdybychom ji volili až podle výsledků, mohli bychom je nevědomky ovlivnit. Pravidla pro konkrétní dotazník někdy stanoví jeho manuál.
+
+### Cvičení 3: Přísnější pravidlo {.exercise}
+
+Kolik osob by mělo platný skór `tot_help`, kdybychom skór vypočítali jen osobám, kterým chybí nejvýše jedna odpověď? Zjistěte to z tabulky `hs_rec` bez jejího přepsání. Jaké jsou výhody a nevýhody přísnějšího pravidla?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l06-reseni-prisnejsi
+hs_rec |>
+  summarise(
+    n_valid_max2 = sum(n_miss_help <= 2),
+    n_valid_max1 = sum(n_miss_help <= 1)
+  )
+```
+
+Při současném pravidle má skór 170 osob, při přísnějším pravidle by jej mělo 163 (123 bez chybějící odpovědi a 40 s jednou chybějící). Pracujeme přímo s počtem chybějících odpovědí, protože `tot_help` už obsahuje `NA` podle současného pravidla. Přísnější pravidlo zaručuje, že každý skór vychází z více odpovědí, a je tedy přesnější. Ztratíme ale dalších 7 osob. Pokud by chybění souviselo s měřenou vlastností (například pokud by lidé s nepříznivým postojem častěji vynechávali položky), mohlo by vyřazení zkreslit výsledky. Žádné pravidlo nezaručuje nezkreslený výsledek; volíme je předem a jeho dopad ověřujeme.
+:::
+
+### Cvičení 4: Skór emoční otevřenosti {.exercise}
+
+Vytvořte pro škálu emoční otevřenosti skór `tot_emo` a počet chybějících odpovědí `n_miss_emo`. Vyjděte z tabulky `hs_rec`, v níž ještě nejsou obrácené položky `emo_`. Použijte stejné pravidlo jako u postojů k pomoci: pokud chybí více než dvě odpovědi, skór nastavte na `NA`. Zjistěte rozložení počtu chybějících odpovědí a počet platných skórů. Výsledek uložte jako `hs_emo_skor`.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Nejprve obrátíme reverzní položky. Bez tohoto kroku by skór smíchal odpovědi s opačným významem, stejně jako u alfy před obrácením.
+
+```{r}
+#| label: l06-reseni-emo-skor
+rev_emo <- codebook |>
+  filter(instrument == "Emotional Expressiveness Scale", reversed) |>
+  pull(name)
+
+hs_emo_skor <- hs_rec |>
+  mutate(across(all_of(rev_emo), ~ 7 - .x)) |>
+  rowwise() |>
+  mutate(
+    tot_emo = mean(c_across(emo_01:emo_17), na.rm = TRUE),
+    n_miss_emo = sum(is.na(c_across(emo_01:emo_17))),
+    .before = help_01
+  ) |>
+  ungroup()
+
+hs_emo_skor |> count(n_miss_emo)
+
+hs_emo_skor <- hs_emo_skor |>
+  mutate(tot_emo = if_else(n_miss_emo > 2, true = NA_real_, false = tot_emo))
+
+hs_emo_skor |>
+  summarise(
+    n_valid = sum(!is.na(tot_emo)),
+    mean = mean(tot_emo, na.rm = TRUE),
+    sd = sd(tot_emo, na.rm = TRUE)
+  )
+```
+
+Všech 17 odpovědí má 101 osob, jednu chybějící odpověď 53 osob, dvě 14 osob a tři 4 osoby. Podle pravidla tedy chybí skór 4 osobám a platný skór má 168 osob. Průměr 3,61 (SD 0,90) leží na stupnici 1–6 přibližně uprostřed mezi odpověďmi „někdy“ a „často“. Při 17 položkách odpovídají dvě chybějící menšímu podílu odpovědí než u desetipoložkové škály. Pro jednoduchost zde používáme stejné pravidlo; v plánu analýzy by bylo možné zvolit pravidlo podle podílu položek.
+:::
+
+### Společný výchozí bod pro další oddíly {#sec-skory-vychozi}
+
+Abychom dále pracovali se stejnými daty bez ohledu na to, jak jste cvičení řešili, shrneme celou přípravu do jednoho bloku. Vychází z tabulky `hs` bez popisků hodnot a obsahuje všechny dosud vysvětlené kroky pro obě škály:
+
+```{r}
+#| label: l06-hs-skory
+rev_help <- codebook |>
+  filter(
+    instrument == "Attitudes Toward Seeking Professional Psychological Help",
+    reversed
+  ) |>
+  pull(name)
+rev_emo <- codebook |>
+  filter(instrument == "Emotional Expressiveness Scale", reversed) |>
+  pull(name)
+
+hs_skory <- hs |>
+  mutate(
+    across(all_of(rev_help), ~ 5 - .x),
+    across(all_of(rev_emo), ~ 7 - .x)
+  ) |>
+  rowwise() |>
+  mutate(
+    tot_help = mean(c_across(help_01:help_10), na.rm = TRUE),
+    n_miss_help = sum(is.na(c_across(help_01:help_10))),
+    tot_emo = mean(c_across(emo_01:emo_17), na.rm = TRUE),
+    n_miss_emo = sum(is.na(c_across(emo_01:emo_17))),
+    .before = help_01
+  ) |>
+  ungroup() |>
+  mutate(
+    tot_help = if_else(n_miss_help > 2, NA_real_, tot_help),
+    tot_emo = if_else(n_miss_emo > 2, NA_real_, tot_emo)
+  )
+
+hs_skory |>
+  summarise(
+    n_help = sum(!is.na(tot_help)),
+    n_emo = sum(!is.na(tot_emo)),
+    n_oba = sum(!is.na(tot_help) & !is.na(tot_emo))
+  )
+```
+
+Skór postoje k odborné pomoci má 170 osob, skór emoční otevřenosti 168 osob a **oba skóry 166 osob**. S tímto počtem se budeme setkávat ve všech dalších analýzách vztahu obou skórů. Vyšší hodnota `tot_help` znamená příznivější postoj k vyhledání odborné psychologické pomoci, vyšší `tot_emo` vyšší emoční otevřenost.
+
+## Vztah dvou skórů v grafu {#sec-skory-graf}
+
+### Bodový graf a chybějící hodnoty
+
+Ptáme se: **souvisí emoční otevřenost s postojem k vyhledání odborné pomoci?** Pro vztah dvou číselných proměnných je základním grafem bodový graf (oddíl [-@sec-bodovy-graf]). Na osu x dáváme proměnnou, kterou chápeme jako vysvětlující, na osu y tu, kterou chceme vysvětlit. Toto pořadí odráží naši otázku, nikoli prokázanou příčinu.
+
+```{r}
+#| label: fig-skory-bodovy
+#| fig-cap: "Emoční otevřenost a postoj k odborné pomoci: každý bod představuje jednu osobu."
+#| fig-alt: "Bodový graf se 166 body; s rostoucí emoční otevřeností se body mírně posouvají k vyššímu postoji k pomoci."
+hs_skory |>
+  ggplot(aes(x = tot_emo, y = tot_help)) +
+  geom_point()
+```
+
+ggplot2 vypsal **varování**, že odstranil 6 řádků s chybějícími hodnotami. Jde o osoby, kterým chybí alespoň jeden ze skórů (172 − 166 = 6). Varování je očekávané a graf vznikl. Aby se v dalších grafech neopakovalo, vytvoříme tabulku jen s osobami, které mají oba skóry:
+
+```{r}
+#| label: l06-hs-dvojice
+hs_dvojice <- hs_skory |>
+  filter(!is.na(tot_emo), !is.na(tot_help))
+nrow(hs_dvojice)
+```
+
+Tabulka `hs_dvojice` má 166 řádků. Ty jsou analyzovaným souborem pro analýzu vztahu obou skórů. Původní tabulku `hs_skory` nepřepisujeme: osoby s jedním skórem v ní zůstávají pro jiné analýzy.
+
+### Překrývající se body a rozptýlení (jitter)
+
+Skór z 10 položek může nabývat jen omezeného počtu hodnot; například skór přesně 3 má 24 osob. Některé body proto leží přesně na sobě a graf vypadá řidší, než ve skutečnosti je. Tomuto problému se říká **překrývání bodů** (*overplotting*). Pomůže **jitter**: každý bod se v grafu nepatrně náhodně posune. Hodnoty v datech se nemění, mění se jen poloha bodů v obrázku.
+
+```{r}
+#| label: fig-skory-jitter
+#| fig-cap: "Stejná data s malým náhodným posunem bodů (nejvýše 0,05 bodu na každé ose)."
+#| fig-alt: "Bodový graf, ve kterém jsou dříve překrývající se body mírně odsunuty od sebe."
+posun <- position_jitter(width = 0.05, height = 0.05, seed = 123)
+
+hs_dvojice |>
+  ggplot(aes(x = tot_emo, y = tot_help)) +
+  geom_point(position = posun)
+```
+
+`width` a `height` určují největší posun ve vodorovném a svislém směru v jednotkách os. Posun 0,05 je malý vzhledem k rozdílům mezi skóry, takže nezkresluje celkový obraz. Posun je náhodný, a proto pomocí `seed` nastavujeme počáteční stav generátoru náhodných čísel (podobně jako `set.seed()`, oddíl [-@sec-upravy-slice]). Při každém vykreslení tak vznikne stejný obrázek. Nastavení jsme uložili do objektu `posun`, abychom je mohli použít i v dalších grafech.
+
+ggplot2 nabízí i zkratku `geom_jitter(width = 0.05, height = 0.05)`. Nemá ale argument `seed`, takže by se body při každém spuštění posunuly trochu jinak. Proto zde používáme `position_jitter()`. [Dokumentace position_jitter](https://ggplot2.tidyverse.org/reference/position_jitter.html); [R4DS, Position adjustments](https://r4ds.hadley.nz/layers.html#position-adjustments)
+
+### Vzhled grafu: motiv
+
+Šedé pozadí a mřížka jsou výchozím **motivem** (*theme*) ggplot2. Motiv mění vzhled grafu, nikoli data. `theme_classic()` ponechá bílé pozadí a osy bez mřížky. Argument `base_size` určuje základní velikost písma v bodech:
+
+```{r}
+#| label: fig-skory-motiv
+#| fig-cap: "Motiv theme_classic() s větším písmem."
+#| fig-alt: "Tentýž bodový graf na bílém pozadí bez mřížky s větším písmem os."
+hs_dvojice |>
+  ggplot(aes(x = tot_emo, y = tot_help)) +
+  geom_point(position = posun) +
+  theme_classic(base_size = 15)
+```
+
+Chceme-li stejný motiv u všech dalších grafů, nemusíme jej přidávat ke každému. Funkce `theme_set()` nastaví výchozí motiv pro zbytek relace R:
+
+```{r}
+#| label: l06-theme-set
+theme_set(theme_classic(base_size = 15))
+```
+
+Od této chvíle budou všechny grafy v této relaci používat `theme_classic(base_size = 15)`, dokud nenastavíme jiný motiv nebo nerestartujeme R. Vliv na předchozí grafy to nemá. Pozor: při sdílení skriptu musí být `theme_set()` ve skriptu před grafy, jinak by jiný uživatel dostal grafy s jiným vzhledem.
+
+### Trendová křivka a přímka
+
+Bodový graf mnohdy neodhalí slabší vztah na první pohled. Vyhlazená křivka **loess** sleduje průměrnou úroveň osy y podél osy x a může být zakřivená. Metodu a vzorec zadáváme výslovně, jak jsme to dělali v oddílu [-@sec-vrstvy]:
+
+```{r}
+#| label: fig-skory-loess
+#| fig-cap: "Vyhlazená křivka loess s 95% pásem spolehlivosti."
+#| fig-alt: "Body a modrá vyhlazená křivka, která s rostoucí emoční otevřeností mírně stoupá, s šedým pásem rozšiřujícím se na okrajích."
+hs_dvojice |>
+  ggplot(aes(x = tot_emo, y = tot_help)) +
+  geom_point(position = posun) +
+  geom_smooth(method = "loess", formula = y ~ x)
+```
+
+Křivka je při nízké emoční otevřenosti téměř plochá a přibližně od hodnoty 2,5 mírně stoupá. Šedý pás je 95% interval spolehlivosti pro odhad **průměrného** postoje při dané emoční otevřenosti, nikoli rozmezí, ve kterém leží většina osob. Na okrajích osy x je méně pozorování, proto je pás širší a tvar křivky tam není spolehlivý.
+
+Pro popis přibližně lineárního vztahu použijeme regresní přímku (`method = "lm"`, z anglického *linear model*). Argument `level` mění spolehlivost pásu; zde zvolíme 99 %. Barvu přímky nastavuje `color`, barvu pásu `fill` a jeho průhlednost `alpha` (0 = neviditelný, 1 = neprůhledný):
+
+```{r}
+#| label: fig-skory-lm
+#| fig-cap: "Regresní přímka s 99% pásem spolehlivosti."
+#| fig-alt: "Body s červenou rostoucí regresní přímkou a světle červeným pásem, který je nejužší uprostřed a k okrajům se rozšiřuje."
+hs_dvojice |>
+  ggplot(aes(x = tot_emo, y = tot_help)) +
+  geom_point(position = posun) +
+  geom_smooth(
+    method = "lm",
+    formula = y ~ x,
+    level = 0.99,
+    color = "red",
+    fill = "red",
+    alpha = 0.2
+  )
+```
+
+Přímka ukazuje kladný vztah: osoby s vyšší emoční otevřeností mají v průměru příznivější postoj k odborné pomoci. 99% pás je širší než 95% pás při stejných datech, protože vyšší spolehlivost vyžaduje širší interval. Pás je nejužší kolem průměrné emoční otevřenosti, kde je nejvíce dat.
+
+Je přímka dostatečným popisem? Porovnáme ji s křivkou loess v jednom grafu. Typ čáry nastavuje `linetype`; `se = FALSE` vypne pás u přímky, aby se oba pásy nepřekrývaly:
+
+```{r}
+#| label: fig-skory-porovnani
+#| fig-cap: "Porovnání regresní přímky (modrá, přerušovaná) a křivky loess (červená, s 95% pásem)."
+#| fig-alt: "Body, modrá přerušovaná přímka a červená vyhlazená křivka, které spolu ve většině rozsahu osy x těsně souhlasí."
+hs_dvojice |>
+  ggplot(aes(x = tot_emo, y = tot_help)) +
+  geom_point(position = posun) +
+  geom_smooth(
+    method = "lm",
+    formula = y ~ x,
+    se = FALSE,
+    color = "blue",
+    linetype = "dashed"
+  ) +
+  geom_smooth(
+    method = "loess",
+    formula = y ~ x,
+    color = "red",
+    fill = "red",
+    alpha = 0.2
+  )
+```
+
+Přímka leží ve většině rozsahu uvnitř pásu křivky loess a obě čáry mají podobný průběh. Odchylky se objevují hlavně na okrajích, kde je málo dat. Lineární popis je tedy pro tato data rozumným zjednodušením. Kdyby se křivka od přímky soustavně odchylovala, například kdyby od určité hodnoty klesala, byla by přímka zavádějící.
+
+### Dokončený graf: popisky a osy
+
+Graf pro zprávu potřebuje srozumitelné popisky os včetně stupnice. Funkcí `scale_x_continuous()` a `scale_y_continuous()` s argumentem `breaks` určíme, kde budou na osách značky. `seq(1, 6, by = 1)` vytvoří čísla 1 až 6. `coord_cartesian(xlim = c(1, 6))` zobrazí na ose x celý rozsah možných skórů 1–6:
+
+```{r}
+#| label: fig-skory-final
+#| fig-cap: "Emoční otevřenost a postoj k vyhledání odborné psychologické pomoci (n = 166) s regresní přímkou a 95% pásem spolehlivosti."
+#| fig-alt: "Bodový graf s rostoucí modrou regresní přímkou; osa x zobrazuje celou škálu emoční otevřenosti 1 až 6, osa y postoj k pomoci 1 až 4."
+hs_dvojice |>
+  ggplot(aes(x = tot_emo, y = tot_help)) +
+  geom_point(position = posun) +
+  geom_smooth(
+    method = "lm",
+    formula = y ~ x,
+    color = "blue",
+    fill = "blue",
+    alpha = 0.2
+  ) +
+  scale_x_continuous(breaks = seq(1, 6, by = 1)) +
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +
+  coord_cartesian(xlim = c(1, 6)) +
+  labs(
+    x = "Emoční otevřenost (průměr položek, 1–6)",
+    y = "Postoj k odborné pomoci\n(průměr položek, 1–4)"
+  )
+```
+
+Zobrazení celé stupnice ukazuje, že nikdo z respondentů neměl průměrnou emoční otevřenost blízko 6; nejvyšší skór je přibližně 5,6. Znak `\n` v popisku osy y zalomí dlouhý text na dva řádky.
+
+Proč `coord_cartesian()` a ne `limits` ve funkci `scale_x_continuous()`? `coord_cartesian()` jen **přiblíží nebo oddálí pohled**, data zůstávají v grafu i ve výpočtu přímky. Omezení přes `limits` ve škále by body mimo zadaný rozsah z grafu odstranilo a přímka by se počítala jen ze zbylých dat. Zde by to nevadilo, protože všechny skóry leží v rozsahu 1–6; při přiblížení části grafu by to ale změnilo výsledek. [Dokumentace coord_cartesian](https://ggplot2.tidyverse.org/reference/coord_cartesian.html)
+
+### Cvičení 5: Kdy jitter škodí? {.exercise}
+
+Upravte objekt `posun` tak, aby se body mohly posunout o 0,5 bodu v obou směrech, a vykreslete s ním bodový graf `tot_emo` a `tot_help`. Proč by byl takový graf zavádějící? Mění se tím korelace nebo regresní přímka?
+
+Vlastní úloha inspirovaná [R4DS, Position adjustments](https://r4ds.hadley.nz/layers.html#position-adjustments).
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: fig-skory-reseni-jitter
+#| fig-cap: "Příliš velký posun bodů (0,5 bodu) zkresluje jejich polohu."
+#| fig-alt: "Rozmazaný bodový graf, ve kterém body přesahují nad horní hranici škály 4."
+posun_velky <- position_jitter(width = 0.5, height = 0.5, seed = 123)
+
+hs_dvojice |>
+  ggplot(aes(x = tot_emo, y = tot_help)) +
+  geom_point(position = posun_velky) +
+  labs(x = "Emoční otevřenost (1–6)", y = "Postoj k odborné pomoci (1–4)")
+```
+
+Na škále postoje 1–4 představuje posun 0,5 bodu polovinu vzdálenosti mezi sousedními odpověďmi. Body se zobrazují i nad hodnotou 4, kterou žádný skór nemůže přesáhnout, a vztah mezi proměnnými vypadá slabší, než je. Hodnoty v tabulce `hs_dvojice` se nezměnily, takže korelace ani regresní přímka (počítaná z původních hodnot) by byly stejné. Zkreslený je pouze obrázek. Jitter má být jen tak velký, aby oddělil překrývající se body.
+:::
+
+## Korelace {#sec-skory-korelace}
+
+### Pearsonova korelace a její test
+
+**Pearsonův korelační koeficient** *r* popisuje sílu a směr **lineárního** vztahu dvou číselných proměnných, od −1 do 1. Funkce `cor.test()` spočítá *r*, interval spolehlivosti a test nulové hypotézy, že korelace v populaci je nulová. Dvojici sloupců můžeme zadat pomocí `$`:
+
+```{r}
+#| label: l06-cor-test
+cor.test(hs_skory$tot_emo, hs_skory$tot_help)
+```
+
+Výstup obsahuje:
+
+- **`sample estimates: cor`** je korelace ve vzorku, *r* = 0,32. Jde o kladný a středně silný vztah: vyšší emoční otevřenost jde ruku v ruce s příznivějším postojem k odborné pomoci.
+- **`95 percent confidence interval`** je od 0,18 do 0,45. Data jsou slučitelná se slabým i středně silným kladným vztahem; nulový nebo záporný vztah interval nezahrnuje.
+- **`t = 4.3574`, `df = 164`, `p-value = 2.314e-05`** je test nulové korelace. `df` (stupně volnosti) je počet dvojic minus 2, tedy 166 − 2 = 164: funkce sama vynechala osoby, kterým chybí některý skór. Zápis `2.314e-05` znamená 0,00002314. Takto nízké *p* říká, že kdyby v populaci žádná korelace nebyla, bylo by velmi neobvyklé pozorovat ve vzorku takto silný vztah.
+
+Druhá mocnina korelace, *r*² = 0,32² ≈ 0,10, znamená, že lineární vztah s emoční otevřeností vysvětluje přibližně 10 % rozptylu postojů. Zbylých 90 % rozdílů mezi lidmi souvisí s jinými vlivy a chybou měření. **Statisticky významný vztah tedy nemusí být silný**; o praktické důležitosti rozhoduje velikost *r* a její interval, nikoli samotné *p*.
+
+Korelace **nedokládá příčinu**. Data pocházejí z jediného dotazníkového měření. Emoční otevřenost může ovlivňovat postoj k pomoci, ale možný je i opačný směr nebo společná příčina obou, například zkušenost s psychoterapií. Navíc jde o malý nereprezentativní vzorek, takže interval spolehlivosti se vztahuje k populaci jen za předpokladu, že vzorek z ní byl náhodně vybrán.
+
+Pearsonova korelace je citlivá na odlehlé hodnoty a zachycuje pouze lineární vztah. Proto vždy nejdříve vytvoříme bodový graf. Inferenční část výstupu (*p* a interval) navíc předpokládá nezávislá pozorování a přibližně normální rozdělení; u větších vzorků je na odchylky od normality méně citlivá.
+
+### Zápis pomocí formule a jiná hladina spolehlivosti
+
+`cor.test()` lze zapsat i pomocí **formule** se jmény sloupců a argumentem `data`. Formule pro korelaci začíná vlnovkou a obě proměnné spojuje `+`; pořadí proměnných na výsledek nemá vliv. Argument `conf.level` mění hladinu spolehlivosti intervalu:
+
+```{r}
+#| label: l06-cor-test-formule
+cor.test(~ tot_emo + tot_help, data = hs_skory, conf.level = 0.99)
+```
+
+Korelace, *t* i *p* zůstaly stejné. Změnil se jen interval: 99% interval je od 0,13 do 0,49, tedy širší než 95% interval. Zápis s formulí je čitelnější a dobře se kombinuje s pipe operátorem pomocí argumentu `data`.
+
+### Spearmanova korelace
+
+**Spearmanova korelace** ρ (rho) pracuje s pořadími hodnot místo hodnot samotných. Popisuje, nakolik vztah stále roste nebo stále klesá (je **monotónní**), i když nemusí být lineární. Je méně citlivá na odlehlé hodnoty a vychýlená rozdělení.
+
+```{r}
+#| label: l06-spearman
+cor.test(~ tot_emo + tot_help, data = hs_skory, method = "spearman", exact = FALSE)
+```
+
+ρ = 0,34 je velmi blízko Pearsonovu *r* = 0,32. Vztah tedy nezávisí na několika extrémních hodnotách ani na předpokladu přímky. `cor.test()` pro Spearmanovu korelaci interval spolehlivosti nevypisuje.
+
+Argument `exact = FALSE` žádá přibližný výpočet *p*. Přesný výpočet předpokládá, že žádné dvě osoby nemají stejnou hodnotu. Naše skóry však obsahují mnoho **shod** (stejných hodnot), například 24 osob má skór přesně 3. Bez tohoto argumentu by R vypsalo varování, že přesné *p* nelze se shodami spočítat, a použilo by přibližný výpočet stejně. [Dokumentace cor.test](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/cor.test.html)
+
+### Korelační matice položek
+
+Funkce `cor()` spočítá korelace mezi všemi dvojicemi sloupců tabulky, tedy **korelační matici**. Na položkách postoje k pomoci si ověříme, jak spolu jednotlivé položky po obrácení souvisejí:
+
+```{r}
+#| label: l06-cor-matice-na
+hs_skory |>
+  select(starts_with("help_")) |>
+  cor() |>
+  round(digits = 2)
+```
+
+Výpis je téměř celý `NA`. Ve výchozím nastavení `cor()` vrátí `NA` pro každou dvojici, ve které chybí alespoň jedna hodnota. Každá položka má chybějící odpovědi, takže známé jsou jen jedničky na diagonále (korelace položky se sebou samou). `round(digits = 2)` pouze zaokrouhlí výsledek pro čtení. Výběr `starts_with("help_")` zachytí jen položky; nový sloupec `tot_help` začíná textem `tot_`.
+
+Argument `use = "pairwise.complete.obs"` spočítá každou korelaci ze všech osob, které odpověděly na obě položky dané dvojice:
+
+```{r}
+#| label: l06-cor-matice
+hs_skory |>
+  select(starts_with("help_")) |>
+  cor(use = "pairwise.complete.obs") |>
+  round(digits = 2)
+```
+
+Všechny korelace jsou nyní k dispozici. Většina je kladná a dosahuje přibližně 0,2 až 0,6; nejsilněji souvisí `help_03` a `help_05` (0,59). Výjimkou je `help_04`, jejíž korelace s ostatními položkami se pohybují od −0,03 do 0,29. To odpovídá nejnižší hodnotě `r.drop` ve výstupu alfy. Matice tak ukazuje, která položka se škálou souvisí slabě, i když celková alfa je uspokojivá.
+
+Každá korelace v matici vychází z jiného počtu osob, zde od 156 do 166. Alternativa `use = "complete.obs"` by všechny korelace počítala jen ze 123 osob, které odpověděly na všech 10 položek. Párové zpracování využije více dat, korelace ale pocházejí z mírně odlišných souborů. Při velkém nebo nenáhodném chybění je to potřeba zvážit. [Dokumentace cor](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/cor.html)
+
+### Cvičení 6: Kolik osob vstupuje do korelace? {.exercise}
+
+Ve výstupu Pearsonovy korelace je `df = 164`. Ověřte výpočtem z tabulky `hs_skory`, kolik osob má oba skóry, a vysvětlete souvislost s `df`. Kolik procent rozptylu postoje k pomoci sdílí podle *r*² s emoční otevřeností? Vyplývá z toho, že zvýšení emoční otevřenosti povede k příznivějšímu postoji?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l06-reseni-df
+hs_skory |>
+  summarise(n_par = sum(!is.na(tot_emo) & !is.na(tot_help)))
+
+r <- cor(hs_skory$tot_emo, hs_skory$tot_help, use = "complete.obs")
+r^2
+```
+
+Oba skóry má 166 osob. U Pearsonovy korelace jsou stupně volnosti `n - 2`, tedy 166 − 2 = 164. `cor.test()` tedy osoby s chybějícím skórem vynechala, aniž by na to upozornila. U `cor()` jsme to museli říct výslovně pomocí `use = "complete.obs"`; bez toho by výsledek byl `NA`.
+
+*r*² ≈ 0,10, tedy přibližně 10 % rozptylu. Nejde o kauzální tvrzení: z jednorázového dotazníkového měření nevíme, zda emoční otevřenost postoj ovlivňuje, ani co by se stalo po její změně. Korelace popisuje souvislost mezi lidmi v tomto vzorku, nikoli účinek změny u jednoho člověka.
+:::
+
+## Tvar rozdělení skórů {#sec-skory-rozdeleni}
+
+### Histogram se standardizovanými hodnotami
+
+Pearsonova korelace a lineární regrese jsou citlivé na velmi vychýlená rozdělení a odlehlé hodnoty. Před jejich interpretací proto prohlížíme rozdělení proměnných. Abychom mohli rozdělení srovnat s normálním rozdělením, převedeme skór na **z-skóry**: od každé hodnoty odečteme průměr a vydělíme ji směrodatnou odchylkou. z-skóry mají průměr 0 a směrodatnou odchylku 1, hodnota 1,5 tedy znamená „o 1,5 směrodatné odchylky nad průměrem“.
+
+```{r}
+#| label: l06-z-skory
+hs_skory <- hs_skory |>
+  mutate(
+    z_emo = (tot_emo - mean(tot_emo, na.rm = TRUE)) / sd(tot_emo, na.rm = TRUE),
+    z_help = (tot_help - mean(tot_help, na.rm = TRUE)) / sd(tot_help, na.rm = TRUE)
+  )
+
+hs_skory |>
+  summarise(
+    prumer_z_emo = mean(z_emo, na.rm = TRUE),
+    sd_z_emo = sd(z_emo, na.rm = TRUE)
+  ) |>
+  round(digits = 3)
+```
+
+Kontrola potvrzuje průměr 0 a směrodatnou odchylku 1. Tabulka `hs_skory` už není rozdělená po řádcích (`ungroup()`), proto `mean()` a `sd()` počítají přes všechny osoby, jak potřebujeme. Stejný převod umí funkce `scale()`; vrací ale matici místo obyčejného vektoru, proto zde používáme výslovný vzorec.
+
+Do histogramu přidáme křivku standardního normálního rozdělení. Histogram musí mít na ose y **hustotu** místo počtu osob, aby byl s křivkou srovnatelný (oddíl [-@sec-hustota]). To zařídí `aes(y = after_stat(density))`: výška sloupce se vypočte (`after_stat`) jako hustota. Funkce `stat_function()` nakreslí křivku zadané funkce, zde hustoty normálního rozdělení `dnorm()` s průměrem 0 a SD 1:
+
+```{r}
+#| label: fig-skory-histogram-emo
+#| fig-cap: "Rozdělení standardizovaného skóru emoční otevřenosti (n = 168) s křivkou standardního normálního rozdělení."
+#| fig-alt: "Histogram z-skórů emoční otevřenosti mezi přibližně −2,6 a 2,3 se sloupci kolem červené křivky normálního rozdělení."
+hs_skory |>
+  ggplot(aes(x = z_emo)) +
+  geom_histogram(
+    aes(y = after_stat(density)),
+    binwidth = 0.25,
+    boundary = 0,
+    color = "black",
+    fill = "grey",
+    na.rm = TRUE
+  ) +
+  stat_function(fun = dnorm, color = "red", linewidth = 1) +
+  labs(x = "Emoční otevřenost (z-skór)", y = "Hustota")
+```
+
+Histogram je přibližně souměrný kolem nuly a nemá odlehlé hodnoty. Sloupce kolísají kolem křivky; při 168 osobách a intervalech širokých 0,25 SD jsou takové nepravidelnosti očekávané. Nejnižší a nejvyšší hodnoty leží přibližně na −2,6 a 2,3 SD, konce rozdělení jsou tedy o něco kratší, než by odpovídalo normálnímu rozdělení. `na.rm = TRUE` vynechá čtyři osoby bez skóru bez varování; jejich počet už známe.
+
+### Q-Q graf
+
+**Q-Q graf** (*quantile-quantile plot*) porovnává seřazené hodnoty proměnné s hodnotami, které bychom očekávali u normálního rozdělení. Leží-li body přibližně na přímce, je rozdělení blízké normálnímu. Odchylky na koncích ukazují na vychýlení nebo „těžké“ či „lehké“ konce rozdělení. Proměnnou zadáváme v `aes(sample = ...)`:
+
+```{r}
+#| label: fig-skory-qq-help
+#| fig-cap: "Q-Q graf skóru postoje k odborné pomoci (n = 170)."
+#| fig-alt: "Q-Q graf, ve kterém body uprostřed leží na přímce, ale vlevo dole klesají výrazně pod ni a vpravo nahoře se ohýbají pod ni."
+hs_skory |>
+  ggplot(aes(sample = tot_help)) +
+  geom_qq_line(na.rm = TRUE) +
+  geom_qq(na.rm = TRUE) +
+  labs(x = "Teoretické kvantily normálního rozdělení", y = "Skór postoje k pomoci")
+```
+
+Uprostřed leží body blízko přímky. Vlevo dole jsou ale nejnižší skóry výrazně pod přímkou: několik osob má mnohem nepříznivější postoj, než by odpovídalo normálnímu rozdělení. Vpravo nahoře se body ohýbají pod přímku, protože skór nemůže přesáhnout 4. Rozdělení je tedy **zešikmené doleva**: většina osob má spíše příznivý postoj a menší skupina výrazně nepříznivý.
+
+Normalita jednotlivých proměnných **není podmínkou** pro výpočet korelace ani regrese. U regrese se předpoklad normality týká **reziduí**, tedy odchylek pozorování od přímky (ukážeme v dalším oddílu). Vychýlené rozdělení je ale důvodem k opatrnosti: Pearsonovu korelaci jsme proto porovnali se Spearmanovou a výsledek byl podobný.
+
+### Cvičení 7: Rozdělení postoje k pomoci {.exercise}
+
+Vytvořte histogram z-skóru postoje k pomoci (`z_help`) s křivkou normálního rozdělení a se šířkou intervalu 0,5. Potom vytvořte Q-Q graf skóru emoční otevřenosti `tot_emo`. Odpovídají grafy předchozím zjištěním?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: fig-skory-reseni-histogram-help
+#| fig-cap: "Rozdělení standardizovaného skóru postoje k odborné pomoci (n = 170)."
+#| fig-alt: "Histogram z-skórů postoje k pomoci s většinou hodnot mezi −1,5 a 1,5 a dlouhým levým koncem k hodnotě přibližně −3,4."
+hs_skory |>
+  ggplot(aes(x = z_help)) +
+  geom_histogram(
+    aes(y = after_stat(density)),
+    binwidth = 0.5,
+    boundary = 0,
+    color = "black",
+    fill = "grey",
+    na.rm = TRUE
+  ) +
+  stat_function(fun = dnorm, color = "red", linewidth = 1) +
+  labs(x = "Postoj k odborné pomoci (z-skór)", y = "Hustota")
+```
+
+```{r}
+#| label: fig-skory-reseni-qq-emo
+#| fig-cap: "Q-Q graf skóru emoční otevřenosti (n = 168)."
+#| fig-alt: "Q-Q graf, ve kterém body leží blízko přímky, jen na obou koncích se mírně odklánějí směrem ke středu."
+hs_skory |>
+  ggplot(aes(sample = tot_emo)) +
+  geom_qq_line(na.rm = TRUE) +
+  geom_qq(na.rm = TRUE) +
+  labs(x = "Teoretické kvantily normálního rozdělení", y = "Skór emoční otevřenosti")
+```
+
+Histogram potvrzuje levostranné zešikmení postoje k pomoci: většina hodnot leží mezi −1,5 a 1,5 SD, ale levý konec sahá až přibližně k −3,4 SD. Nejvyšší z-skór je jen asi 1,6, protože skór je shora omezen hodnotou 4. Q-Q graf emoční otevřenosti leží v celém rozsahu blízko přímky. Mírné odchylky na koncích směrem ke středu odpovídají plošší podobě rozdělení, kterou jsme viděli v histogramu. Výraznější odchylka od normality se tedy týká postoje k pomoci, nikoli emoční otevřenosti.
+:::
+
+## Jednoduchá lineární regrese {#sec-skory-regrese}
+
+### Odhad modelu
+
+Korelace popisuje sílu vztahu. **Jednoduchá lineární regrese** jej popisuje rovnicí přímky: o kolik se v průměru liší postoj k pomoci, když se emoční otevřenost liší o jeden bod. Model zapisujeme formulí `y ~ x`, kde vlevo je vysvětlovaná proměnná a vpravo prediktor. Rovnice modelu je
+
+$$
+y = b_0 + b_1 x + e,
+$$
+
+kde $y$ je postoj k pomoci (`tot_help`), $x$ emoční otevřenost (`tot_emo`), $b_0$ průsečík, $b_1$ sklon a $e$ chyba, tedy část postoje, kterou přímka nevysvětlí.
+
+```{r}
+#| label: l06-lm
+fit <- lm(tot_help ~ tot_emo, data = hs_skory, na.action = na.exclude)
+summary(fit)
+```
+
+Funkce `lm()` odhadne model metodou nejmenších čtverců a `summary()` vypíše jeho souhrn. Argument `na.action = na.exclude` probereme níže. Podstatné hodnoty:
+
+- **`Coefficients`, řádek `tot_emo`**: sklon *b*₁ = 0,20. Osoby, které se v emoční otevřenosti liší o 1 bod (na stupnici 1–6), se v průměru liší v postoji k pomoci o 0,20 bodu (na stupnici 1–4). Například mezi skórem emoční otevřenosti 2 a 5 je tedy rozdíl odhadovaného průměrného postoje 3 × 0,20 = 0,60 bodu, tedy přibližně o půl až o jednu odpověď na položku.
+- **`Std. Error`** sklonu (0,046) vyjadřuje nejistotu odhadu. Test `t value = 4.357`, `Pr(>|t|) = 2.31e-05` zkoumá nulovou hypotézu, že sklon je v populaci nulový. Hodnoty *t* i *p* jsou totožné s testem korelace: u jednoduché regrese jde o stejnou otázku.
+- **`(Intercept)`** *b*₀ = 2,28 je odhadovaný postoj při emoční otevřenosti 0. Taková hodnota na stupnici 1–6 neexistuje, takže průsečík nemá věcný význam; je nutný jen pro umístění přímky.
+- **`Multiple R-squared: 0.1038`**: model vysvětluje přibližně 10 % rozptylu postojů. U jednoduché regrese je to přesně *r*² z korelace.
+- **`Residual standard error: 0.532`**: typická odchylka pozorovaného postoje od přímky je přibližně 0,53 bodu. To je téměř stejné jako směrodatná odchylka samotného postoje (0,55). Znalost emoční otevřenosti tedy zlepší odhad postoje jednotlivce jen málo.
+- **`6 observations deleted`** (`due to missingness`): model použil 166 osob s oběma skóry.
+
+Interval spolehlivosti koeficientů vypíše `confint()`:
+
+```{r}
+#| label: l06-confint
+confint(fit)
+```
+
+95% interval sklonu je od 0,11 do 0,29 bodu postoje na 1 bod emoční otevřenosti. Data jsou tedy slučitelná se slabším i silnějším kladným vztahem, ale ne s nulovým nebo záporným. Stejně jako u korelace jde o popis souvislosti, nikoli o účinek změny emoční otevřenosti.
+
+### Předpoklady modelu a rezidua
+
+Intervaly a testy v souhrnu modelu platí, pokud je vztah přibližně lineární, pozorování jsou nezávislá, rozptyl reziduí je podobný v celém rozsahu x a rezidua jsou přibližně normálně rozdělená. Linearitu jsme posoudili porovnáním přímky s křivkou loess. Rezidua jsou rozdíly mezi pozorovaným a modelem odhadnutým postojem.
+
+Zde se uplatní `na.action = na.exclude`. Funkce `residuals()` pak vrátí vektor dlouhý jako celá tabulka (172 hodnot) a u osob vynechaných z modelu doplní `NA`. Rezidua tak můžeme přidat jako nový sloupec ke správným osobám. Při výchozím nastavení by vektor měl jen 166 hodnot a připojení k tabulce se 172 řádky by skončilo chybou.
+
+```{r}
+#| label: fig-skory-rezidua
+#| fig-cap: "Q-Q graf reziduí regresního modelu (n = 166)."
+#| fig-alt: "Q-Q graf reziduí, ve kterém body uprostřed leží na přímce a vlevo dole klesají pod ni."
+hs_skory <- hs_skory |>
+  mutate(rezidua = residuals(fit))
+
+hs_skory |>
+  ggplot(aes(sample = rezidua)) +
+  geom_qq_line(na.rm = TRUE) +
+  geom_qq(na.rm = TRUE) +
+  labs(x = "Teoretické kvantily normálního rozdělení", y = "Reziduum")
+```
+
+Rezidua mají podobný tvar jako samotný postoj k pomoci: uprostřed leží na přímce, ale několik osob má výrazně nižší postoj, než model předpovídá (dlouhý levý konec), a největší kladná rezidua jsou naopak menší, než by odpovídalo normálnímu rozdělení. Odchylka není velká a při 166 osobách intervaly koeficientů příliš neovlivní. Ve zprávě bychom ji přesto uvedli a výsledek porovnali se Spearmanovou korelací, jak jsme to udělali. Nezávislost pozorování z dat neověříme; vyplývá z toho, jak byla data sebrána (každá osoba vyplnila dotazník jednou).
+
+### Interval spolehlivosti a predikční interval
+
+Funkce `predict()` spočítá odhad modelu pro zadané hodnoty prediktoru. Připravíme si **mřížku** hodnot emoční otevřenosti v rozsahu, který jsme pozorovali. `seq(..., length.out = 200)` vytvoří 200 rovnoměrně rozložených čísel mezi nejnižší a nejvyšší hodnotou. Mimo pozorovaný rozsah bychom model **extrapolovali**, tedy předpokládali, že přímka platí i tam, kde nemáme data.
+
+```{r}
+#| label: l06-mrizka
+mrizka <- tibble(
+  tot_emo = seq(
+    from = min(hs_dvojice$tot_emo),
+    to = max(hs_dvojice$tot_emo),
+    length.out = 200
+  )
+)
+range(mrizka$tot_emo)
+```
+
+Mřížka sahá od 1,24 do 5,65, tedy od nejnižšího po nejvyšší pozorovaný skór emoční otevřenosti. Argument `interval` určuje druh intervalu:
+
+- **`"confidence"`**: interval spolehlivosti pro **průměrný** postoj osob s danou emoční otevřeností.
+- **`"prediction"`**: predikční interval pro postoj **jednoho nového člověka**. Zahrnuje nejistotu odhadu průměru i rozdíly mezi lidmi, proto je mnohem širší.
+
+```{r}
+#| label: l06-predict
+ci_tab <- predict(fit, newdata = mrizka, interval = "confidence") |>
+  as_tibble() |>
+  rename(ci_lwr = lwr, ci_upr = upr)
+
+pi_tab <- predict(fit, newdata = mrizka, interval = "prediction") |>
+  as_tibble() |>
+  rename(pi_lwr = lwr, pi_upr = upr)
+
+ci_tab |> slice_head(n = 3)
+pi_tab |> slice_head(n = 3)
+```
+
+`predict()` vrací matici se sloupci `fit` (odhad), `lwr` (dolní mez) a `upr` (horní mez). `as_tibble()` z ní vytvoří tabulku a `rename()` přejmenuje meze, aby bylo zřejmé, ke kterému intervalu patří. Pro nejnižší emoční otevřenost (1,24) je odhad 2,53. Interval spolehlivosti je přibližně 2,30–2,76, kdežto predikční interval 1,45–3,60. Nová osoba s takto nízkou emoční otevřeností tedy může mít téměř jakýkoli postoj na stupnici.
+
+Objekty jsme pojmenovali `ci_tab` a `pi_tab`, nikoli `pi`. `pi` je v R vestavěná konstanta π; objekt stejného jména by ji v naší relaci zakryl.
+
+Obě tabulky mají stejné řádky ve stejném pořadí jako `mrizka`. Spojíme je proto vedle sebe pomocí `bind_cols()`. Sloupec `fit` je v obou tabulkách stejný, a tak jej z druhé tabulky vynecháme:
+
+```{r}
+#| label: l06-bind-cols
+predikce <- bind_cols(mrizka, ci_tab, select(pi_tab, pi_lwr, pi_upr))
+predikce |> slice_head(n = 3)
+```
+
+`bind_cols()` řádky nepáruje podle obsahu, jen je položí vedle sebe. Je proto vhodné jen tehdy, když víme, že řádky si odpovídají, jako zde, kde vznikly ze stejné mřížky. Párování podle hodnoty `fit` pomocí funkce pro spojování tabulek by nebylo spolehlivé: desetinná čísla se nemusí přesně shodovat a dvě různé hodnoty prediktoru by mohly mít stejný odhad.
+
+### Graf s oběma intervaly
+
+Graf sestavíme postupně. `geom_ribbon()` nakreslí pás mezi dolní (`ymin`) a horní (`ymax`) mezí. Nejprve nakreslíme širší predikční pás, potom užší pás spolehlivosti a přímku. Vrstvy se kreslí v pořadí zápisu, takže pozdější leží navrch:
+
+```{r}
+#| label: fig-skory-intervaly
+#| fig-cap: "Regresní přímka s 95% intervalem spolehlivosti pro průměr (modrý pás) a 95% predikčním intervalem pro jednotlivce (růžový pás); body jsou pozorované osoby (n = 166)."
+#| fig-alt: "Rostoucí regresní přímka s úzkým modrým pásem a širokým růžovým pásem, ve kterém leží téměř všechny body; několik bodů leží pod růžovým pásem."
+predikce |>
+  ggplot(aes(x = tot_emo)) +
+  geom_ribbon(aes(ymin = pi_lwr, ymax = pi_upr), fill = "pink", alpha = 0.5) +
+  geom_ribbon(aes(ymin = ci_lwr, ymax = ci_upr), fill = "blue", alpha = 0.2) +
+  geom_line(aes(y = fit)) +
+  geom_point(
+    data = hs_dvojice,
+    aes(y = tot_help),
+    position = posun,
+    alpha = 0.5
+  ) +
+  labs(
+    x = "Emoční otevřenost (průměr položek, 1–6)",
+    y = "Postoj k odborné pomoci\n(průměr položek, 1–4)"
+  )
+```
+
+Vrstvy `geom_ribbon()` a `geom_line()` používají data `predikce`. Vrstva `geom_point()` má vlastní data `hs_dvojice` a vlastní mapování `y = tot_help`; mapování `x = tot_emo` dědí z hlavního `aes()`, protože sloupec stejného jména je v obou tabulkách. `alpha = 0.5` zprůhlední body, aby byly vidět pásy pod nimi.
+
+Modrý pás spolehlivosti je úzký: průměrný postoj při dané emoční otevřenosti odhadujeme poměrně přesně. Růžový predikční pás je široký asi 2,1 bodu a pokrývá velkou část stupnice 1–4. Odhadnout postoj **jednoho konkrétního člověka** podle emoční otevřenosti by tedy bylo velmi nepřesné. Uvnitř predikčního pásu leží téměř všechny body; pod ním je několik osob s výrazně nepříznivým postojem, které jsme viděli i v Q-Q grafu. Ve větší části grafu horní okraj predikčního pásu přesahuje hodnotu 4, kterou skór nemůže překročit. Lineární model hranice stupnice nezná; i to je jeho zjednodušení. [Dokumentace predict.lm](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/predict.lm.html)
+
+### Cvičení 8: Predikce pro dvě osoby {.exercise}
+
+Pomocí modelu `fit` spočítejte odhadovaný postoj k pomoci pro emoční otevřenost 2 a 5, jednou s intervalem spolehlivosti a jednou s predikčním intervalem. Jaký je rozdíl mezi odhady pro obě hodnoty? Proč se predikční intervaly obou hodnot překrývají, i když se intervaly spolehlivosti nepřekrývají?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l06-reseni-predikce
+dve_hodnoty <- tibble(tot_emo = c(2, 5))
+predict(fit, newdata = dve_hodnoty, interval = "confidence")
+predict(fit, newdata = dve_hodnoty, interval = "prediction")
+```
+
+Odhad pro emoční otevřenost 2 je 2,68 a pro 5 je 3,28; rozdíl 0,60 bodu odpovídá trojnásobku sklonu 0,20. Intervaly spolehlivosti (2,51–2,85 a 3,13–3,43) se nepřekrývají: průměrný postoj osob s emoční otevřeností 5 odhadujeme jako příznivější než u osob s hodnotou 2. Predikční intervaly (1,62–3,74 a 2,22–4,34) se překrývají většinou svého rozsahu. Jednotlivý člověk s nízkou emoční otevřeností tedy může mít příznivější postoj než jednotlivý člověk s vysokou. Intervaly mají stejnou výchozí hladinu 95 %, ale predikční interval navíc zahrnuje rozdíly mezi lidmi s toutéž emoční otevřeností. Horní mez 4,34 opět přesahuje hranici stupnice.
+:::
+
+## Závěrečná úloha: věk a postoj k odborné pomoci {#sec-skory-samostatne .exercise}
+
+V nové relaci R načtěte oba soubory z `data/clean` a odstraňte popisky hodnot. Obraťte reverzní položky škály postojů k odborné pomoci podle datového slovníku, spočítejte skór `tot_help` a nastavte jej na `NA` u osob, kterým chybí více než dvě odpovědi. Uveďte Cronbachovu alfu. Potom zjistěte, zda postoj k pomoci souvisí s **věkem** (`age`): prohlédněte rozdělení věku, vytvořte bodový graf s regresní přímkou, spočítejte Pearsonovu i Spearmanovu korelaci a jednoduchou regresi. Sklon interpretujte pro věkový rozdíl 10 let. Kolik osob vstupuje do analýzy? Ukazuje výsledek, že věk s postojem nesouvisí?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Následující řešení načítá balíčky i data samo a nepotřebuje objekty z předchozích oddílů.
+
+```{r}
+#| label: l06-reseni-samostatne
+library(tidyverse)
+library(labelled)
+library(psych)
+
+dotaznik <- read_rds("data/clean/help_seeking_data.rds") |>
+  remove_val_labels()
+slovnik <- read_rds("data/clean/help_seeking_codebook.rds")
+
+reverzni <- slovnik |>
+  filter(
+    instrument == "Attitudes Toward Seeking Professional Psychological Help",
+    reversed
+  ) |>
+  pull(name)
+
+dotaznik <- dotaznik |>
+  mutate(across(all_of(reverzni), ~ 5 - .x)) |>
+  rowwise() |>
+  mutate(
+    tot_help = mean(c_across(help_01:help_10), na.rm = TRUE),
+    n_miss_help = sum(is.na(c_across(help_01:help_10)))
+  ) |>
+  ungroup() |>
+  mutate(tot_help = if_else(n_miss_help > 2, NA_real_, tot_help))
+
+alfa <- dotaznik |>
+  select(starts_with("help_")) |>
+  psych::alpha()
+alfa$total$raw_alpha
+
+dotaznik |>
+  summarise(
+    n_vek = sum(!is.na(age)),
+    median_vek = median(age, na.rm = TRUE),
+    min_vek = min(age, na.rm = TRUE),
+    max_vek = max(age, na.rm = TRUE),
+    n_oba = sum(!is.na(age) & !is.na(tot_help))
+  )
+```
+
+Alfa je 0,82, stejně jako v hlavním výkladu. Věk uvedlo 167 osob, medián je 24 let a rozsah 16 až 78 let. Oba údaje má 165 osob: chybí věk pěti osob a skór dvou, přičemž žádná osoba nechybí v obou údajích.
+
+```{r}
+#| label: fig-skory-reseni-vek
+#| fig-cap: "Věk a postoj k vyhledání odborné psychologické pomoci (n = 165) s regresní přímkou."
+#| fig-alt: "Bodový graf s většinou bodů mezi 18 a 30 lety a řidšími body do 78 let; regresní přímka je téměř vodorovná."
+dotaznik_par <- dotaznik |>
+  filter(!is.na(age), !is.na(tot_help))
+
+dotaznik_par |>
+  ggplot(aes(x = age, y = tot_help)) +
+  geom_point(position = position_jitter(width = 0.3, height = 0.05, seed = 123)) +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  labs(x = "Věk (roky)", y = "Postoj k odborné pomoci\n(průměr položek, 1–4)") +
+  theme_classic(base_size = 15)
+
+cor.test(~ age + tot_help, data = dotaznik_par)
+cor.test(~ age + tot_help, data = dotaznik_par, method = "spearman", exact = FALSE)
+
+fit_vek <- lm(tot_help ~ age, data = dotaznik_par)
+summary(fit_vek)
+confint(fit_vek)
+```
+
+Věk je výrazně zešikmený: většina respondentů je mladších 30 let, starších osob je málo a rozkládají se až do 78 let. Body nevytvářejí žádný zřetelný vzorec a regresní přímka je téměř vodorovná. Věk jsme posunuli o nejvýše 0,3 roku, protože je zaznamenán v celých letech.
+
+Pearsonova korelace je *r* = 0,01 s 95% intervalem od −0,14 do 0,16 (*p* = 0,91), Spearmanova ρ = 0,04 (*p* = 0,63). Sklon je 0,0003 bodu na rok, tedy přibližně 0,003 bodu na 10 let, s 95% intervalem od −0,006 do 0,007 na rok (−0,06 až 0,07 na 10 let). Model vysvětluje prakticky nulový podíl rozptylu.
+
+V tomto vzorku jsme **lineární souvislost věku s postojem nezjistili**. To neznamená, že věk s postojem nesouvisí. Interval spolehlivosti vylučuje jen silnější vztahy (přibližně |*r*| > 0,16) a starší osoby jsou ve vzorku zastoupeny málo, takže pro ně je odhad nejistý. Neprůkazný výsledek by zde mohl skrývat i nelineární vztah nebo rozdíly v podskupinách, které jsme nezkoumali. Na rozdíl od emoční otevřenosti (*r* = 0,32) však data o vztahu s věkem nic nenaznačují.
+:::
+
+## Časté potíže {#sec-skory-potize}
+
+| Projev | Co ověřit |
+|:-----------------------------------|:-----------------------------------|
+| `<double> - <haven_labelled> is not permitted` nebo chyba v `psych::alpha()`. | Položky mají popisky hodnot a není načtený haven ani labelled; před výpočty použijte `remove_val_labels()`. |
+| Alfa je záporná nebo velmi nízká, psych varuje před zápornými korelacemi. | Zda jsou obrácené reverzní položky podle datového slovníku. |
+| Po obrácení jsou hodnoty mimo škálu (0, −1, 7). | Vzorec `(min + max) - x` pro správnou škálu; ověřte pomocí `count(puvodni, obracena)`. |
+| Položky se vrátily do původního směru. | Zda jste obrácení nespustili dvakrát na stejný objekt. |
+| `all_of()` hlásí neexistující sloupec. | Přesné názvy, například `help_02` místo `help_2`. |
+| Skór je u všech osob `NA`. | Chybí `na.rm = TRUE` v `mean()` uvnitř `c_across()`. |
+| Skór je u všech osob stejný. | Chybí `rowwise()` před `mutate()`. |
+| Souhrn vrací řádek pro každou osobu. | Po `rowwise()` chybí `ungroup()`. |
+| `if_else()` hlásí neslučitelné typy. | Pro chybějící desetinné číslo použijte `NA_real_`. |
+| `cor()` vrací samé `NA`. | Chybějící hodnoty; zvolte `use = "pairwise.complete.obs"` nebo `"complete.obs"`. |
+| Graf vypisuje „Removed … rows“. | Počet osob bez hodnoty; ověřte, že odpovídá očekávání. |
+| Graf s jitterem se při každém spuštění mírně liší. | Nastavte `seed` v `position_jitter()`. |
+| Predikční pás přesahuje hranici škály. | Lineární model hranice nezná; interpretujte opatrně. |
+
+## Co si odnést {#sec-skory-shrnuti}
+
+Před spojením položek do skóru zkontrolujte jejich směr. Reverzní položky vyhledejte v datovém slovníku, obraťte vzorcem `(min + max) - x` a výsledek ověřte četnostmi. Cronbachova alfa a korelace položek pomáhají odhalit chybu v obrácení nebo slabě související položku. Alfa ale nedokazuje, že škála měří jedinou vlastnost.
+
+Skór počítáme pro každou osobu zvlášť pomocí `rowwise()` a `c_across()`. Pravidlo pro chybějící odpovědi volíme předem a zjišťujeme, kolik osob vyřadí. Vztah dvou skórů nejprve zobrazíme v bodovém grafu, potom jej popíšeme korelací a regresí. Rozlišujeme statistickou významnost od síly vztahu (*r*², rozsah predikčního intervalu) a souvislost od příčiny. Interval spolehlivosti se týká průměru, predikční interval jednotlivce.
+
+## Zdroje a další procvičení {#sec-skory-zdroje}
+
+- Wickham, H., Çetinkaya-Rundel, M., & Grolemund, G. *R for Data Science* (2. vydání): [Modifying multiple columns](https://r4ds.hadley.nz/iteration.html#sec-across) a [Position adjustments](https://r4ds.hadley.nz/layers.html#position-adjustments). Základ pro `across()` a jitter; cvičení 1, 2 a 5 jsou vlastními obměnami.
+- Dokumentace dplyr: [Row-wise operations](https://dplyr.tidyverse.org/articles/rowwise.html) a [c_across()](https://dplyr.tidyverse.org/reference/c_across.html).
+- Revelle, W. Balíček psych: [dokumentace funkce alpha](https://search.r-project.org/CRAN/refmans/psych/html/alpha.html).
+- Sijtsma, K. (2009). On the use, the misuse, and the very limited usefulness of Cronbach's alpha. *Psychometrika, 74*(1), 107–120. <https://doi.org/10.1007/s11336-008-9101-0>
+- McNeish, D. (2018). Thanks coefficient alpha, we'll take it from here. *Psychological Methods, 23*(3), 412–433. <https://doi.org/10.1037/met0000144>
+- Dokumentace R: [cor.test](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/cor.test.html), [cor](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/cor.html), [lm](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/lm.html) a [predict.lm](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/predict.lm.html).
+- Dokumentace ggplot2: [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html), [position_jitter](https://ggplot2.tidyverse.org/reference/position_jitter.html), [geom_qq](https://ggplot2.tidyverse.org/reference/geom_qq.html), [geom_ribbon](https://ggplot2.tidyverse.org/reference/geom_ribbon.html) a [coord_cartesian](https://ggplot2.tidyverse.org/reference/coord_cartesian.html).

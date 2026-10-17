@@ -1,4 +1,4 @@
-# Data k páté lekci
+# Data k páté a šesté lekci
 
 Veřejné vstupy lekce jsou výslovně vyjmenované v `_quarto.yml`. Kopírují se do
 `_book/data/raw/`, odkud je lze stáhnout i bez přístupu do IS MUNI. Kapitola
@@ -43,5 +43,18 @@ zůstávají lokálně a jsou v `.gitignore`. Nezahrnujte je do veřejného comm
 ani do zdrojů Quarto. Ostatní dosud nezařazené datasety nejsou součástí této
 lekce ani jejího publikačního balíčku.
 
-Výsledky studentského skriptu vznikají v ignorované složce `data/clean/`.
-Původní místní `data/cleaned/` je jiná složka a tato lekce ji nepoužívá.
+Výsledky studentského skriptu páté lekce vznikají ve složce `data/clean/`,
+kterou Git jinak ignoruje. Původní místní `data/cleaned/` je jiná složka
+a lekce ji nepoužívají.
+
+## Vstupy šesté lekce
+
+| Soubor | Původ a použití |
+| --- | --- |
+| `clean/help_seeking_data.rds` | Dodal vyučující 17. 10. 2026 jako připravenou verzi `help_seeking.xlsx`: 172 × 34, `-99` převedeno na `NA`, demografie jako faktory s anglickými kategoriemi, položky `help_` a `emo_` jako `haven_labelled` s popisky ze slovníku a sloupec `financial_situation` s opraveným názvem. Ověřeno: všech 33 sdílených sloupců má stejné hodnoty jako sešit po převodu `-99`. |
+| `clean/help_seeking_codebook.rds` | Dodaný datový slovník ke stejným datům (34 řádků, `reversed` jako logický sloupec). Popisky hodnot zachovávají původní znění sešitu. |
+
+Oba soubory jsou výjimkou z ignorování `data/clean/` (viz `.gitignore`) a jsou
+výslovně uvedené v `project.resources`. Generátor nebyl dodán; jde o soubory
+vyučujícího, nikoli o výstup páté lekce. Ostatní soubory v `data/clean/`
+zůstávají místními výstupy a nezveřejňují se.
