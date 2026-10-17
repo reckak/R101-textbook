@@ -18,10 +18,9 @@ a upravena. Záznam níže z 17. 10. 2026 platí, pokud jej tato revize nemění
   a `c_across()` fungují při načteném labelled. Nový oddíl vysvětluje ztrátu
   atributů a tři způsoby, jak popisky zachovat. Skóry jsou identické.
 - **Doplněno:** načtení z URL (`read_rds()` přímo i `download.file()` do
-  `data/clean`) s pevným commitem `9a078dd07469f7188224031f35b93ecf3c84dccf`
-  větve `codex/lekce-06`. Po sloučení pull requestu zůstává commit dostupný
-  přes jeho historii; při squash-merge je vhodné odkaz převést na commit
-  v `main`. `group_by(id)` jako ekvivalent `rowwise()` (ověřena jedinečnost
+  `data/clean`) s pevným commitem `9a078dd07469f7188224031f35b93ecf3c84dccf`,
+  který je díky běžnému sloučení PR #21 součástí historie `main`.
+  `group_by(id)` jako ekvivalent `rowwise()` (ověřena jedinečnost
   `id` a `identical()` skórů), `drop_na()` (166 vs. 58 řádků bez sloupců),
   srovnání `limits` (sklon −0,06, n = 59, dvě varování) a `coord_cartesian()`
   (sklon 0,20), legenda trendových čar podle `sec-legenda-modelu`.
