@@ -135,7 +135,7 @@ status_l05 <- system2(
 )
 stopifnot(status_l05 == 0L)
 
-# Execute lesson 06 independently, including scoring, reliability and regression checks.
+# Execute lesson 06 independently, including labels, scoring, reliability, zooming and Q-Q band checks.
 status_l06 <- system2(
   file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript"),
   c("--vanilla", "quarto/_verification/check-lesson-06.R")

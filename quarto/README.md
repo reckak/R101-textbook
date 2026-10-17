@@ -1,5 +1,50 @@
 # Autorská dokumentace učebnice R101
 
+## Šestá kapitola: revize a zkrácení, 18. 10. 2026
+
+Na pokyn uživatele (připomínky k `lekce_06.qmd`) byla kapitola zkrácena
+a upravena. Záznam níže z 17. 10. 2026 platí, pokud jej tato revize nemění.
+
+- **Vyřazeno:** oddíly Korelace (Pearson, Spearman, korelační matice,
+  cvičení 6) a Jednoduchá lineární regrese (`lm`, rezidua, `predict`,
+  intervaly, cvičení 8). Odpovídající části `week_06.R` zůstávají
+  nezpracované pro případnou další lekci. Úvod oddílu o rozdělení skórů
+  nyní navazuje na bodový graf; zmínka o reziduích je obecná. Závěrečná
+  úloha (věk) je grafická: histogram věku, bodový graf s přímkou a loess,
+  bez testů. Cvičení přečíslována (6 = rozdělení), lekce má 7 řešení.
+- **Popisky hodnot:** `remove_val_labels()` odstraněno (i ze závěrečné úlohy).
+  Ověřeno: `5 - x` u `haven_labelled` vrací `numeric` bez popisků hodnot
+  i `var_label`; neobrácené položky zůstávají `haven_labelled`; `psych::alpha()`
+  a `c_across()` fungují při načteném labelled. Nový oddíl vysvětluje ztrátu
+  atributů a tři způsoby, jak popisky zachovat. Skóry jsou identické.
+- **Doplněno:** načtení z URL (`read_rds()` přímo i `download.file()` do
+  `data/clean`) s pevným commitem `9a078dd07469f7188224031f35b93ecf3c84dccf`
+  větve `codex/lekce-06`. Po sloučení pull requestu zůstává commit dostupný
+  přes jeho historii; při squash-merge je vhodné odkaz převést na commit
+  v `main`. `group_by(id)` jako ekvivalent `rowwise()` (ověřena jedinečnost
+  `id` a `identical()` skórů), `drop_na()` (166 vs. 58 řádků bez sloupců),
+  srovnání `limits` (sklon −0,06, n = 59, dvě varování) a `coord_cartesian()`
+  (sklon 0,20), legenda trendových čar podle `sec-legenda-modelu`.
+- **qqplotr 0.0.7:** Q-Q grafy s bodovým a simultánním tail-sensitive pásem
+  (Aldor-Noiman et al., 2013, DOI ověřeno; s opravou 10.1080/00031305.2014.970871).
+  Pás `"ts"` je simulovaný, proto `set.seed(123)`; kontrola ověřuje shodu
+  pásu při opakovaném sestavení. Postoj k pomoci: 31 + 2 body mimo bodový
+  pás, 11 nejnižších pod pásem `"ts"`, 4 body ze schodu u skóru 3 nad ním;
+  pásy `"ks"` a `"ell"` nejnižší skóry pokrývají (text na závislost na typu
+  pásu upozorňuje). Shapiro–Wilk pro `tot_help` p ≈ 1,3 × 10⁻⁵ (jen
+  autorská kontrola, v textu neuvedeno); emoční otevřenost celá v pásu `"ts"`.
+  Balíček doplněn do instalace, CI a varování o maskování `stat_qq_line()`.
+- **Jazyk:** „Cronbachovo alfa“ jako nesklonné neutrum v kapitole, `index.qmd`
+  a README; „psychometrika“; osy jako `x` a `y` v textu (ne v `fig-alt`);
+  loess popsán jako podmíněný průměr proměnné na ose `y`.
+- **Ověření:** `check-lesson-06.R` přepsán (popisky, `group_by`, `drop_na`,
+  sklony obou přiblížení, legenda, počty bodů mimo pásy, `ks`/`ell`,
+  samostatné závěrečné řešení), nový síťový `check-lesson-06-downloads.R`
+  (bajtová shoda obou RDS). Render celé knihy (Quarto 1.9.38, R 4.5.1),
+  `check-r.R` a `check-html.cjs` (cíl osnovy `sec-skory-rozdeleni`, snímek
+  `html-qqbands`) prošly; nové grafy prohlédnuty a interpretace upraveny podle
+  nich (popisek osy u grafu pásů ořezán legendou → legenda dole).
+
 ## Šestá kapitola: skóry škál, korelace a regrese, 17. 10. 2026
 
 Podkladem je `scripts/week_06.R`, zachovaný beze změny (SHA-256
