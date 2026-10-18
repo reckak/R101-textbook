@@ -129,6 +129,102 @@ a rozbalí se až po kliknutí na „Ukázat řešení“.
 Pouhé skrytí kódu pomocí `code-fold` nestačí, protože by zůstaly viditelné
 ostatní části řešení. Viz [dokumentace rozbalovacích bloků Quarto](https://quarto.org/docs/authoring/callouts.html).
 
+## Testy pro IS MUNI
+
+### Obsah a obtížnost
+
+- Pokud uživatel neurčí jinak, vytvoř k lekci 10 lehčích otázek s výběrem
+jedné správné odpovědi. Každá otázka má celkem čtyři možnosti, tedy jednu
+správnou odpověď a tři nesprávné alternativy.
+- Před tvorbou přečti celou aktuální lekci v `quarto/lekce_XX.qmd`.
+Rozvrhni otázky napříč jejími hlavními tématy; nesoustřeď je pouze na začátek,
+jediný postup nebo pokročilé detaily. Vycházej z látky skutečně vysvětlené
+v lekci a z předpokládaných znalostí začátečníků.
+- Střídej porozumění pojmům, čtení krátkého kódu, interpretaci výsledků
+a rozpoznání běžných chyb. Zadání musí být samostatně srozumitelné;
+potřebné hodnoty, objekty a podmínky uveď přímo v otázce.
+- Formuluj jednoznačné otázky a věrohodné nesprávné alternativy vycházející
+z typických chyb. Vyhýbej se chytákům, překrývajícím se odpovědím a nápovědám
+v délce či formulaci možností. Pozici správné odpovědi mezi otázkami střídej.
+- Ke každé ze čtyř možností napiš stručnou věcnou zpětnou vazbu, která
+vysvětlí, proč je správná nebo nesprávná. Ověř shodu zpětné vazby s klíčem.
+
+### Soubor a přesný formát
+
+- Výstup ulož jako obyčejný text v UTF-8 do `tests/test_XX.txt`, kde `XX`
+je dvoumístné číslo lekce, například `tests/test_05.txt`. Respektuj případnou
+jinou cestu výslovně určenou uživatelem.
+- Do výsledného `.txt` nevkládej Markdownové ohraničení kódu, úvodní komentář,
+nadpis celého testu ani číslovaný seznam. Níže uvedené ohraničení slouží
+pouze k zobrazení šablony v tomto dokumentu.
+- Každá otázka má přesně devět řádků. První obsahuje `::Název::Text otázky`.
+Následují čtyři možnosti s jednou obyčejnou mezerou před `:r1` až `:r4`
+a čtyři hodnoticí řádky bez úvodní mezery. Identifikátory se v každé otázce
+používají znovu od `r1` do `r4`.
+- V hodnoticí části označ právě jednu možnost `ok`, ostatní tři `0`.
+Za označením vždy následuje mezera a příslušná zpětná vazba. Správné `ok`
+nemusí být u `r1`; přesuň je podle skutečně správné možnosti.
+- Mezi sousední otázky vlož samostatný řádek obsahující přesně dvě pomlčky
+`--`, bez mezer. Pro deset otázek použij devět oddělovačů, žádný před první
+ani za poslední otázkou. Prázdný řádek ani delší řada pomlček oddělovač
+nenahrazují. Nevkládej další prázdné řádky uvnitř testu.
+- Názvy otázek musí být neprázdné a v testu jedinečné. Zástupné texty šablony
+nahraď skutečným obsahem. Každý text otázky, možnosti i zpětné vazby ponech
+na jednom řádku. Použij skutečné mezery, nikoli zápis `&#x20;`.
+- Mimo předepsané značky hlídej dvojtečky v textu: za běžnou interpunkční
+dvojtečkou piš mezeru. Zápisy kódu s dvojtečkou, které by import mohl chápat
+jako manipulační prvek, pokud možno nahraď jednoznačnou rovnocennou ukázkou
+bez dvojtečky; neměň přitom význam kódu. Při chybě identifikátoru `:` nejprve
+zkontroluj oddělovače otázek, protože bez nich může být následující hlavička
+`::Název::` nesprávně čtena jako součást předchozí hodnoticí části.
+
+Přesná šablona dvou navazujících otázek; stejným způsobem pokračuj do deseti:
+
+```text
+::Název otázky 1::Text otázky 1
+ :r1 Odpověď 1
+ :r2 Odpověď 2
+ :r3 Odpověď 3
+ :r4 Odpověď 4
+:r1 ok Zpětná vazba k odpovědi 1
+:r2 0 Zpětná vazba k odpovědi 2
+:r3 0 Zpětná vazba k odpovědi 3
+:r4 0 Zpětná vazba k odpovědi 4
+--
+::Název otázky 2::Text otázky 2
+ :r1 Odpověď 1
+ :r2 Odpověď 2
+ :r3 Odpověď 3
+ :r4 Odpověď 4
+:r1 0 Zpětná vazba k odpovědi 1
+:r2 ok Zpětná vazba k odpovědi 2
+:r3 0 Zpětná vazba k odpovědi 3
+:r4 0 Zpětná vazba k odpovědi 4
+```
+
+### Kontroly před uložením a předáním
+
+- Před uložením zkontroluj pokrytí hlavních témat celé lekce, přiměřenou
+obtížnost a právě jednu věcně správnou možnost v každé otázce.
+- Kód a konkrétní výsledky, na nichž závisí správnost odpovědí nebo zpětné
+vazby, ověř spuštěním v čisté relaci R s uvedenými daty a balíčky.
+Pokud spuštění není možné, přesně uveď, co zůstalo neověřené a proč.
+- Programově zkontroluj připravený text: rozdělení podle `\r?\n--\r?\n`
+musí dát 10 bloků po devíti řádcích. Každý blok musí mít hlavičku, možnosti
+`r1` až `r4` právě jednou a odpovídající čtyři hodnoticí řádky, právě jedno
+`ok` a tři `0`. Kontroluj také předepsané mezery a neprázdnost všech textů.
+Celkem musí být 40 možností, 40 zpětných vazeb a 10 označení `ok`.
+- Ověř devět samostatných oddělovačů `--`, jedinečné názvy a nepřítomnost
+zbylých zástupných textů, nechtěných prázdných řádků a Markdownového obalu.
+Povoleny jsou konce řádků LF i CRLF; soubor zakonči koncem řádku.
+- Po uložení soubor znovu načti jako UTF-8, zkontroluj českou diakritiku,
+shodu s připraveným textem a zopakuj strukturální kontrolu. Zkontroluj také
+`git diff --check` (u nového souboru po jeho zařazení do Gitu).
+- Rozlišuj místní kontrolu formátu a kódu od skutečného importu do IS MUNI.
+Úspěšný import ani chování odpovědníku netvrď bez přímého ověření v systému;
+pokud import neproběhl, uveď to při předání. Samotná úprava testu nevyžaduje
+vykreslení celé Quarto knihy.
+
 ## Výchozí zdroj a styl kódu
 - V tématech, která pokrývá, vycházejí cvičení primárně z knihy [R for Data Science (2. vydání)](https://r4ds.hadley.nz/)
 od Hadleyho Wickhama, Mine Çetinkaya-Rundel a Garretta Grolemunda.
