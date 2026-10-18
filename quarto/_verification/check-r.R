@@ -1,3 +1,9 @@
+if (!isTRUE(l10n_info()[["UTF-8"]])) {
+  stop("R is not using a UTF-8 locale. Czech plot labels may be corrupted. ",
+       "See docs/provoz.md, set a supported UTF-8 locale, then render the ",
+       "whole book again before running checks.", call. = FALSE)
+}
+
 lines <- c(readLines("quarto/lekce_01.qmd", encoding = "UTF-8"),
            readLines("quarto/lekce_02.qmd", encoding = "UTF-8"))
 starts <- which(grepl("^```\\{r\\}", lines))

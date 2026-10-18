@@ -185,8 +185,32 @@ function check(condition, message) { if (!condition) throw new Error(message); }
           'Download table must allow scrolling if wider than its mobile container');
       }
       result.mobileWidth = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, viewport: innerWidth }));
-      check(result.mobileWidth.page <= result.mobileWidth.viewport + 1, 'Horizontal page overflow on mobile');
+      if (result.mobileWidth.page > result.mobileWidth.viewport + 1) {
+        const overflowing = await page.locator('main *').evaluateAll(elements => elements
+          .filter(el => {
+            if (el.getBoundingClientRect().right <= innerWidth + 1) return false;
+            for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+              if (['auto', 'scroll', 'hidden', 'clip'].includes(getComputedStyle(parent).overflowX)) return false;
+            }
+            return true;
+          })
+          .map(el => ({ tag: el.tagName, id: el.id, class: el.className,
+            right: Math.round(el.getBoundingClientRect().right), text: el.textContent.trim().slice(0, 120) }))
+          .slice(0, 20));
+        throw new Error(`Horizontal page overflow on mobile: chapter ${chapterNumber}, ` +
+          `${result.mobileWidth.page}px / ${result.mobileWidth.viewport}px; ${JSON.stringify(overflowing)}`);
+      }
       result.chapters.push({ chapter: chapterNumber, solutions: result.solutions, codeBlocks: result.codeBlocks, copyChecks: result.copyChecks, images: result.images.length, localLinks: checkedLinks.size, mobileWidth: result.mobileWidth });
+      if (chapterNumber === 6) {
+        // A wider fallback font reproduces the unbroken DOI overflow across platforms.
+        const fallbackFont = await page.addStyleTag({ content: 'main a.uri { font-family: Arial, sans-serif; }' });
+        try {
+          const width = await page.evaluate(() => document.documentElement.scrollWidth);
+          check(width <= 391, `Chapter 6 URL overflow with fallback font: ${width}px / 390px`);
+        } finally {
+          await fallbackFont.evaluate(el => el.remove());
+        }
+      }
       if (chapterNumber >= 2) {
         const images = await page.locator('main .cell-output-display img').evaluateAll(imgs => imgs.map(img => ({src: img.src, alt: img.alt, id: img.closest('[id]')?.id})));
         const gallery = await context.newPage();

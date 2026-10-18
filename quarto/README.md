@@ -1,5 +1,48 @@
 # Autorská dokumentace učebnice R101
 
+## Oprava lokálního renderu českých popisků, 18. 10. 2026
+
+Po předchozím renderu uživatel upozornil na náhradní zápisy `<U+00F3>`
+a podobné v grafech. Diagnostika R 4.5.1 ve stejném prostředí potvrdila,
+že zděděné `LANG`, `LC_ALL` a `LC_CTYPE` s hodnotou `C.UTF-8` Windows
+nepřijalo: `Sys.getlocale()` vracelo `C` a UTF-8 v `l10n_info()` bylo
+`FALSE`. Po nastavení `English_United States.utf8` je UTF-8 `TRUE`.
+Zdrojové české popisky zůstaly správné; poškození vzniklo při lokální
+tvorbě PNG, nikoli zalamováním URL v CSS. Předchozí kontrola HTML
+ověřovala načtení obrázků, nikoli správnost textu uvnitř nich, a tuto
+chybu nezachytila. Postup pro Windows je doplněn v `docs/provoz.md`.
+
+Kontrola `check-r.R` nyní nevyhovující locale odmítá s pokynem k opravě
+a novému renderu. Ověřeno: původní prostředí skončí touto chybou;
+UTF-8 prostředí projde celou kontrolou R. Celá kniha byla znovu vykreslena
+a prošla kontrolou HTML všech šesti kapitol (61 řešení, 512 kopírování,
+390/390 px, bez chyb JavaScriptu). Vizuálně byly zkontrolovány aktuální
+přehledy všech 50 vykreslených grafů kapitol 2, 3, 4 a 6, včetně řešení;
+popisky mají správnou diakritiku. Q-Q graf s oběma pásy z uživatelova
+snímku byl zkontrolován také samostatně v plném rozlišení.
+
+## Mobilní přetékání URL, 18. 10. 2026
+
+Kontrolu GitHub Actions zastavoval mobilní layout. V seznamu literatury
+šesté kapitoly se dlouhý DOI odkaz nezalamoval; při šířce viewportu 390 px
+a fontu Arial dosahovala stránka 413 px. Společný styl nyní umožňuje
+zalamování doslovných URL (`main a.uri`, `overflow-wrap: anywhere`).
+Text odkazů, jejich cíle, výukový kód ani analytické výsledky se nemění.
+
+Kontrola HTML navíc testuje URL šesté kapitoly s náhradním fontem Arial.
+Při přetékání vypisuje kapitolu, naměřené šířky a prvky přesahující viewport;
+vynechává obsah uzavřený v lokálně posuvných či oříznutých kontejnerech.
+Původní kontrola šířky celé stránky zůstává zachována.
+
+Ověření: úspěšný render celé knihy v Quarto 1.9.38 a úplná kontrola HTML
+všech šesti kapitol (61 řešení, 513 kopírovaných bloků, obrázky, lokální
+odkazy a stahování, bez chyb JavaScriptu). Všechny kapitoly mají při
+viewportu 390 px šířku stránky 390 px. Regresní kontrola s Arialem prošla;
+dočasné vypnutí opravy na novém renderu reprodukovalo 413 px. Výsledný
+mobilní seznam literatury byl zkontrolován také vizuálně. `git diff --check`
+prošel. Samostatná kontrola výpočtů R nebyla opakována; změna se týká pouze
+CSS a kontroly HTML, celý výukový kód se vykonal při renderu.
+
 ## Šestá kapitola: revize a zkrácení, 18. 10. 2026
 
 Na pokyn uživatele (připomínky k `lekce_06.qmd`) byla kapitola zkrácena
