@@ -1,5 +1,27 @@
 # Autorská dokumentace učebnice R101
 
+## Mobilní přetékání URL, 18. 10. 2026
+
+Kontrolu GitHub Actions zastavoval mobilní layout. V seznamu literatury
+šesté kapitoly se dlouhý DOI odkaz nezalamoval; při šířce viewportu 390 px
+a fontu Arial dosahovala stránka 413 px. Společný styl nyní umožňuje
+zalamování doslovných URL (`main a.uri`, `overflow-wrap: anywhere`).
+Text odkazů, jejich cíle, výukový kód ani analytické výsledky se nemění.
+
+Kontrola HTML navíc testuje URL šesté kapitoly s náhradním fontem Arial.
+Při přetékání vypisuje kapitolu, naměřené šířky a prvky přesahující viewport;
+vynechává obsah uzavřený v lokálně posuvných či oříznutých kontejnerech.
+Původní kontrola šířky celé stránky zůstává zachována.
+
+Ověření: úspěšný render celé knihy v Quarto 1.9.38 a úplná kontrola HTML
+všech šesti kapitol (61 řešení, 513 kopírovaných bloků, obrázky, lokální
+odkazy a stahování, bez chyb JavaScriptu). Všechny kapitoly mají při
+viewportu 390 px šířku stránky 390 px. Regresní kontrola s Arialem prošla;
+dočasné vypnutí opravy na novém renderu reprodukovalo 413 px. Výsledný
+mobilní seznam literatury byl zkontrolován také vizuálně. `git diff --check`
+prošel. Samostatná kontrola výpočtů R nebyla opakována; změna se týká pouze
+CSS a kontroly HTML, celý výukový kód se vykonal při renderu.
+
 ## Šestá kapitola: revize a zkrácení, 18. 10. 2026
 
 Na pokyn uživatele (připomínky k `lekce_06.qmd`) byla kapitola zkrácena

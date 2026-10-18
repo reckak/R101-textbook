@@ -3,6 +3,8 @@ body { line-height: 1.7; }
 h1, h2, h3 { color: #174650; }
 h2 { margin-top: 2.5rem; }
 .subtitle { color: #536770; }
+/* Long literal URLs (including DOIs) must fit narrow text columns. */
+main a.uri { overflow-wrap: anywhere; }
 .quarto-title { border-bottom: 3px solid var(--lesson-accent); padding-bottom: 1rem; }
 figure img { border: 1px solid #d7dfe2; border-radius: 6px; }
 figcaption { line-height: 1.5; }
