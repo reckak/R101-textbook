@@ -1,0 +1,99 @@
+::Obrácení reverzní položky::Podle datového slovníku je položka reverzní a její možné odpovědi jsou 1 až 6. Kterým výpočtem správně obrátíme původní odpověď x, aby vyšší skóry všech položek vyjadřovaly stejný směr měřené vlastnosti?
+ :r1 6 - x
+ :r2 7 - x
+ :r3 5 - x
+ :r4 x / 6
+:r1 0 Odečítáme od součtu nejnižší a nejvyšší možné odpovědi, nikoli jen od maxima. Výpočet 6 - x by odpověď 6 změnil na 0, tedy mimo škálu.
+:r2 ok Součet krajních hodnot je 1 + 6 = 7. Výpočet 7 - x zamění 1 za 6, 2 za 5 a 3 za 4; chybějící odpověď zůstane NA.
+:r3 0 Výpočet 5 - x je vhodný pro škálu 1 až 4. U škály 1 až 6 by vytvářel i hodnoty mimo povolený rozsah.
+:r4 0 Dělení šesti změní jednotky, ale neobrátí pořadí odpovědí. Vyšší původní odpovědi by stále měly vyšší výsledné hodnoty.
+--
+::Co říká Cronbachovo alfa::Po správném obrácení reverzních položek vyšlo u dotazníkové škály poměrně vysoké Cronbachovo alfa. Který závěr je přiměřený?
+ :r1 Je prokázáno, že škála měří právě jednu vlastnost.
+ :r2 Je prokázáno, že škála měří právě tu vlastnost, kterou chceme měřit.
+ :r3 Každou položku, jejíž odstranění alfa zvýší, musíme ze škály vyřadit.
+ :r4 Výsledek vypovídá o vnitřní konzistenci škály; sám nedokazuje její jednorozměrnost ani validitu.
+:r1 0 Vysoké alfa může vzniknout i u položek měřících více příbuzných vlastností. Samo tedy jednorozměrnost nedokládá.
+:r2 0 Vnitřní konzistence není totéž co validita. Položky mohou spolu souviset, aniž měří zamýšlenou vlastnost.
+:r3 0 O vyřazení položky nelze rozhodnout jen podle zvýšení alfa v jednom vzorku. Záleží také na obsahu položky a teoretickém zdůvodnění škály.
+:r4 ok Alfa vychází ze vztahů mezi položkami a za určitých předpokladů odhaduje reliabilitu skóru. Jeho interpretace závisí také na délce škály a účelu měření.
+--
+::Průměr pro každou osobu::Ve fiktivní tabulce dotaznik představuje každý řádek jednu osobu a p1, p2 a p3 jsou již správně orientované číselné položky. Co zajistí příkaz dotaznik |> rowwise() |> mutate(skor = mean(c_across(c(p1, p2, p3)), na.rm = TRUE)) |> ungroup()?
+ :r1 Spočítá pro každou osobu průměr jejích dostupných odpovědí a poté zruší zpracování po řádcích.
+ :r2 Spočítá zvlášť průměr každé položky přes všechny osoby a vrátí tři řádky.
+ :r3 Spočítá jediný průměr všech odpovědí a zapíše jej všem osobám.
+ :r4 Ponechá pouze osoby, které mají vyplněné všechny tři položky.
+:r1 ok Funkce rowwise() zajistí výpočet pro každý řádek a c_across() poskytne hodnoty vybraných položek. Funkce ungroup() toto uspořádání zruší, aby další souhrny neprobíhaly zvlášť pro každou osobu.
+:r2 0 Tento kód počítá po řádcích, nikoli souhrny jednotlivých sloupců přes osoby. Funkce mutate() přidává skór k původním řádkům.
+:r3 0 Právě rowwise() brání tomu, aby se vypočítal jeden společný průměr všech odpovědí. Bez něj by uvedené použití c_across() mělo jiný výsledek.
+:r4 0 Argument na.rm = TRUE vynechá chybějící hodnoty při průměrování, ale neodstraňuje osoby. Pravidlo pro minimální počet odpovědí musíme určit samostatně.
+--
+::Pravidlo pro chybějící odpovědi::Škála má 10 položek. Předem jsme stanovili, že skór bude průměrem dostupných odpovědí pouze tehdy, pokud chybí nejvýše dvě odpovědi. Osoba A vyplnila 8 položek a osoba B vyplnila 7 položek. Jak postupujeme?
+ :r1 Oběma osobám vypočítáme průměr, protože na.rm = TRUE nahrazuje pravidlo pro počet odpovědí.
+ :r2 Oběma osobám nastavíme skór na NA, protože neodpověděly na všech 10 položek.
+ :r3 Osobě A ponecháme průměr z 8 odpovědí a osobě B nastavíme skór na NA.
+ :r4 Osobě A ponecháme průměr a osobě B nahradíme tři chybějící odpovědi nulami.
+:r1 0 Argument na.rm = TRUE umožní počítat z dostupných hodnot, ale nekontroluje, zda je odpovědí dost podle stanoveného pravidla.
+:r2 0 Pravidlo dovoluje až dvě chybějící odpovědi. Osoba A podmínku splňuje, takže její skór nemusíme zahodit.
+:r3 ok Osobě A chybí dvě odpovědi, osobě B tři. Podmínka n_miss > 2 tedy nastaví NA pouze osobě B. Hranici volíme předem podle manuálu nebo plánu analýzy.
+:r4 0 Nula není náhradou za nevyplněnou odpověď a změnila by význam průměru. Při překročení hranice nastavujeme chybějící skór NA.
+--
+::Výběr osob pro bodový graf::V tabulce hs_skory chceme zobrazit vztah číselných skórů tot_emo a tot_help. Některým osobám chybí věk, ale oba skóry mají. Který příkaz ponechá všechny osoby s oběma skóry bez ohledu na chybějící věk?
+ :r1 hs_skory |> drop_na()
+ :r2 hs_skory |> drop_na(tot_emo, tot_help)
+ :r3 hs_skory |> drop_na(age)
+ :r4 hs_skory |> filter(is.na(tot_emo), is.na(tot_help))
+:r1 0 Bez uvedení sloupců drop_na() odstraní řádky s chyběním kdekoli v tabulce, tedy i osoby s oběma skóry a chybějícím věkem.
+:r2 ok Funkce posoudí chybění pouze v uvedených skórech. Osoby s oběma hodnotami zůstanou, i když jim chybí údaj v jiném sloupci.
+:r3 0 Tento příkaz kontroluje věk, nikoli oba skóry. Vyřadil by některé použitelné osoby a mohl ponechat osoby bez skóru.
+:r4 0 Podmínky is.na() vybírají chybějící hodnoty. Tento zápis ponechá osoby, kterým chybí oba skóry, což je opak zamýšleného výběru.
+--
+::Překrývající se body::Do bodové vrstvy grafu přidáme position_jitter(width = 0.05, height = 0.05, seed = 123). Regresní přímku přidává samostatná vrstva geom_smooth(). K čemu zde jitter slouží?
+ :r1 Nahrazuje chybějící skóry malými náhodnými čísly.
+ :r2 Mění uložené skóry, aby se při dalším výpočtu zvýšila jejich variabilita.
+ :r3 Přepočítává regresní přímku z náhodně posunutých bodů.
+ :r4 Mírně posouvá zobrazené body, aby byly lépe patrné ty, které se překrývají.
+:r1 0 Jitter nedoplňuje chybějící hodnoty. Bez obou souřadnic nelze bod v tomto grafu zobrazit.
+:r2 0 Hodnoty v původní tabulce zůstávají stejné. Jitter upravuje pouze polohu bodů v grafu.
+:r3 0 Posun je nastaven pouze pro bodovou vrstvu. Samostatná vrstva geom_smooth() počítá trend z původních dat.
+:r4 ok Malý posun pomůže odlišit překrývající se body. Argument seed umožní opakovat stejný posun; příliš velký jitter by mohl obraz vztahu zkreslit.
+--
+::Pás kolem trendové čáry::Bodový graf obsahuje regresní přímku a její 95% pás spolehlivosti vytvořený pomocí geom_smooth(method = "lm"). Co tento pás vyjadřuje?
+ :r1 Nejistotu odhadu průměrné hodnoty y při dané hodnotě x.
+ :r2 Rozmezí, ve kterém musí ležet přesně 95 % jednotlivých osob.
+ :r3 Hranice, mimo které jsou všechny naměřené hodnoty chybné.
+ :r4 Důkaz, že změna proměnné x způsobuje změnu proměnné y.
+:r1 ok Pás se týká odhadu podmíněného průměru. Stejný základní význam má i pás kolem křivky loess, která na rozdíl od přímky dovoluje zakřivený trend.
+:r2 0 Pás kolem průměru není rozmezím jednotlivých pozorování. Mnoho bodů může ležet mimo něj, aniž je graf nebo model chybný.
+:r3 0 Bod mimo pás nemusí být chybou ani odlehlou hodnotou. Pás popisuje nejistotu odhadu průměru, ne přípustný rozsah měření.
+:r4 0 Trendová čára ani její pás samy nedokládají kauzalitu. Pozorovaná souvislost v tomto typu dat neurčuje příčinu ani směr působení.
+--
+::Přiblížení grafu bez změny výpočtu::Chceme zobrazit jen část bodového grafu pro hodnoty x od 2,5 do 3,5, ale zachovat regresní přímku vypočtenou ze všech původních pozorování. Který doplněk grafu použijeme?
+ :r1 scale_x_continuous(limits = c(2.5, 3.5))
+ :r2 Před vykreslením vybereme jen řádky s x mezi 2,5 a 3,5.
+ :r3 coord_cartesian(xlim = c(2.5, 3.5))
+ :r4 geom_smooth(method = "loess")
+:r1 0 Nastavení limits na škále vyřazuje hodnoty mimo rozsah před výpočtem trendu. Přímka by se proto mohla změnit.
+:r2 0 Po výběru řádků by přímka vycházela pouze z vybrané části dat. To není jen přiblížení původního grafu.
+:r3 ok Funkce coord_cartesian() přiblíží pohled na hotový graf. Data mimo zobrazený rozsah zůstávají součástí výpočtu regresní přímky.
+:r4 0 Tímto změníme způsob odhadu trendu na křivku loess. Neurčujeme tím výřez grafu ani nezachováváme původní regresní přímku.
+--
+::Význam z-skóru::Po převodu skóru pomocí vzorce z = (skor - prumer) / smerodatna_odchylka má jedna osoba z-skór 1,5. Jak tuto hodnotu správně interpretujeme?
+ :r1 Její původní skór je přesně 1,5 bodu nad průměrem, nezávisle na směrodatné odchylce.
+ :r2 Její skór leží 1,5 směrodatné odchylky nad průměrem použitým při standardizaci.
+ :r3 Její skór je o 1,5 % vyšší než průměr použitý při standardizaci.
+ :r4 Převod na z-skóry zaručil normální rozdělení všech skórů.
+:r1 0 Jednotkou z-skóru je směrodatná odchylka, nikoli bod původní škály. Rozdíl v původních bodech závisí na velikosti směrodatné odchylky.
+:r2 ok Kladný z-skór znamená hodnotu nad průměrem. Standardizace mění střed a jednotku měření; z-skóry mají průměr 0 a směrodatnou odchylku 1, pokud původní směrodatná odchylka není nulová.
+:r3 0 Standardizace nevyjadřuje procentní změnu. Hodnotu čteme jako počet směrodatných odchylek od průměru.
+:r4 0 Standardizace nezmění tvar rozdělení na normální. Tvar dále posuzujeme histogramem nebo Q-Q grafem; při překrytí histogramu křivkou dnorm použijeme na svislé ose hustotu.
+--
+::Interpretace Q-Q grafu::V normálním Q-Q grafu leží body blízko referenční přímky a všechny uvnitř zvoleného simultánního 95% pásu. Který závěr je přiměřený?
+ :r1 Je dokázáno, že rozdělení v populaci je přesně normální.
+ :r2 Každá osoba uvnitř pásu má s pravděpodobností 95 % správně vypočtený skór.
+ :r3 Protože žádný bod neleží mimo pás, můžeme bez dalších kontrol použít libovolnou statistickou metodu.
+ :r4 Pozorované rozdělení je slučitelné s normálním rozdělením; přesnou normalitu tím nedokazujeme.
+:r1 0 Shoda grafu s očekávaným tvarem není důkazem přesné normality. Zejména malý vzorek může skrýt i podstatnější odchylky.
+:r2 0 Pás se týká očekávané variability bodů Q-Q grafu při normálním rozdělení. Neověřuje správnost výpočtu jednotlivých skórů.
+:r3 0 Každá metoda má vlastní předpoklady. Například u lineární regrese se předpoklad normality týká reziduí, nikoli samotných hodnot obou proměnných.
+:r4 ok Q-Q graf porovnává seřazené hodnoty s teoretickými kvantily. Simultánní pás posuzuje všechny body společně; body uvnitř pásu nevyvracejí normalitu, ale samy ji nezaručují.
