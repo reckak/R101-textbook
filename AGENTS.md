@@ -275,7 +275,8 @@ ručně; používej křížové odkazy a po změnách ověř jejich cíle.
 - Rozlišuj cesty potřebné k vykreslení knihy a cesty ve studentském projektu.
 Student musí mít přístup ke všem vstupům potřebným pro cvičení a jasné pokyny,
 kam je uložit; nesmí potřebovat neveřejné soubory autora.
-- Provozní a instalační postupy udržuj v kořenovém `README.md`, podrobnosti
+- Kořenové `README.md` udržuj jako stručný rozcestník. Provozní a instalační
+postupy udržuj v `docs/provoz.md`, podrobnosti
 k obsahu a jeho ověření v `quarto/README.md`. V instrukcích je neduplikuj.
 
 ## R a Quarto
@@ -315,7 +316,8 @@ nebo upravené kapitoly, pokud to dostupné prostředí umožňuje. Úspěšná 
 jiné kapitoly ani starší verze není ověřením aktuální změny.
 - Po přidání kapitoly a po změně společné konfigurace, stylů nebo navigace
 vykresli celou knihu a ověř dotčené stránky, navigaci a odkazy mezi kapitolami.
-- Používej kontroly popsané v `README.md`, ale ověř jejich skutečný rozsah.
+- Používej kontroly shrnuté v `README.md` a popsané v `docs/provoz.md`,
+ale ověř jejich skutečný rozsah.
 Kontroly v `quarto/_verification/` původně pokrývají první kapitolu; s novým
 obsahem je přiměřeně rozšiřuj. Pevné počty prvků nejsou normou pro další kapitoly.
 - Před dokončením konkrétní interpretace spusť příslušný kód a prohlédni
