@@ -118,8 +118,8 @@ stopifnot(nrow(inside) == 59L,
           near2(coef(full_fit)[[2]], 0.20))
 # Both trend layers of the comparison carry their own legend colour.
 comparison <- ggplot2::ggplot_build(plot_from("fig-skory-porovnani"))$data
-stopifnot(identical(unique(comparison[[2]]$colour), "#0072B2"),
-          identical(unique(comparison[[3]]$colour), "#D55E00"))
+stopifnot(identical(unique(comparison[[2]]$colour), "red"),
+          identical(unique(comparison[[3]]$colour), "blue"))
 
 # Distributions and Q-Q bands.
 stopifnot(near2(min(hs_skory$z_help, na.rm = TRUE), -3.41),

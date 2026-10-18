@@ -1,5 +1,31 @@
 # Autorská dokumentace učebnice R101
 
+## Šestá kapitola: připomínky k názvu a grafům, 18. 10. 2026
+
+Název je „Práce se skóry dotazníkových škál“. Všechny blokové ukázky
+lekce nyní pokračují po pipe na novém řádku; všechna nastavení
+`base_size` v lekci jsou 13. Porovnání přímky a loess používá
+červenou a modrou i v závěrečném řešení, včetně barev pásů.
+
+Histogram emoční otevřenosti vzniká ve třech krocích: samotný histogram
+s hustotou na svislé ose, červená plná normální hustota a modrá tečkovaná
+empirická hustota. Barvy se mapují v `aes()`, takže vzniká legenda;
+`key_glyph = "path"` zobrazuje empirickou hustotu v legendě jako čáru.
+Výklad vysvětluje odhad hustoty, vyhlazení a pozorovaný plošší vrchol
+empirické křivky. Oporou je oficiální dokumentace
+[geom_density](https://ggplot2.tidyverse.org/reference/geom_density.html).
+Data, skórování a statistické postupy se nemění.
+
+Ověření: celá lekce včetně všech řešení prošla `check-lesson-06.R`
+v čisté relaci R s UTF-8 locale; zachována shoda skórů s podkladem.
+Prošel render celé knihy a po závěrečné úpravě legendy nový render
+šesté kapitoly. Kontroly R a HTML byly přizpůsobeny novým barvám
+a názvu kapitoly. Úplná kontrola HTML prošla: v šesté kapitole 7 řešení,
+66 kopírovaných bloků a 20 grafů; všech šest kapitol bez chyb JavaScriptu
+a bez přetékání při šířce 390 px. Vizuálně zkontrolováno všech 20 grafů
+šesté lekce, nové legendy také samostatně v plném rozlišení.
+Prošel rovněž `git diff --check`.
+
 ## Oprava lokálního renderu českých popisků, 18. 10. 2026
 
 Po předchozím renderu uživatel upozornil na náhradní zápisy `<U+00F3>`

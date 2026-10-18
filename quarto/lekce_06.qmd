@@ -1,5 +1,5 @@
 ---
-title: "Skóry dotazníkových škál a vztah dvou proměnných"
+title: "Práce se skóry dotazníkových škál"
 subtitle: "Od reverzních položek přes reliabilitu k bodovému grafu a rozdělení skórů"
 ---
 
@@ -54,7 +54,9 @@ library(qqplotr)
 hs <- read_rds("data/clean/help_seeking_data.rds")
 codebook <- read_rds("data/clean/help_seeking_codebook.rds")
 dim(hs)
-hs |> select(id, gender, age, help_01:help_03) |> slice_head(n = 4)
+hs |>
+  select(id, gender, age, help_01:help_03) |>
+  slice_head(n = 4)
 ```
 
 Tabulka má 172 řádků a 34 sloupců. Pohlaví je faktor s anglickými kategoriemi a položky mají typ `<hvn_lbll>`, tedy vektor s popisky hodnot z balíčku haven. U první osoby chybí odpověď na `help_01`. Zápis `help_01:help_03` vybírá sousední sloupce od `help_01` po `help_03`, jak jsme to dělali v `select()` v třetí lekci.
@@ -232,8 +234,10 @@ hs_rec <- hs |>
       ~ 5 - .x)
     )
 
-hs |> count(help_02)
-hs_rec |> count(help_02)
+hs |>
+  count(help_02)
+hs_rec |>
+  count(help_02)
 ```
 
 Výsledek ukládáme do nového objektu `hs_rec` (*recoded*), takže původní tabulka `hs` zůstává beze změny. Porovnání četností potvrzuje obrácení: 110 osob, které původně odpověděly 1, má nyní hodnotu 4, 7 osob s odpovědí 4 má nyní 1 a 7 chybějících odpovědí zůstalo chybějících. **Takovou kontrolu po každém překódování doporučujeme**, protože chybný vzorec by R neohlásilo; vytvořilo by jen nesprávná čísla.
@@ -288,7 +292,8 @@ Pro škálu 0–4 je součet minima a maxima 4, proto počítáme `4 - x` (0 →
 hs_kontrola <- hs |>
   mutate(across(all_of(rev_help), ~ 5 - .x, .names = "{.col}_r"))
 
-hs_kontrola |> count(help_04, help_04_r)
+hs_kontrola |>
+  count(help_04, help_04_r)
 ```
 
 Každá kombinace se vyskytuje jen v jednom řádku a dvojice jsou 1–4, 2–3, 3–2 a 4–1. Žádná původní odpověď se tedy nezměnila na dvě různé hodnoty a součet každé dvojice je 5. Chybějící odpověď (`NA`) zůstala chybějící i po obrácení. Tento výpis nekontroluje jen správnost jednoho řádku; ukazuje převod pro všechny osoby najednou.
@@ -409,7 +414,9 @@ hs_rec <- hs_rec |>
   ) |>
   ungroup()
 
-hs_rec |> select(id, tot_help, n_miss_help) |> slice_head(n = 4)
+hs_rec |>
+  select(id, tot_help, n_miss_help) |>
+  slice_head(n = 4)
 ```
 
 Skóry se nyní liší mezi osobami. První osobě chybí jedna odpověď, proto je její skór průměrem z 9 položek; ostatní tři osoby odpověděly na všech 10 položek. `rowwise()` funguje podobně jako `group_by()`, kde každou skupinu tvoří jeden řádek. Proto po výpočtu voláme `ungroup()`: další funkce by jinak stále pracovaly po řádcích a třeba `summarise()` by vrátila jeden souhrn pro každou osobu, což by nebylo moc užitečné. [Dokumentace výpočtů po řádcích v dplyr](https://dplyr.tidyverse.org/articles/rowwise.html)
@@ -418,7 +425,8 @@ Podobnost s `group_by()` není jen přirovnání. Stejný výsledek dostaneme, k
 
 ```{r}
 #| label: l06-group-by-id
-hs_rec |> summarise(n_radku = n(), n_ruznych_id = n_distinct(id))
+hs_rec |>
+  summarise(n_radku = n(), n_ruznych_id = n_distinct(id))
 
 skory_podle_id <- hs_rec |>
   group_by(id) |>
@@ -438,7 +446,8 @@ Průměr z dostupných odpovědí lze spočítat i osobě, která odpověděla j
 
 ```{r}
 #| label: l06-pocty-chybeni
-hs_rec |> count(n_miss_help)
+hs_rec |>
+  count(n_miss_help)
 ```
 
 Odpovědi na všech 10 položek má 123 osob, 40 osobám chybí jedna odpověď, 7 osobám dvě a 2 osobám tři. Zvolíme pravidlo: **pokud chybí více než dvě odpovědi, skór nevypočítáme** a nahradíme jej `NA`. Skór tak vždy vychází alespoň z 8 z 10 položek. Funkci `if_else()` znáte z páté lekce: pro každý řádek otestuje podmínku a vybere jednu ze dvou hodnot.
@@ -507,7 +516,8 @@ hs_emo_skor <- hs_rec |>
   ) |>
   ungroup()
 
-hs_emo_skor |> count(n_miss_emo)
+hs_emo_skor |>
+  count(n_miss_emo)
 
 hs_emo_skor <- hs_emo_skor |>
   mutate(tot_emo = if_else(n_miss_emo > 2, true = NA_real_, false = tot_emo))
@@ -599,8 +609,12 @@ Stejný výběr umí zapsat stručněji funkce `drop_na()` z balíčku tidyr, kt
 
 ```{r}
 #| label: l06-drop-na
-hs_skory |> drop_na(tot_emo, tot_help) |> nrow()
-hs_skory |> drop_na() |> nrow()
+hs_skory |>
+  drop_na(tot_emo, tot_help) |>
+  nrow()
+hs_skory |>
+  drop_na() |>
+  nrow()
 ```
 
 S oběma skóry dostáváme stejných 166 řádků jako s `filter()`. Pozor ale na `drop_na()` **bez názvů sloupců**: odstraní každý řádek, ve kterém chybí jakákoli hodnota, zde i jediná odpověď na položku nebo věk. Zbylo by jen 58 osob, ačkoli oba skóry má 166 osob. Sloupce, podle kterých řádky vyřazujeme, proto vždy uvádějte výslovně. [Dokumentace drop_na](https://tidyr.tidyverse.org/reference/drop_na.html)
@@ -635,17 +649,17 @@ ggplot2 nabízí i zkratku `geom_jitter(width = 0.05, height = 0.05)`. Nemá ale
 hs_dvojice |>
   ggplot(aes(x = tot_emo, y = tot_help)) +
   geom_point(position = posun) +
-  theme_classic(base_size = 15)
+  theme_classic(base_size = 13)
 ```
 
 Chceme-li stejný motiv u všech dalších grafů, nemusíme jej přidávat ke každému grafu samostatně. Funkce `theme_set()` nastaví výchozí motiv pro zbytek relace R:
 
 ```{r}
 #| label: l06-theme-set
-theme_set(theme_classic(base_size = 15))
+theme_set(theme_classic(base_size = 13))
 ```
 
-Od této chvíle budou všechny grafy v této relaci používat `theme_classic(base_size = 15)`, dokud nenastavíme jiný motiv nebo nerestartujeme R. Vliv na předchozí grafy to nemá. Pozor: při sdílení skriptu musí být `theme_set()` ve skriptu před grafy, jinak by jiný uživatel dostal grafy s jiným vzhledem.
+Od této chvíle budou všechny grafy v této relaci používat `theme_classic(base_size = 13)`, dokud nenastavíme jiný motiv nebo nerestartujeme R. Vliv na předchozí grafy to nemá. Pozor: při sdílení skriptu musí být `theme_set()` ve skriptu před grafy, jinak by jiný uživatel dostal grafy s jiným vzhledem.
 
 ### Trendová křivka a přímka
 
@@ -689,7 +703,7 @@ Je přímka rozumným popisem vztahu? Porovnáme ji s křivkou loess v jednom gr
 ```{r}
 #| label: fig-skory-porovnani
 #| fig-cap: "Porovnání regresní přímky a křivky loess, obě s 95% pásem spolehlivosti."
-#| fig-alt: "Body s modrou rostoucí přímkou a oranžovou vyhlazenou křivkou; legenda Průběh rozlišuje Lineární a Loess."
+#| fig-alt: "Body s červenou rostoucí přímkou a modrou vyhlazenou křivkou; legenda Průběh rozlišuje Lineární a Loess."
 hs_dvojice |>
   ggplot(aes(x = tot_emo, y = tot_help)) +
   geom_point(position = posun) +
@@ -697,8 +711,8 @@ hs_dvojice |>
               method = "lm", formula = y ~ x, alpha = 0.2) +
   geom_smooth(aes(color = "Loess", fill = "Loess"),
               method = "loess", formula = y ~ x, alpha = 0.2) +
-  scale_color_manual(values = c("Lineární" = "#0072B2", "Loess" = "#D55E00")) +
-  scale_fill_manual(values = c("Lineární" = "#0072B2", "Loess" = "#D55E00")) +
+  scale_color_manual(values = c("Lineární" = "red", "Loess" = "blue")) +
+  scale_fill_manual(values = c("Lineární" = "red", "Loess" = "blue")) +
   labs(color = "Průběh", fill = "Průběh")
 ```
 
@@ -811,13 +825,13 @@ hs_skory |>
 
 Kontrola potvrzuje průměr 0 a směrodatnou odchylku 1. Tabulka `hs_skory` už není rozdělená po řádcích (`ungroup()`), proto `mean()` a `sd()` počítají přes všechny osoby, jak potřebujeme. Stejný převod umí funkce `scale()`; vrací ale matici místo obyčejného vektoru, proto zde používáme výslovný vzorec.
 
-Do histogramu přidáme křivku standardního normálního rozdělení. Histogram musí mít na ose `y` **hustotu** místo počtu osob, aby byl s křivkou srovnatelný (oddíl [-@sec-hustota]). To zařídí `aes(y = after_stat(density))`: výška sloupce se vypočte (`after_stat`) jako hustota. Funkce `stat_function()` nakreslí křivku zadané funkce, zde hustoty normálního rozdělení `dnorm()` s průměrem 0 a SD 1:
+Nejprve vytvoříme samotný histogram. Na ose `y` použijeme **hustotu** místo počtu osob, abychom později mohli přidat křivky hustoty (oddíl [-@sec-hustota]). To zařídí `aes(y = after_stat(density))`: výška sloupce se vypočte (`after_stat`) jako hustota. Graf uložíme do objektu `histogram_emo`, abychom k němu mohli postupně přidávat vrstvy:
 
 ```{r}
 #| label: fig-skory-histogram-emo
-#| fig-cap: "Rozdělení standardizovaného skóru emoční otevřenosti (n = 168) s křivkou standardního normálního rozdělení."
-#| fig-alt: "Histogram z-skórů emoční otevřenosti mezi přibližně −2,6 a 2,3 se sloupci kolem červené křivky normálního rozdělení."
-hs_skory |>
+#| fig-cap: "Rozdělení standardizovaného skóru emoční otevřenosti (n = 168)."
+#| fig-alt: "Histogram z-skórů emoční otevřenosti mezi přibližně −2,6 a 2,3, přibližně souměrný kolem nuly."
+histogram_emo <- hs_skory |>
   ggplot(aes(x = z_emo)) +
   geom_histogram(
     aes(y = after_stat(density)),
@@ -827,11 +841,52 @@ hs_skory |>
     fill = "grey",
     na.rm = TRUE
   ) +
-  stat_function(fun = dnorm, color = "red", linewidth = 1) +
   labs(x = "Emoční otevřenost (z-skór)", y = "Hustota")
+
+histogram_emo
 ```
 
-Histogram je přibližně souměrný kolem nuly a nemá odlehlé hodnoty. Sloupce kolísají kolem křivky; při 168 osobách a intervalech širokých 0,25 SD jsou takové nepravidelnosti očekávané. Nejnižší a nejvyšší hodnoty leží přibližně na −2,6 a 2,3 SD, konce rozdělení jsou tedy o něco kratší, než by odpovídalo normálnímu rozdělení. `na.rm = TRUE` vynechá čtyři osoby bez skóru bez varování; jejich počet už známe.
+Histogram je přibližně souměrný kolem nuly a neukazuje izolované odlehlé hodnoty. Nejnižší a nejvyšší hodnoty leží přibližně na −2,6 a 2,3 SD. Při 168 osobách a intervalech širokých 0,25 SD jsou nepravidelnosti ve výškách sousedních sloupců očekávané. `na.rm = TRUE` vynechá čtyři osoby bez skóru bez varování; jejich počet už známe.
+
+Nyní přidáme **červenou plnou křivku standardního normálního rozdělení**. Funkce `stat_function()` nakreslí zadanou funkci, zde hustotu normálního rozdělení `dnorm()` s průměrem 0 a SD 1. Označení křivky vložíme do `aes(color = ...)`, aby vznikla legenda, a konkrétní barvu přiřadíme pomocí `scale_color_manual()`:
+
+```{r}
+#| label: fig-skory-histogram-normalni
+#| fig-cap: "Histogram emoční otevřenosti s hustotou standardního normálního rozdělení."
+#| fig-alt: "Histogram z-skórů emoční otevřenosti s červenou plnou křivkou normální hustoty a legendou."
+histogram_normalni <- histogram_emo +
+  stat_function(
+    aes(color = "Normální"),
+    fun = dnorm,
+    linewidth = 1,
+    linetype = "solid"
+  ) +
+  scale_color_manual(values = c("Normální" = "red", "Empirická" = "blue")) +
+  labs(color = "Hustota") +
+  theme(legend.position = "bottom")
+
+histogram_normalni
+```
+
+Sloupce kolísají kolem normální křivky, ale nepřiléhají k ní přesně. Křivka je teoretická reference; samotné převedení na z-skóry nezměnilo tvar rozdělení dat na normální. V barevné škále jsme připravili také modrou barvu pro empirickou hustotu, kterou přidáme v dalším kroku. V legendě se zatím zobrazí jen normální hustota.
+
+Nakonec přidáme **modrou tečkovanou křivku empirické hustoty**. Funkce `geom_density()` odhaduje hladký průběh hustoty z pozorovaných hodnot. Na rozdíl od normální křivky tedy její tvar vychází z dat; závisí ovšem také na míře vyhlazení. Typ čáry `linetype = "dotted"` znamená tečkovanou čáru:
+
+```{r}
+#| label: fig-skory-histogram-hustoty
+#| fig-cap: "Histogram emoční otevřenosti s normální a empirickou hustotou."
+#| fig-alt: "Histogram s červenou plnou normální hustotou a modrou tečkovanou empirickou hustotou; legenda rozlišuje obě křivky."
+histogram_normalni +
+  geom_density(
+    aes(color = "Empirická"),
+    linetype = "dotted",
+    key_glyph = "path",
+    linewidth = 1,
+    na.rm = TRUE
+  )
+```
+
+Empirická křivka má kolem středu nižší a plošší vrchol než normální křivka. Shrnuje tvar dat bez závislosti na hranicích intervalů histogramu. Obě křivky porovnáváme jako pomůcku k posouzení tvaru rozdělení, nikoli jako důkaz normality. Argument key_glyph = "path" zobrazí empirickou hustotu v legendě jako čáru. Podrobněji odchylky prohlédneme pomocí Q-Q grafu.
 
 ### Q-Q graf
 
@@ -1007,7 +1062,7 @@ dotaznik |>
   ggplot(aes(x = age)) +
   geom_histogram(binwidth = 2, boundary = 0, color = "black", fill = "grey", na.rm = TRUE) +
   labs(x = "Věk (roky)", y = "Počet osob") +
-  theme_classic(base_size = 15)
+  theme_classic(base_size = 13)
 ```
 
 Věk je výrazně zešikmený doprava. Přibližně polovina respondentů (91 ze 167) má nejvýše 25 let a nejvyšší sloupec připadá na 20–21 let, tedy na typický věk studentů. Zbytek se rozkládá řídce mezi přibližně 26 a 60 lety; 40 a více let má 44 osob a starší než 60 let jsou jen tři.
@@ -1026,15 +1081,15 @@ dotaznik_par |>
               method = "lm", formula = y ~ x, alpha = 0.2) +
   geom_smooth(aes(color = "Loess", fill = "Loess"),
               method = "loess", formula = y ~ x, alpha = 0.2) +
-  scale_color_manual(values = c("Lineární" = "#0072B2", "Loess" = "#D55E00")) +
-  scale_fill_manual(values = c("Lineární" = "#0072B2", "Loess" = "#D55E00")) +
+  scale_color_manual(values = c("Lineární" = "red", "Loess" = "blue")) +
+  scale_fill_manual(values = c("Lineární" = "red", "Loess" = "blue")) +
   labs(
     x = "Věk (roky)",
     y = "Postoj k odborné pomoci\n(průměr položek, 1–4)",
     color = "Průběh",
     fill = "Průběh"
   ) +
-  theme_classic(base_size = 15)
+  theme_classic(base_size = 13)
 ```
 
 Do grafu vstupuje 165 osob; `drop_na(age, tot_help)` ponechá jen ty, které mají oba údaje. Věk jsme posunuli o nejvýše 0,3 roku, protože je zaznamenán v celých letech. Body nevytvářejí žádný zřetelný vzorec. Regresní přímka je téměř vodorovná kolem hodnoty 3 a křivka loess se od ní výrazněji neodchyluje: jen u nejmladších osob leží o něco níže. V celém věkovém rozsahu se vyskytují nízké i vysoké postoje.
@@ -1076,5 +1131,5 @@ Skór počítáme pro každou osobu zvlášť pomocí `rowwise()` a `c_across()`
 - Sijtsma, K. (2009). On the use, the misuse, and the very limited usefulness of Cronbach's alpha. *Psychometrika, 74*(1), 107–120. <https://doi.org/10.1007/s11336-008-9101-0>
 - McNeish, D. (2018). Thanks coefficient alpha, we'll take it from here. *Psychological Methods, 23*(3), 412–433. <https://doi.org/10.1037/met0000144>
 - Aldor-Noiman, S., Brown, L. D., Buja, A., Rolke, W., & Stine, R. A. (2013). The power to see: A new graphical test of normality. *The American Statistician, 67*(4), 249–260. <https://doi.org/10.1080/00031305.2013.847865>
-- Dokumentace ggplot2: [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html), [position_jitter](https://ggplot2.tidyverse.org/reference/position_jitter.html), [geom_qq](https://ggplot2.tidyverse.org/reference/geom_qq.html) a [coord_cartesian](https://ggplot2.tidyverse.org/reference/coord_cartesian.html).
+- Dokumentace ggplot2: [geom_smooth](https://ggplot2.tidyverse.org/reference/geom_smooth.html), [geom_density](https://ggplot2.tidyverse.org/reference/geom_density.html), [position_jitter](https://ggplot2.tidyverse.org/reference/position_jitter.html), [geom_qq](https://ggplot2.tidyverse.org/reference/geom_qq.html) a [coord_cartesian](https://ggplot2.tidyverse.org/reference/coord_cartesian.html).
 - Almeida, A., Loy, A., & Hofmann, H. (2018). ggplot2 compatible quantile-quantile plots in R. *The R Journal, 10*(2), 248–261. <https://doi.org/10.32614/RJ-2018-051>; [úvod a příklady k balíčku qqplotr](https://aloy.github.io/qqplotr/articles/introduction.html).
