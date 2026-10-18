@@ -12,6 +12,36 @@ Z kořene projektu vykreslete celou učebnici:
 quarto render
 ```
 
+### České znaky při renderu ve Windows
+
+Pokud spouštěcí prostředí předává R linuxové locale `C.UTF-8`, nemusí je
+Windows přijmout. R pak může přejít do locale `C` a v grafech nahradit
+diakritiku zápisy jako `<U+00F3>`. Samotný úspěšný render ani kontrola HTML
+takto poškozený text uvnitř PNG neodhalí.
+Souhrnná kontrola `check-r.R` proto vyžaduje UTF-8 locale; kontroluje
+aktuální relaci R, nikoli nastavení staršího renderu. Nenahrazuje tedy
+nové vykreslení a vizuální prohlédnutí obrázků.
+
+V takovém prostředí nastavte před renderem v PowerShellu UTF-8 locale
+podporované Windows a zkontrolujte je ve stejné instalaci R, kterou používá
+Quarto:
+
+```powershell
+$env:LANG = 'English_United States.utf8'
+$env:LC_ALL = 'English_United States.utf8'
+$env:LC_CTYPE = 'English_United States.utf8'
+Rscript --vanilla -e 'print(Sys.getlocale()); stopifnot(isTRUE(l10n_info()[["UTF-8"]]))'
+quarto render
+```
+
+Pokud příkazy nejsou v `PATH`, použijte úplné cesty k `Rscript.exe`
+a `quarto.exe`. Nastavení platí pro tuto relaci PowerShellu a její potomky;
+nemění systémové locale. Na Linuxu tyto windowsové hodnoty nepoužívejte.
+Po opravě znovu vykreslete celou knihu a vizuálně ověřte české popisky
+v grafech všech dotčených kapitol včetně rozbalených řešení.
+
+### Náhled a umístění výstupu
+
 Pro prohlížení s průběžným obnovováním použijte:
 
 ```sh
