@@ -36,7 +36,7 @@ function check(condition, message) { if (!condition) throw new Error(message); }
     check((await page.locator('h1 .chapter-number').innerText()).trim() === '1', 'First lesson must be chapter 1');
     for (const chapterNumber of [1, 2, 3, 4, 5, 6]) {
       await page.setViewportSize({ width: 1440, height: 1000 });
-      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat', 4: 'Vektory, faktory', 5: 'Import dat', 6: 'Skóry dotazníkových' };
+      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat', 4: 'Vektory, faktory', 5: 'Import dat', 6: 'Práce se skóry' };
       await page.locator('#quarto-sidebar a.sidebar-link').filter({ hasText: titles[chapterNumber] }).click();
       await page.waitForLoadState('networkidle');
       check((await page.locator('h1 .chapter-number').innerText()).trim() === String(chapterNumber), 'Wrong chapter number');
