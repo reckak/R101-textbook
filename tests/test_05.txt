@@ -1,0 +1,99 @@
+::Oddělovač a desetinná čárka::Textový soubor obsahuje sloupce oddělené středníkem a desetinná čísla zapsaná s čárkou, například 0,45. Která funkce z balíčku readr je pro tento formát vhodná bez dalšího nastavování oddělovačů?
+ :r1 read_csv()
+ :r2 read_csv2()
+ :r3 read_tsv()
+ :r4 read_excel()
+:r1 0 Funkce read_csv() standardně očekává čárky mezi sloupci a desetinné tečky. Zadaný soubor používá jinou kombinaci.
+:r2 ok Funkce read_csv2() očekává středník mezi sloupci a desetinnou čárku. Při výběru funkce se řídíme obsahem souboru, nikoli pouze jeho příponou.
+:r3 0 Funkce read_tsv() očekává sloupce oddělené tabulátory, nikoli středníky.
+:r4 0 Funkce read_excel() z balíčku readxl slouží pro sešity Excelu. Zde načítáme textový soubor.
+--
+::Identifikátor s počátečními nulami::V textovém souboru mají účastníci identifikátory "001", "002" a "003". Chceme při importu pomocí read_csv() zachovat i počáteční nuly. Jaký typ máme pro sloupec id zadat v argumentu col_types?
+ :r1 col_double()
+ :r2 col_integer()
+ :r3 col_logical()
+ :r4 col_character()
+:r1 0 Číselný typ double neuchovává počáteční nuly jako součást identifikátoru. Hodnota 001 by se uložila jako číslo 1.
+:r2 0 Ani celočíselný typ neuchovává počáteční nuly. Identifikátor zde potřebujeme uložit jako text.
+:r3 0 Logický typ je určen pro hodnoty TRUE, FALSE a chybění. Pro tyto identifikátory není vhodný.
+:r4 ok Textový typ character zachová identifikátory včetně počátečních nul. Použijeme například col_types = cols(id = col_character()).
+--
+::Dokumentované chybějící hodnoty::Datový slovník uvádí, že hodnota -99 znamená nevyplněnou odpověď. Co při načítání sešitu pomocí read_excel() zajistí argument na = c("", "-99")?
+ :r1 Prázdné buňky a hodnoty zapsané jako -99 se načtou jako NA; samotné řádky zůstanou zachovány.
+ :r2 Odstraní se všichni účastníci, kteří mají alespoň jednu nevyplněnou odpověď.
+ :r3 Hodnoty -99 se nahradí nulou, aby šlo spočítat průměr.
+ :r4 Hodnoty -99 zůstanou v datech a pouze dostanou popisek „Chybí“.
+:r1 ok Argument na určuje, které zápisy se při importu převedou na NA. Neodstraňuje účastníky. Kódy chybění vybíráme podle dokumentace dat, protože například nula může být platnou odpovědí.
+:r2 0 Označení chybění pomocí NA není odstranění řádku. O případném vyřazení pozorování bychom museli rozhodnout samostatně.
+:r3 0 Nula je konkrétní hodnota a mohla by zkreslit výpočty. Chybějící odpověď zde reprezentuje NA.
+:r4 0 Argument na převádí uvedené zápisy na skutečné chybějící hodnoty NA. Pouhé přidání popisku by číselnou hodnotu nezměnilo.
+--
+::Kódování češtiny::Po načtení CSV souboru pomocí read_csv() souhlasí počet řádků i sloupců, ale česká slova obsahují poškozené znaky. Víme, že soubor používá kódování Windows-1250. Jaký postup je vhodný?
+ :r1 Nastavit všechny sloupce na číselný typ pomocí col_double().
+ :r2 Přejmenovat soubor z přípony .csv na .xlsx.
+ :r3 Načíst soubor znovu s argumentem locale = locale(encoding = "Windows-1250").
+ :r4 Považovat import za správný, protože rozměry tabulky souhlasí.
+:r1 0 Datový typ a kódování jsou různé věci. Převod textových odpovědí na čísla poškozenou češtinu neopraví.
+:r2 0 Přejmenování přípony nemění formát ani kódování obsahu souboru.
+:r3 ok Kódování určuje, jak se uložené znaky přečtou. Po opětovném importu s odpovídajícím nastavením zkontrolujeme konkrétní česká slova.
+:r4 0 Správný počet řádků a sloupců nezaručuje správnost obsahu. Po importu kontrolujeme také texty, typy a smysluplnost hodnot.
+--
+::Názvy proměnných v datovém slovníku::V tabulce dat jsme opravili překlep v názvu sloupce z finantial_situation na financial_situation. Datový slovník má tento název uvedený ve sloupci name. Co je potřeba udělat, pokud chceme podle názvů přiřazovat popisky z datového slovníku?
+ :r1 Opravit pouze pořadí řádků v datovém slovníku; názvy se shodovat nemusí.
+ :r2 Opravit název také v datovém slovníku a zkontrolovat shodu názvů mezi slovníkem a daty.
+ :r3 Převést odpovědi v přejmenovaném sloupci na text, aby popisky fungovaly.
+ :r4 Odstranit datový slovník, protože po přejmenování sloupce už nemůže být užitečný.
+:r1 0 Při přiřazování podle názvů je nutná jejich shoda. Samotné pořadí řádků chybný název neopraví.
+:r2 ok Název musí odpovídat v datech i ve slovníku. Chybějící názvy lze hledat pomocí setdiff() v obou směrech; tato kontrola ale sama neověří správnost významu popisků.
+:r3 0 Typ odpovědí nemusíme kvůli opravě názvu měnit. Potřebujeme sladit název, podle kterého se popisek přiřazuje.
+:r4 0 Datový slovník zůstává důležitou dokumentací významu proměnných a jejich kódování. Je třeba jej udržovat v souladu s daty.
+--
+::Popisky v datech ze SPSS::Po načtení souboru pomocí read_sav() má sloupec gender popisek proměnné „Pohlaví“ a číselné hodnoty 1 a 2 mají popisky „Muž“ a „Žena“. Které tvrzení správně rozlišuje oba druhy popisků?
+ :r1 Popisek proměnné „Pohlaví“ je novým názvem sloupce, takže gender už v tabulce neexistuje.
+ :r2 Popisky „Muž“ a „Žena“ znamenají, že sloupec je po importu vždy faktorem.
+ :r3 Popisek proměnné a popisky hodnot mají stejnou funkci; oba pouze určují pořadí řádků.
+ :r4 Popisek proměnné popisuje význam celého sloupce, zatímco popisky hodnot vysvětlují jednotlivé kódy.
+:r1 0 Název a popisek proměnné jsou odlišné. Sloupec se může nadále jmenovat gender a přitom mít popisek „Pohlaví“.
+:r2 0 Číselný sloupec s popisky načtený pomocí haven může mít třídu haven_labelled. To není totéž co faktor; případný převod provedeme zvlášť, například pomocí to_factor().
+:r3 0 Popisky pomáhají interpretovat obsah dat. Popisek proměnné vysvětluje sloupec, popisky hodnot jeho kódy; pořadí řádků neurčují.
+:r4 ok Popisek proměnné získáme například pomocí var_label(), popisky hodnot pomocí val_labels() z balíčku labelled. Samotné popisky nemění uložené číselné kódy.
+--
+::Stejná úprava více sloupců::Sloupce partner, college_title a college_student mají shodné kódování 1 = Ne a 2 = Ano. Co uvnitř mutate() provede zápis across(c(partner, college_title, college_student), ~ factor(.x, levels = c(1, 2), labels = c("Ne", "Ano")))?
+ :r1 Převede každý ze tří vybraných sloupců na faktor s popisky Ne a Ano.
+ :r2 Spojí tři sloupce do jediného sloupce obsahujícího jejich součet.
+ :r3 Vybere pouze účastníky, kteří mají ve všech třech sloupcích hodnotu Ano.
+ :r4 Změní všechny sloupce tabulky na faktory bez ohledu na jejich kódování.
+:r1 ok Funkce across() použije stejnou úpravu na každý vybraný sloupec. Zápis .x zde představuje právě zpracovávaný sloupec. Společný převod je vhodný, protože všechny tři proměnné mají stejné kódování.
+:r2 0 Funkce across() v tomto zápisu sloupce nesčítá ani nespojuje. Na každý zvlášť použije funkci factor().
+:r3 0 Jde o úpravu vybraných sloupců, nikoli o výběr řádků. Výběr účastníků podle podmínky bychom řešili například pomocí filter().
+:r4 0 Zápis c(partner, college_title, college_student) určuje jen tři vybrané sloupce. U proměnných s jiným kódováním by stejný převod mohl vytvořit nesprávné kategorie nebo NA.
+--
+::Popisek není změna hodnoty::Číselnému vektoru odpoved obsahujícímu c(1, 2, 9) přiřadíme pomocí val_labels() popisky, včetně popisku „Bez odpovědi“ pro hodnotu 9. Neprovedeme žádnou další úpravu. Co se stane s uloženou hodnotou 9?
+ :r1 Automaticky se změní na NA, protože popisek obsahuje slovo „Bez“.
+ :r2 Z vektoru se odstraní, takže zůstanou jen dva prvky.
+ :r3 Zůstane číselnou hodnotou 9; samotný popisek z ní chybějící hodnotu neudělá.
+ :r4 Změní se na číslo 0, které R používá pro všechny nevyplněné odpovědi.
+:r1 0 R význam textu popisku takto nevyhodnocuje. Chybění musíme nastavit nebo převést výslovně podle dokumentace dat.
+:r2 0 Přidání popisků nemění počet prvků ani neodstraňuje odpovědi.
+:r3 ok Popisek je informace o významu kódu, nikoli překódování. Pokud 9 označuje chybění, musíme před výpočty zajistit odpovídající zacházení s touto hodnotou, například převod na NA.
+:r4 0 Nula není univerzálním kódem chybění. Může představovat platnou hodnotu; běžnou chybějící hodnotu v R zapisujeme jako NA.
+--
+::Excel s víceřádkovou hlavičkou::První řádek listu Excelu obsahuje názvy sloupců, druhý jejich popisky a třetí technické informace. Vlastní data začínají na čtvrtém řádku. Správné názvy již máme uložené ve vektoru four_names. Které nastavení read_excel() načte pouze datové řádky a přiřadí jim tyto názvy?
+ :r1 skip = 2, col_names = four_names
+ :r2 skip = 3, col_names = four_names
+ :r3 skip = 3, col_names = TRUE
+ :r4 skip = 0, col_names = FALSE
+:r1 0 Přeskočí se pouze první dva řádky. Technické informace ze třetího řádku se dostanou mezi data a mohou ovlivnit odhad typů sloupců.
+:r2 ok Přeskočíme všechny tři řádky hlavičky a názvy dodáme samostatně. První skutečné pozorování na čtvrtém řádku tak zůstane součástí dat.
+:r3 0 Při col_names = TRUE by se první nepřeskočený řádek použil jako názvy sloupců. Zde už ale obsahuje první skutečné pozorování.
+:r4 0 Bez přeskočení hlavičky se názvy, popisky i technické informace načtou jako součást dat. Hodnota col_names = FALSE navíc nedodá připravené názvy.
+--
+::Uložení připravené tabulky::Připravená tabulka obsahuje faktory i popisky proměnných a hodnot. Chceme ji později v R načíst se zachovanými typy a popisky. Která dvojice funkcí je pro uložení a opětovné načtení tohoto jednoho objektu vhodná?
+ :r1 write_csv() a read_csv(), protože CSV zachovává všechny atributy objektů R.
+ :r2 write_csv() a read_excel(), protože Excel automaticky obnoví původní popisky.
+ :r3 print() a read_csv(), protože výpis tabulky uchovává všechny její vlastnosti.
+ :r4 write_rds() a read_rds(), protože formát RDS uchovává i třídy a atributy objektu.
+:r1 0 CSV ukládá tabulkové hodnoty, ale neuchovává úplnou informaci o faktorech ani popiscích v R. Pro přenos do jiných programů k němu může být potřeba samostatný datový slovník.
+:r2 0 Funkce read_excel() je určena pro soubory Excelu. Z textového CSV sama neobnoví původní třídy a popisky objektu R.
+:r3 0 Běžný výpis pomocí print() slouží ke zobrazení objektu. Není způsobem, jak spolehlivě uložit jeho úplnou strukturu a atributy.
+:r4 ok RDS uloží jeden objekt včetně jeho tříd a atributů. Po načtení pomocí read_rds() výsledek přiřadíme do zvoleného názvu; shodu s původním objektem můžeme ověřit pomocí identical().
