@@ -1099,6 +1099,8 @@ V tomto vzorku tedy graf **žádnou zřetelnou souvislost věku s postojem nenaz
 
 ## Časté potíže {#sec-skory-potize}
 
+::: {.table-responsive tabindex="0" role="region" aria-label="Časté potíže při práci se skóry"}
+
 | Projev | Co ověřit |
 |:-----------------------------------|:-----------------------------------|
 | `<double> - <haven_labelled> is not permitted` nebo chyba v `psych::alpha()`. | Položky mají popisky hodnot a není načtený haven ani labelled; na začátek skriptu patří `library(labelled)`. |
@@ -1116,6 +1118,8 @@ V tomto vzorku tedy graf **žádnou zřetelnou souvislost věku s postojem nenaz
 | Po přiblížení grafu se změnil sklon přímky. | Přiblížení přes `limits` vyřadí data z výpočtu; použijte `coord_cartesian()`. |
 | Graf s jitterem nebo pásem `"ts"` se při každém spuštění mírně liší. | Nastavte `seed` v `position_jitter()`, resp. `set.seed()` před grafem. |
 | `stat_qq_line()` se chová jinak, než čekáte. | Po načtení qqplotr se používá jeho verze; verzi z ggplot2 zavoláte jako `ggplot2::stat_qq_line()`. |
+
+:::
 
 ## Co si odnést {#sec-skory-shrnuti}
 

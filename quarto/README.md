@@ -1,5 +1,26 @@
 # Autorská dokumentace učebnice R101
 
+## Mobilní tabulka častých potíží, 18. 10. 2026
+
+GitHub Actions odhalily v šesté lekci přesah tabulky „Časté potíže“
+na 416 px při šířce obrazovky 390 px. Předchozí místní kontrola
+na Windows tento přesah nezachytila. Tabulka nyní používá vlastní
+vodorovně posuvný obal `table-responsive`, pojmenovaný pro čtečky
+obrazovky a dostupný klávesnicí. Obsah tabulky a výpočty se nemění.
+
+Kontrola HTML navíc záměrně zvětšuje písmo kódu v této tabulce:
+ověřuje vznik místního přesahu, zachování šířky stránky a posun
+šipkou na klávesnici. Po návratu původního písma ukládá mobilní
+snímek tabulky pro vizuální kontrolu.
+
+Ověření: render celé knihy (Quarto 1.9.38), souhrnná kontrola R
+v UTF-8 relaci a úplná kontrola HTML prošly. Všech šest kapitol má
+na mobilu šířku 390/390 px, všech 61 řešení a 514 kopírování funguje,
+bez chyb JavaScriptu. Prošel i nový test širokého kódu a posouvání
+klávesnicí; mobilní snímek tabulky byl vizuálně zkontrolován.
+Prošel `git diff --check`. Místní ověření proběhlo na Windows;
+linuxový běh GitHub Actions je samostatná kontrola pull requestu.
+
 ## Šestá kapitola: připomínky k názvu a grafům, 18. 10. 2026
 
 Název je „Práce se skóry dotazníkových škál“. Všechny blokové ukázky

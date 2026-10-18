@@ -202,6 +202,23 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       }
       result.chapters.push({ chapter: chapterNumber, solutions: result.solutions, codeBlocks: result.codeBlocks, copyChecks: result.copyChecks, images: result.images.length, localLinks: checkedLinks.size, mobileWidth: result.mobileWidth });
       if (chapterNumber === 6) {
+        const problems = page.locator('#sec-skory-potize .table-responsive');
+        check(await problems.getAttribute('tabindex') === '0', 'Troubleshooting table must be keyboard focusable');
+        // Stress intrinsic table width independently of the platform's default fonts.
+        const wideCode = await page.addStyleTag({ content: '#sec-skory-potize code { font-size: 20px; }' });
+        try {
+          check(await problems.evaluate(el => getComputedStyle(el).overflowX === 'auto' && el.scrollWidth > el.clientWidth),
+            'Wide troubleshooting table must scroll inside its container');
+          check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+            'Troubleshooting table overflows the mobile page with wider code');
+          await problems.focus();
+          await page.keyboard.press('ArrowRight');
+          await page.waitForFunction(() => document.querySelector('#sec-skory-potize .table-responsive').scrollLeft > 0);
+        } finally {
+          await wideCode.evaluate(el => el.remove());
+          await problems.evaluate(el => { el.scrollLeft = 0; });
+        }
+        await screenshot('html-mobile-troubleshooting', '#sec-skory-potize');
         // A wider fallback font reproduces the unbroken DOI overflow across platforms.
         const fallbackFont = await page.addStyleTag({ content: 'main a.uri { font-family: Arial, sans-serif; }' });
         try {
