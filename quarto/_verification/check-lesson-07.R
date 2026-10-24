@@ -92,8 +92,20 @@ stopifnot(isTRUE(all.equal(qq_line$y, qq_line$x)),
           isTRUE(all.equal(sort(qq_points$x), qnorm(ppoints(n_valid), mean(monit_valid),
                                                     sd(monit_valid) * sqrt((n_valid - 1) / n_valid)))),
           identical(qq_twice[[1]][[1]][c("ymin", "ymax")], qq_twice[[2]][[1]][c("ymin", "ymax")]))
-group_line <- ggplot2::ggplot_build(run("fig-testy-qq-pohlavi"))$data[[1]]
-stopifnot(isTRUE(all.equal(group_line$y, group_line$x)))
+group_twice <- lapply(1:2, function(i) ggplot2::ggplot_build(run("fig-testy-qq-pohlavi"))$data)
+group_line <- group_twice[[1]][[2]]
+stopifnot(isTRUE(all.equal(group_line$y, group_line$x)),
+          identical(group_twice[[1]][[1]][c("ymin", "ymax")], group_twice[[2]][[1]][c("ymin", "ymax")]))
+grid_line <- ggplot2::ggplot_build(run("fig-testy-reseni-qq-mrizka"))$data[[2]]
+stopifnot(isTRUE(all.equal(grid_line$y, grid_line$x)), length(unique(grid_line$PANEL)) == 4L)
+
+# Shapiro-Wilk is significant in both large groups although W is close to 1.
+shapiro <- analyza_pohlavi |> group_by(pohlavi) |> shapiro_test(monit)
+stopifnot(near(shapiro$statistic, c(0.990, 0.983), 0.001), near(shapiro$p[1], 0.032, 0.001), shapiro$p[2] < 0.001)
+# Exercise 7 commentary: smaller groups give p-values around 0.05; no older boy scores 4.
+shapiro4 <- analyza_pohlavi |> group_by(kohorta, pohlavi) |> shapiro_test(monit)
+stopifnot(min(shapiro4$p) < 0.001, near(max(shapiro4$p), 0.069, 0.001),
+          max(analyza_pohlavi$monit[analyza_pohlavi$kohorta == "starší" & analyza_pohlavi$pohlavi == "chlapci"]) < 3.8)
 
 # The score matches the source script after correcting the input path.
 source_lines <- readLines("scripts/week_07.R", encoding = "UTF-8", warn = FALSE)
@@ -143,6 +155,9 @@ stopifnot(near(d_kohorta$effsize, 0.57), near(c(d_kohorta$conf.low, d_kohorta$co
 ct <- cor.test(~ vekr + monit, data = analyza_vek)
 stopifnot(nrow(analyza_vek) == 755L, near(unname(ct$estimate), -0.28), unname(ct$parameter) == 753,
           near(ct$conf.int, c(-0.35, -0.22)))
+tidy_cor <- analyza_vek |> cor_test(vekr, monit)
+stopifnot(tidy_cor$cor == -0.28, near(tidy_cor$statistic, unname(ct$statistic), 1e-6),
+          near(c(tidy_cor$conf.low, tidy_cor$conf.high), ct$conf.int, 1e-6))
 within_r <- analyza_vek |> summarise(r = cor(vekr, monit), n = n(), .by = kohorta) |> arrange(kohorta)
 stopifnot(near(within_r$r, c(-0.16, 0.01), 0.006), identical(within_r$n, c(432L, 323L)))
 

@@ -1,5 +1,36 @@
 # Autorská dokumentace učebnice R101
 
+## Sedmá kapitola: APA, cor_test, Shapirův–Wilkův test, 25. 10. 2026
+
+Na pokyn uživatele (jen kapitola 7):
+
+- **APA:** kurzíva u statistických značek v textu, popiscích grafů, tabulkách,
+  vzorových zápisech a nadpisech (*M*, *SD*, *n*, *N*, *t*, *F*, *p*, *d*, *r*,
+  *df*, *W*, *z*; „*t*-test“, „*p*-hodnota“, „Cohenovo *d*“). Bez kurzívy zůstávají
+  řecká písmena (χ², α, μ, ρ), CI, kód, `fig-alt` a LaTeX. Provedeno skriptem
+  omezeným na prózu a `fig-cap` a zkontrolováno ručně; ve vykresleném HTML
+  nezůstaly neuzavřené hvězdičky.
+- **`cor_test()`** vedle `cor.test()`: tabulka jako první argument, tibble,
+  respektuje `group_by()` (cvičení 4); upozornění, že `cor` zaokrouhluje na
+  2 desetinná místa. Výsledky shodné s `cor.test()` (ověřuje kontrola).
+- **Shapirův–Wilkův test** (`sec-testy-shapiro`) před Levenovým testem;
+  připomenutí principů testování hypotéz přesunuto sem jako k prvnímu testu.
+  Chlapci *W* = 0,990, *p* = 0,032; dívky *W* = 0,983, *p* < 0,001; ve čtyřech
+  skupinách kohorta × pohlaví *p* < 0,001 až 0,069. Výhrada o síle testu podle
+  Ghasemi & Zahediasl (2012; tvrzení ověřena v plném textu PMC3693611)
+  a Lumley et al. (2002) k platnosti *t*-testu u velkých vzorků (metadata
+  ověřena přes Crossref).
+- **Q-Q pás i ve skupinách** (`fig-testy-qq-pohlavi`, `"ts"`, `identity = TRUE`):
+  mimo pás u chlapců 1 pod / 77 nad, u dívek 121 / 47.
+- **Cvičení 6** doplněno o empirickou hustotu; **nové cvičení 7** – Q-Q grafy
+  `facet_grid(kohorta ~ pohlavi)`; mimo pás 5, 30, 0 a 6 bodů.
+- Tabulky rozhodnutí a častých potíží, shrnutí a zdroje doplněny.
+
+Ověření: render sedmé kapitoly, `check-lesson-07.R` (nově přímka y = x
+a opakovatelnost pásu ve skupinách a ve cvičení 7, `cor_test()`, Shapirův–Wilkův
+test), `check-r.R` a `check-html.cjs` (sedmá kapitola: 8 řešení,
+70 kopírování, 15 grafů, mobil 390/390 px) prošly; nové grafy prohlédnuty.
+
 ## Sedmá kapitola: připomínky a redakce, 25. 10. 2026
 
 Commit zahrnuje redakční úpravy uživatele v `lekce_07.qmd` (formátování
