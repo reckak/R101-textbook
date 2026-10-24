@@ -1,5 +1,34 @@
 # Autorská dokumentace učebnice R101
 
+## Sedmá kapitola: připomínky a redakce, 25. 10. 2026
+
+Commit zahrnuje redakční úpravy uživatele v `lekce_07.qmd` (formátování
+argumentů kódu na více řádků, stylistika, původ dat přímo z projektu Cesty
+do dospělosti, termín „rovnice modelu“, exces a chvosty u špičatosti aj.).
+V nich opraveno: „datouvou“ → „datovou“, „mezi 5 až 12“ → „od 5 do 12“;
+termín „rovnice modelu“ doplněn o *formula* a sjednocen u `t_test()`
+a `cor.test()` (dříve „formule“).
+
+- **Histogram věku:** bez `na.rm = TRUE`; očekávané varování „Removed 3 rows
+  containing non-finite outside the scale range (`stat_bin()`)“ výklad využívá
+  jako kontrolu počtu chybějících hodnot. `check-lesson-07.R` má nově seznam
+  očekávaných varování (tento blok, právě jedno).
+- **Q-Q grafy s `identity = TRUE`** (jako podkladový skript): referenční přímka
+  y = x; osa x odpovídá normálnímu rozdělení s průměrem a SD z dat (ověřeno:
+  shoda s `qnorm(ppoints(n), mean, sd · √((n − 1)/n))`), tedy stejné křivce jako
+  `stat_theodensity()`. Mimo pás `"ts"` 130 bodů pod a 274 nad (dříve 127/270);
+  interpretace se nemění. Kontrola ověřuje přímku y = x u obou grafů
+  a opakovatelnost pásu.
+- **Nezávislost pozorování:** doplněno, že podobnost uvnitř tříd a škol lze
+  posoudit a zohlednit smíšeným (víceúrovňovým) modelem se školou a třídou jako
+  náhodnými faktory; je to nad rámec lekce a výřez tyto proměnné neobsahuje.
+  Stručně i v omezeních závěru.
+- Tabulka rozhodnutí doplněna o ponechané varování a přímku y = x.
+
+Ověření: render sedmé kapitoly, `check-r.R` (7 kapitol) a `check-html.cjs`
+(sedmá kapitola: 7 řešení, 67 kopírování, 14 grafů, mobil 390/390 px) prošly;
+oba nové Q-Q grafy vizuálně zkontrolovány.
+
 ## Sedmá kapitola bez ggmosaic, 24. 10. 2026
 
 Po sloučení PR #30 selhalo sestavení v GitHub Actions: `pak` nenašel

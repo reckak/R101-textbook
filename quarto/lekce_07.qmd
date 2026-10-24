@@ -7,7 +7,7 @@ subtitle: "Levenův test, t-test, velikost účinku, korelace a χ² test na dat
 
 V této lekci projdete celou malou analýzu od kontroly dat po závěr. Budeme se ptát, zda dospívající chlapci a dívky uvádějí, že o nich rodiče vědí stejně mnoho, například s kým tráví volný čas nebo co je trápí. Nejprve zkontrolujete kategoriální proměnné a věk a opravíte chybně zapsanou hodnotu. Potom spočítáte skór rodičovského monitoringu a popíšete jeho rozdělení. Rozdíl mezi chlapci a dívkami otestujete **t-testem** a jeho velikost vyjádříte **Cohenovým d**. Shodu rozptylů posoudíte **Levenovým testem**, vztah věku a monitoringu **korelací** a nezávislost pohlaví a věkové kohorty **χ² testem**. Nakonec ověříte, zda rozdíl mezi pohlavími nezkresluje věk, a výsledky shrnete v krátkém závěru.
 
-U každého testu postupujeme stejně: k čemu slouží, na jakém principu funguje, jaké má předpoklady, jak jej spustit v R a jak číst jeho výstup.
+U každého testu postupujeme stejně: uvedeme, k čemu slouží, na jakém principu funguje, jaké má předpoklady, jak jej spustit v R a jak číst jeho výstup.
 
 Navazujeme na předchozí lekce. Z [druhé lekce](lekce_02.qmd) využijeme boxplot (oddíl [-@sec-boxplot]), panely (oddíl [-@sec-panely]) a legendu pro více čar (oddíl [-@sec-legenda-modelu]). Z [třetí lekce](lekce_03.qmd) `count()`, `summarise()` a argument `.by` (oddíl [-@sec-upravy-by]), ze [čtvrté lekce](lekce_04.qmd) faktory s argumenty `levels` a `labels` (oddíl [-@sec-struktury-faktory]) a z [páté lekce](lekce_05.qmd) import souborů SPSS a popisky (oddíl [-@sec-import-spss]). Ze [šesté lekce](lekce_06.qmd) budeme opakovat výpočet skóru po řádcích (oddíl [-@sec-skory-skor]), Cronbachovo alfa a Q-Q graf s pásem spolehlivosti (oddíl [-@sec-skory-qqplotr]). Předpokládáme znalost průměru, směrodatné odchylky, normálního rozdělení a intervalu spolehlivosti; principy testování hypotéz stručně připomeneme u prvního testu.
 
@@ -25,9 +25,9 @@ Stáhněte soubor a uložte jej do složky `data/raw` svého projektu:
 | [monitoring_teaching.sav](../data/raw/monitoring_teaching.sav){download="monitoring_teaching.sav"} | Odpovědi 768 dospívajících: identifikátor, pohlaví, kohorta, věk v letech a devět položek o tom, co o nich vědí rodiče. Soubor SPSS s popisky proměnných a hodnot. |
 :::
 
-Jde o skutečná, nesimulovaná data z výzkumu dvou věkových kohort dospívajících z roku 1999. Mladší kohortu tvořili žáci šestých tříd, starší kohortu studenti prvních ročníků středních škol. Podle vyučujícího data souvisejí s longitudinálním výzkumem, k němuž patří projekt [Cesty do dospělosti](https://www.fss.muni.cz/vyzkum/resene-projekty/18505) na Fakultě sociálních studií MU. Pro výuku používáme jen výřez: 13 proměnných z původně mnohem rozsáhlejšího dotazníku. Respondenti nebyli vybráni náhodně z celé populace dospívajících a data jsou přes dvacet let stará, proto výsledky slouží k nácviku analýzy, nikoli jako aktuální popis dospívajících v Česku.
+Jde o skutečná, nesimulovaná data z výzkumu dvou věkových kohort dospívajících z roku 1999. Mladší kohortu tvořili žáci šestých tříd, starší kohortu studenti prvních ročníků středních škol. Data byla získána v rámci longitudinálního projektu [Cesty do dospělosti](https://www.fss.muni.cz/vyzkum/resene-projekty/18505) na Fakultě sociálních studií MU. Pro výuku používáme jen výřez: 13 proměnných z původně mnohem rozsáhlejšího dotazníku. Respondenti nebyli vybráni náhodně z celé populace dospívajících a data jsou přes dvacet let stará, proto výsledky slouží k nácviku analýzy, nikoli jako aktuální popis dospívajících v Česku.
 
-Položky `c01_99` až `c09_99` popisují, jak často podle dospívajícího rodiče vědí o různých oblastech jeho života. Odpovědní škála má čtyři stupně: 1 = nikdy to neví, 2 = občas to ví, 3 = často to ví a 4 = vždy to ví. Průměr těchto položek budeme nazývat **rodičovský monitoring**. V odborné literatuře se tak označuje to, co rodiče o dospívajícím vědí; tato znalost ovšem nemusí pocházet z jejich dohledu, ale například i z toho, co jim dospívající sami řeknou ([Stattin & Kerr, 2000](https://doi.org/10.1111/1467-8624.00210)). Měříme navíc jen výpověď dospívajících, nikoli to, co rodiče skutečně vědí.
+Položky `c01_99` až `c09_99` popisují, jak často podle dospívajícího vědí rodiče o různých oblastech jeho života. Odpovědní škála má čtyři stupně: 1 = nikdy to neví, 2 = občas to ví, 3 = často to ví a 4 = vždy to ví. Průměr těchto položek budeme nazývat **rodičovský monitoring**. V odborné literatuře se tak označuje to, kolik toho rodiče o dospívajícím vědí; tato znalost ovšem nemusí pocházet z jejich dohledu, ale například i z toho, co jim dospívající sami řeknou ([Stattin & Kerr, 2000](https://doi.org/10.1111/1467-8624.00210)). Měříme navíc jen výpověď dospívajících, nikoli to, co rodiče skutečně vědí.
 
 ### Balíčky a načtení dat
 
@@ -119,7 +119,9 @@ Opravujeme číselný kód ještě před převodem na faktor. `if_else()` znáte
 ```{r}
 #| label: l07-oprava
 adolescenti <- adolescenti |>
-  mutate(kohorta = if_else(kohorta == 66, true = 6, false = kohorta))
+  mutate(kohorta = if_else(kohorta == 66,
+                           true = 6,
+                           false = kohorta))
 
 adolescenti |>
   count(kohorta)
@@ -135,8 +137,12 @@ Pro tabulky a grafy převedeme pohlaví a kohortu na faktory. Funkce `factor()` 
 #| label: l07-faktory
 adolescenti <- adolescenti |>
   mutate(
-    pohlavi = factor(pohlavi, levels = c(1, 2), labels = c("chlapci", "dívky")),
-    kohorta = factor(kohorta, levels = c(6, 10), labels = c("mladší", "starší"))
+    pohlavi = factor(pohlavi,
+                     levels = c(1, 2),
+                     labels = c("chlapci", "dívky")),
+    kohorta = factor(kohorta,
+                     levels = c(6, 10),
+                     labels = c("mladší", "starší"))
   )
 
 adolescenti |>
@@ -154,10 +160,11 @@ Spočítejte procento chlapců a dívek **zvlášť v každé kohortě**. Vyjdě
 #| label: l07-reseni-slozeni
 adolescenti |>
   count(kohorta, pohlavi) |>
-  mutate(procenta = n / sum(n) * 100, .by = kohorta)
+  mutate(procenta = n / sum(n) * 100,
+         .by = kohorta)
 ```
 
-Díky `.by = kohorta` se `sum(n)` počítá zvlášť pro každou kohortu, takže procenta v každé kohortě dávají dohromady 100 %. Bez `.by` by šlo o procenta z celého vzorku. V mladší kohortě je 42,0 % chlapců a 57,3 % dívek (0,7 % bez údaje), ve starší 40,0 % chlapců a 60,0 % dívek. V obou kohortách tedy převažují dívky a jejich podíl je velmi podobný. Zda je drobný rozdíl větší, než bychom čekali náhodou, otestujeme v oddílu [-@sec-testy-chi].
+Díky `.by = kohorta` se `sum(n)` počítá zvlášť pro každou kohortu, takže procenta v každé kohortě dávají dohromady 100 %. Bez `.by` by šlo o procenta z celého vzorku. V mladší kohortě je 42,0 % chlapců a 57,3 % dívek (0,7 % bez údaje), ve starší 40,0 % chlapců a 60,0 % dívek. V obou kohortách tedy mírně převažují dívky a jejich podíl je velmi podobný. Zda je drobný rozdíl větší, než bychom čekali náhodou, otestujeme v oddílu [-@sec-testy-chi].
 :::
 
 ## Kontrola věku {#sec-testy-vek}
@@ -170,11 +177,11 @@ Data byla sbírána ve dvou věkově vzdálených skupinách. Rozdělení věku 
 #| fig-alt: "Histogram věku se dvěma oddělenými skupinami: červená mladší kohorta mezi 11,75 a 14 lety, tyrkysová starší kohorta mezi 15,5 a 17,5 lety a dva osamocené sloupce kolem 18,4 a 19,1 roku."
 adolescenti |>
   ggplot(aes(x = vekr, fill = kohorta)) +
-  geom_histogram(binwidth = 0.25, boundary = 0, color = "black", na.rm = TRUE) +
+  geom_histogram(binwidth = 0.25, boundary = 0, color = "black") +
   labs(x = "Věk (roky)", y = "Počet osob", fill = "Kohorta")
 ```
 
-Histogram ukazuje dvě zřetelně oddělené skupiny bez překryvu, mezi 14 a 15,5 roku není nikdo. Mladší kohorta má většinou 11,75 až 13 let, starší 15,75 až 17,25 roku. Rozdělení tedy odpovídá tomu, že data pocházejí ze šestých tříd a prvních ročníků středních škol. Věk chybí třem osobám (`na.rm = TRUE` je z grafu vynechá bez varování). Dvě osoby starší kohorty jsou výrazně starší než ostatní:
+Histogram ukazuje dvě zřetelně oddělené skupiny bez překryvu, mezi 14 a 15,5 roku není nikdo. Mladší kohorta má většinou 11,75 až 13 let, starší 15,75 až 17,25 roku. Rozdělení tedy odpovídá tomu, že data pocházejí ze šestých tříd a prvních ročníků středních škol. ggplot2 vypsal **varování**, že odstranil 3 řádky s hodnotami, které nelze zobrazit: jde o tři osoby, kterým chybí věk. Varování zde záměrně necháváme. Počet odstraněných řádků porovnáme s tím, co o datech víme (věk chybí třem osobám podle `look_for()`), a ověříme tak, že graf nevynechal nic dalšího. Argument `na.rm = TRUE` by varování potlačil, ale tuto kontrolu bychom ztratili; používáme jej až tehdy, když počet chybějících hodnot známe a ve výkladu jej uvádíme. Dvě osoby starší kohorty jsou výrazně starší než ostatní:
 
 ```{r}
 #| label: l07-vek-nad-18
@@ -198,7 +205,7 @@ adolescenti |>
   summary()
 ```
 
-U všech položek je minimum 1 a maximum 4, mimo škálu tedy nic není. Na každou položku neodpovědělo 5 až 12 osob (`NA's`). Průměry se liší: nejvyšší má `c05_99` (jak se ti ve škole vede, 3,41), nejnižší `c06_99` (zda máš hotové domácí úlohy, 2,33).
+U všech položek je minimum 1 a maximum 4, mimo škálu tedy nic není. Počty chybějících odpovědí se pohybují od 5 do 12 (`NA's`). Průměry se liší: nejvyšší má `c05_99` (jak se ti ve škole vede, 3,41), nejnižší `c06_99` (zda máš hotové domácí úlohy, 2,33).
 
 Rozdělení odpovědí ukáže sloupcový graf pro každou položku. Pro graf s panely potřebujeme tabulku v **dlouhém formátu**: místo devíti sloupců s odpověďmi jeden sloupec s názvem položky a jeden s odpovědí. Každá osoba pak má devět řádků. Převod zajistí `pivot_longer()` z balíčku tidyr: `cols` určí převáděné sloupce, `names_to` název nového sloupce s původními názvy sloupců, `values_to` název sloupce s hodnotami a `values_drop_na = TRUE` vynechá chybějící odpovědi. [R4DS, Pivoting](https://r4ds.hadley.nz/data-tidy.html#sec-pivoting)
 
@@ -243,7 +250,7 @@ adolescenti |>
   round(digits = 2)
 ```
 
-Všechny korelace jsou kladné, od 0,20 (`c01_99` a `c06_99`) do 0,58 (`c07_99` a `c08_99`). Žádná položka tedy není reverzní a nic neobracíme. Vyšší hodnota u všech položek znamená, že rodiče podle dospívajícího vědí více.
+Všechny korelace jsou kladné, od 0,20 (`c01_99` a `c06_99`) do 0,58 (`c07_99` a `c08_99`). Žádná položka tedy není reverzní a nic nemusíme obracet. Vyšší hodnota u všech položek znamená, že rodiče podle dospívajícího vědí více.
 
 Reliabilitu odhadneme Cronbachovým alfa jako v šesté lekci (oddíl [-@sec-skory-alfa]); vypíšeme jen celkový výsledek:
 
@@ -255,7 +262,7 @@ alfa_monit <- adolescenti |>
 alfa_monit$total
 ```
 
-Alfa je 0,82 a průměrná korelace mezi položkami 0,35. Funkce nevypsala varování o záporně korelujících položkách. Platí stejná omezení jako v šesté lekci: alfa nedokládá, že položky měří jedinou vlastnost.
+Alfa je 0,82 a průměrná korelace mezi položkami 0,35. Funkce nevypsala varování o záporně korelujících položkách. Platí ale stejná omezení jako v šesté lekci: alfa nedokládá, že položky měří jedinou vlastnost.
 
 ### Výpočet skóru a pravidlo pro chybějící odpovědi
 
@@ -281,10 +288,13 @@ Na všech devět položek odpovědělo 743 osob a 15 osobám chybí jedna odpov�
 ```{r}
 #| label: l07-pravidlo
 adolescenti <- adolescenti |>
-  mutate(monit = if_else(n_miss_monit > 1, true = NA_real_, false = monit))
+  mutate(monit = if_else(n_miss_monit > 1,
+                         true = NA_real_,
+                         false = monit))
 
 adolescenti |>
-  summarise(n_platnych = sum(!is.na(monit)), n_chybi = sum(is.na(monit)))
+  summarise(n_platnych = sum(!is.na(monit)),
+            n_chybi = sum(is.na(monit)))
 ```
 
 Platný skór má 758 osob, 10 osobám chybí. Jako v šesté lekci platí, že pravidlo volíme předem a uvádíme je ve zprávě.
@@ -313,7 +323,7 @@ Ruční výpočet ponechá chybějící skór 25 osobám, náš postup 10. Sčí
 
 ### Rozdělení skóru
 
-Skór popíšeme číselně. Kromě průměru, směrodatné odchylky a mediánu použijeme dva ukazatele tvaru rozdělení z balíčku psych. **Šikmost** (*skewness*) je 0 u souměrného rozdělení, záporná u rozdělení s delším levým koncem a kladná u delšího pravého konce. **Špičatost** (*kurtosis*) vrací `psych::kurtosi()` jako takzvanou nadbytečnou špičatost: u normálního rozdělení je 0, záporné hodnoty znamenají plošší rozdělení s lehčími konci, kladné hodnoty ostřejší vrchol a těžší konce.
+Skór popíšeme číselně. Kromě průměru, směrodatné odchylky a mediánu použijeme dva ukazatele tvaru rozdělení z balíčku `psych`. **Šikmost** (*skewness*) je 0 u souměrného rozdělení, záporná u rozdělení s delším levým koncem a kladná u delšího pravého konce. **Špičatost** (*kurtosis*) vrací `psych::kurtosi()` jako takzvanou nadbytečnou špičatost (exces): u normálního rozdělení je 0, záporné hodnoty znamenají plošší rozdělení s lehčími chvosty, kladné hodnoty ostřejší vrchol a těžší chvosty.
 
 ```{r}
 #| label: l07-popis-skoru
@@ -359,23 +369,23 @@ adolescenti |>
   theme(legend.position = "bottom")
 ```
 
-`drop_na(monit)` (oddíl [-@sec-skory-graf]) předem vyřadí 10 osob bez skóru, takže graf nevypisuje varování o odstraněných řádcích.
+`drop_na(monit)` (oddíl [-@sec-skory-graf]) předem vyřadí 10 osob bez skóru `monit`, takže graf nevypisuje varování o odstraněných řádcích.
 
 Rozdělení je přibližně souměrné kolem hodnoty 2,8 a nemá výrazně odlehlé hodnoty. Empirická křivka má nižší a plošší vrchol než normální křivka a na obou stranách klesá pomaleji: to odpovídá záporné špičatosti. Vpravo je patrný strop škály: skór nemůže přesáhnout 4, a poslední sloupec je proto o něco vyšší než předchozí. Výšky sousedních sloupců kolísají, protože některé hodnoty skóru vznikají kombinací odpovědí častěji než jiné; na celkovém tvaru to nic nemění.
 
-Q-Q graf se simultánním pásem `"ts"` vytvoříme stejně jako v šesté lekci; pás se počítá ze simulací, proto nastavíme `set.seed()`:
+Q-Q graf se simultánním pásem `"ts"` vytvoříme podobně jako v šesté lekci; pás se počítá ze simulací, proto nastavíme `set.seed()`. Jedno nastavení ale změníme. Ve výchozím stavu prokládá qqplotr referenční přímku body, které odpovídají prvnímu a třetímu kvartilu dat. Argument `identity = TRUE` místo toho použije přímku y = x: bod na ní leží tehdy, když se kvantil dat rovná kvantilu **normálního rozdělení s průměrem a směrodatnou odchylkou odhadnutými z dat**. Referenční přímka tak odpovídá téže normální křivce, kterou jsme v histogramu kreslili pomocí `stat_theodensity()`, a stejnou přímku použije i pás spolehlivosti. Argument proto uvádíme ve všech třech vrstvách:
 
 ```{r}
 #| label: fig-testy-qq
-#| fig-cap: "Q-Q graf skóru rodičovského monitoringu (n = 758) se simultánním 95% pásem spolehlivosti."
+#| fig-cap: "Q-Q graf skóru rodičovského monitoringu (n = 758) se simultánním 95% pásem spolehlivosti; referenční přímka y = x."
 #| fig-alt: "Q-Q graf, ve kterém body tvoří vodorovné schody podél přímky; vlevo dole leží nejnižší body nad přímkou, vpravo nahoře se body zarovnávají na hodnotě 4 pod přímkou; konce schodů často vybíhají z úzkého šedého pásu."
 set.seed(123)
 adolescenti |>
   drop_na(monit) |>
   ggplot(aes(sample = monit)) +
-  stat_qq_band(bandType = "ts") +
-  stat_qq_line() +
-  stat_qq_point() +
+  stat_qq_band(bandType = "ts", identity = TRUE) +
+  stat_qq_line(identity = TRUE) +
+  stat_qq_point(identity = TRUE) +
   labs(
     x = "Teoretické kvantily normálního rozdělení (v jednotkách skóru)",
     y = "Rodičovský monitoring"
@@ -390,7 +400,7 @@ Na rozdíl od šesté lekce ale **pás nelze číst doslova**. Body tvoří vodo
 
 Výzkumná otázka zní: **Liší se rodičovský monitoring, jak jej uvádějí dospívající, mezi chlapci a dívkami?** Statistický test je jen jedna část odpovědi. Nejdříve rozdíl popíšeme: průměry, směrodatné odchylky a grafy ukážou, jak velký rozdíl je a jak se skupiny překrývají. Test potom posoudí, zda by takový rozdíl mohl snadno vzniknout náhodou.
 
-Pro analýzu podle pohlaví potřebujeme osoby, které mají platný skór i údaj o pohlaví. Uložíme je do samostatné tabulky; původní `adolescenti` ponecháme pro jiné analýzy:
+Pro analýzu podle pohlaví potřebujeme osoby, které mají platný skór monitoringu i údaj o pohlaví. Uložíme je do samostatné tabulky; původní datovou tabulku (`adolescenti`) ponecháme pro jiné analýzy:
 
 ```{r}
 #| label: l07-analyza-pohlavi
@@ -458,7 +468,7 @@ analyza_pohlavi |>
 
 Pro porovnání průměrů dvou nezávislých skupin použijeme **t-test pro dva nezávislé výběry**. Než jej spustíme, projdeme jeho předpoklady. Předpoklad neznamená, že musí být splněn dokonale; ptáme se, zda by jeho porušení mohlo výsledek podstatně zkreslit.
 
-1. **Nezávislost pozorování.** Každá osoba je v datech jednou a patří jen do jedné skupiny. To ověříme níže. Nezávislost ovšem narušuje i sběr dat ve třídách a školách: spolužáci si mohou být podobnější než náhodně vybraní dospívající. Tento předpoklad z dat neověříme, plyne z plánu výzkumu; vrátíme se k němu v závěru.
+1. **Nezávislost pozorování.** Každá osoba je v datech jednou a patří jen do jedné skupiny. To ověříme níže. Nezávislost ovšem narušuje i sběr dat ve třídách a školách: spolužáci si mohou být podobnější než náhodně vybraní dospívající. Pouhým t-testem tento předpoklad neověříme; plyne z plánu výzkumu. Míru podobnosti uvnitř tříd a škol by bylo možné posoudit a ve výsledcích zohlednit **smíšeným (víceúrovňovým) lineárním modelem**, ve kterém by škola a třída vystupovaly jako náhodné faktory. To je nad rámec této lekce a výukový výřez dat proměnné škola a třída ani neobsahuje. K tomuto omezení se vrátíme v závěru.
 2. **Úroveň měření.** Průměr má smysl jen u proměnné, jejíž rozdíly lze považovat za stejně velké. Skór je průměrem devíti čtyřstupňových položek a nabývá 36 různých hodnot. Jako u skórů v šesté lekci jej považujeme přibližně za intervalovou proměnnou; jde o běžné, ale ne samozřejmé rozhodnutí.
 3. **Normalita.** t-test předpokládá, že **výběrový průměr** má v každé skupině přibližně normální rozdělení. U velkých skupin to podle centrální limitní věty platí i tehdy, když samotné skóry normální rozdělení nemají, pokud nejsou extrémně zešikmené nebo nemají výrazně odlehlé hodnoty. Máme 313 a 442 osob a rozdělení jsou přibližně souměrná, takže tento předpoklad nás netrápí. U malých skupin (řádově desítky osob) bychom rozdělení posuzovali pečlivěji.
 4. **Shoda rozptylů** (homoskedasticita). Tento předpoklad má jen **Studentův** t-test. **Welchův** t-test jej nepotřebuje, viz oddíl [-@sec-testy-ttest].
@@ -468,22 +478,23 @@ Nezávislost ve smyslu „každá osoba jednou“ ověříme jako v šesté lekc
 ```{r}
 #| label: l07-unikatni-id
 adolescenti |>
-  summarise(n_radku = n(), n_ruznych_id = n_distinct(id))
+  summarise(n_radku = n(),
+            n_ruznych_id = n_distinct(id))
 ```
 
 Tabulka má 768 řádků a 768 různých identifikátorů, každá osoba je tedy v datech jen jednou a nemůže být současně ve skupině chlapců i dívek.
 
-Normalitu posoudíme Q-Q grafy v panelech. Z důvodů vysvětlených v oddílu [-@sec-testy-skor] pás spolehlivosti nepřidáváme a sledujeme celkový průběh bodů:
+Normalitu posoudíme Q-Q grafy v panelech. Z důvodů vysvětlených v oddílu [-@sec-testy-skor] pás spolehlivosti nepřidáváme a sledujeme celkový průběh bodů. Referenční přímka je opět y = x (`identity = TRUE`); průměr a směrodatná odchylka normálního rozdělení se přitom odhadují zvlášť v každém panelu:
 
 ```{r}
 #| label: fig-testy-qq-pohlavi
-#| fig-cap: "Q-Q grafy skóru rodičovského monitoringu u chlapců (n = 313) a dívek (n = 442)."
+#| fig-cap: "Q-Q grafy skóru rodičovského monitoringu u chlapců (n = 313) a dívek (n = 442); referenční přímka y = x."
 #| fig-alt: "Dva Q-Q grafy vedle sebe; body tvoří schody podél přímky, na obou koncích se mírně ohýbají ke středu, u dívek se nahoře zarovnávají na hodnotě 4."
 #| fig-width: 8
 analyza_pohlavi |>
   ggplot(aes(sample = monit)) +
-  stat_qq_line() +
-  stat_qq_point() +
+  stat_qq_line(identity = TRUE) +
+  stat_qq_point(identity = TRUE) +
   facet_wrap(~ pohlavi) +
   labs(
     x = "Teoretické kvantily normálního rozdělení (v jednotkách skóru)",
@@ -491,7 +502,7 @@ analyza_pohlavi |>
   )
 ```
 
-V obou skupinách body uprostřed sledují přímku a na koncích se ohýbají ke středu, stejně jako v celém vzorku. U chlapců je ohnutí nepatrné. U dívek je výraznější: nejnižší skóry leží nad přímkou a nahoře se body zřetelně zarovnávají na stropě 4, protože více dívek volilo nejvyšší odpovědi. Rozdělení jsou tedy o něco plošší než normální, ale souměrná a bez odlehlých hodnot. Při 313 a 442 osobách to pro t-test nepředstavuje problém: rozdělení průměru je díky velikosti skupin přibližně normální.
+V obou skupinách body uprostřed sledují přímku a na koncích se ohýbají ke středu, stejně jako v celém vzorku. U chlapců je ohnutí nepatrné. U dívek je výraznější: nejnižší skóry leží nad přímkou a nahoře se body zřetelně zarovnávají na stropě 4, protože více dívek volilo nejvyšší odpovědi. Rozdělení jsou tedy o něco plošší než normální, ale souměrná a bez odlehlých hodnot. Při 313 a 442 osobách to pro t-test nepředstavuje problém: rozdělení výběrových průměrů je díky velikosti skupin přibližně normální.
 
 ### Levenův test shody rozptylů {#sec-testy-levene}
 
@@ -509,17 +520,17 @@ analyza_pohlavi |>
   levene_test(monit ~ pohlavi)
 ```
 
-Zápis `monit ~ pohlavi` je **formule**: vlevo od vlnovky je proměnná, kterou porovnáváme, vpravo proměnná určující skupiny. Čteme ji „monitoring podle pohlaví“.
+Zápis `monit ~ pohlavi` je **rovnice modelu** (v R *formula*): vlevo od vlnovky je proměnná, kterou porovnáváme, vpravo proměnná určující skupiny. Čteme ji „monitoring podle pohlaví“.
 
-**Výstup.** `df1` = 1 jsou stupně volnosti mezi skupinami (počet skupin − 1), `df2` = 753 stupně volnosti uvnitř skupin (755 osob − 2 skupiny). `statistic` je F = 0,29 a `p` = 0,59. Data jsou tedy dobře slučitelná se shodnými rozptyly, což odpovídá téměř stejným SD 0,56 a 0,58.
+**Výstup.** `df1` = 1 jsou stupně volnosti mezi skupinami (počet skupin − 1), `df2` = 753 stupně volnosti uvnitř skupin (755 osob − 2 skupiny). `statistic` je F = 0,29 a `p` = 0,59. Data jsou tedy dobře slučitelná se shodnými populačními rozptyly, což odpovídá téměř stejným SD 0,56 a 0,58.
 
-**Rozhodnutí.** Výsledek Levenova testu použijeme jen jako **popis**, nikoli jako přepínač mezi Studentovým a Welchovým t-testem. Nevýznamný Levenův test nedokazuje, že rozptyly jsou shodné; u malých vzorků mívá malou sílu odhalit i podstatný rozdíl. Simulace navíc ukazují, že dvoustupňový postup „nejprve Levene, podle výsledku Student nebo Welch“ chybu I. druhu nechrání a často ji zhoršuje ([Zimmerman, 2004](https://doi.org/10.1348/000711004849222)). Proto rovnou použijeme Welchův test.
+**Rozhodnutí.** Výsledek Levenova testu použijeme jen jako **popis**, nikoli jako přepínač mezi Studentovým a Welchovým t-testem. Nevýznamný Levenův test nedokazuje, že rozptyly jsou shodné; u malých vzorků mívá malou sílu odhalit i podstatný rozdíl. Simulace navíc ukazují, že dvoustupňový postup „nejprve Levene, podle výsledku Student nebo Welch“ před chybou I. druhu nechrání a často ji naopak zhoršuje ([Zimmerman, 2004](https://doi.org/10.1348/000711004849222)). Proto rovnou použijeme Welchův test.
 
 ## t-test pro dva nezávislé výběry {#sec-testy-ttest}
 
 **K čemu slouží.** t-test posuzuje, zda se liší průměry dvou skupin v populaci, ze které vzorek pochází.
 
-**Princip.** Nulová hypotéza zní: populační průměry obou skupin jsou stejné (μ₁ = μ₂); alternativní hypotéza, že se liší (oboustranný test). Statistika t je rozdíl výběrových průměrů vydělený jeho **směrodatnou chybou**, tedy odhadem toho, jak moc by rozdíl průměrů kolísal mezi opakovanými výběry stejné velikosti:
+**Princip.** Nulová hypotéza zní: populační průměry obou skupin jsou stejné (μ₁ = μ₂); alternativní hypotéza, že se liší (oboustranný test). Statistika t je rozdíl výběrových průměrů dělený jeho **směrodatnou chybou**, tedy odhadem toho, jak moc by rozdíl průměrů kolísal mezi opakovanými výběry stejné velikosti:
 
 $$
 t = \frac{M_1 - M_2}{SE_{M_1 - M_2}}
@@ -534,7 +545,7 @@ Když jsou rozptyly stejné, dávají obě varianty téměř stejný výsledek. 
 
 **Předpoklady** jsme prošli v oddílu [-@sec-testy-predpoklady]: nezávislá pozorování, přibližně intervalová proměnná a přibližně normální rozdělení výběrového průměru; u Studentova testu navíc shoda rozptylů.
 
-**Funkce v R.** Funkce `t_test()` z rstatix přijímá tabulku a formuli; argument `detailed = TRUE` vypíše i průměry skupin a interval spolehlivosti. Ve výchozím nastavení (`var.equal = FALSE`) počítá Welchův test. Výsledek je tabulka s mnoha sloupci, proto ji vypíšeme pomocí `glimpse()`, který zobrazí každý sloupec na samostatném řádku:
+**Funkce v R.** Funkce `t_test()` z rstatix přijímá tabulku a rovnici modelu; argument `detailed = TRUE` vypíše i průměry skupin a interval spolehlivosti. Ve výchozím nastavení (`var.equal = FALSE`) počítá Welchův test. Výsledek je tabulka s mnoha sloupci, proto ji vypíšeme pomocí `glimpse()`, který zobrazí každý sloupec na samostatném řádku:
 
 ```{r}
 #| label: l07-welch
@@ -679,7 +690,7 @@ Graf ukazuje dva oddělené shluky bodů. Starší kohorta leží v průměru n�
 
 **Předpoklady.** Nezávislá pozorování a **lineární vztah**: *r* shrnuje jen přímkový trend a nevhodně popíše zakřivený vztah. Citlivý je na odlehlé hodnoty a na **shluky** (skupiny) bodů. Test a interval navíc předpokládají přibližně normální rozdělení obou proměnných, u velkých vzorků je ale odolný vůči mírným odchylkám.
 
-**Funkce v R.** `cor.test()` ze základního R přijímá formuli s oběma proměnnými na pravé straně (`~ vekr + monit`) a tabulku v argumentu `data`:
+**Funkce v R.** `cor.test()` ze základního R přijímá zápis s vlnovkou, ve kterém jsou obě proměnné na pravé straně (`~ vekr + monit`), protože žádnou z nich nevysvětlujeme tou druhou, a tabulku v argumentu `data`:
 
 ```{r}
 #| label: l07-cor-test
@@ -926,7 +937,7 @@ Výsledky analýzy shrnujeme v několika větách, které **odpovídají na výz
 
 > Dívky uváděly mírně vyšší rodičovský monitoring než chlapci: podle jejich výpovědi o nich rodiče v průměru vědí o něco více. Rozdíl činil 0,14 bodu na čtyřbodové škále, 95% CI [0,06; 0,22], což odpovídá malému účinku (*d* = 0,24; 95% CI [0,09; 0,38]); obě rozdělení se z velké části překrývají. Rozdíl nebyl zkreslen věkem: podíl dívek byl v obou kohortách téměř stejný (58 % a 60 %, χ²(1) = 0,40, *p* = 0,53) a uvnitř mladší i starší kohorty měl rozdíl stejnou velikost (0,15 bodu; *d* = 0,26 a 0,28). Rozdíl mezi kohortami byl přibližně dvakrát větší než rozdíl mezi pohlavími (0,31 bodu; *d* = 0,57).
 >
-> Výsledky je třeba číst s několika omezeními. Jde o průřezová observační data, takže z nich nelze usuzovat na příčiny rozdílů ani na změnu u týchž osob v čase. Měřili jsme výpověď dospívajících, nikoli skutečné jednání nebo znalost rodičů, a rozdíl tedy může zčásti odrážet i to, jak chlapci a dívky o rodičích odpovídají. Data byla sbírána ve třídách a školách, takže pozorování nemusí být zcela nezávislá a skutečná nejistota odhadů může být o něco větší, než udávají intervaly spolehlivosti. Vzorek nebyl vybrán náhodně a data pocházejí z roku 1999, proto je nelze zobecnit na dnešní dospívající.
+> Výsledky je třeba číst s několika omezeními. Jde o průřezová observační data, takže z nich nelze usuzovat na příčiny rozdílů ani na změnu u týchž osob v čase. Měřili jsme výpověď dospívajících, nikoli skutečné jednání nebo znalost rodičů, a rozdíl tedy může zčásti odrážet i to, jak chlapci a dívky o rodičích odpovídají. Data byla sbírána ve třídách a školách, takže pozorování nemusí být zcela nezávislá a skutečná nejistota odhadů může být o něco větší, než udávají intervaly spolehlivosti; zohlednit by to mohl smíšený model se školou a třídou. Vzorek nebyl vybrán náhodně a data pocházejí z roku 1999, proto je nelze zobecnit na dnešní dospívající.
 
 Všimněte si struktury: první odstavec odpovídá slovy na otázku, uvádí rozdíl v jednotkách škály i standardizovaně, vždy s intervalem spolehlivosti, a p-hodnotu jen tam, kde odpovídá na samostatnou otázku. Druhý odstavec jmenuje omezení, která vyplývají z plánu výzkumu a z dat, nikoli obecné fráze.
 
@@ -999,10 +1010,11 @@ Závěr: Starší dospívající uváděli nižší rodičovský monitoring než
 | Rozhodnutí | Důvod |
 |:-----------------------------------|:-----------------------------------|
 | Kohortu 66 jsme opravili na 6. | Věk 12,2 roku jednoznačně odpovídá mladší kohortě; bez takového dokladu bychom hodnotu nastavili na `NA`. |
+| U histogramu věku jsme varování o odstraněných řádcích nepotlačili. | Počet odstraněných řádků (3) ověřuje, že graf vynechal jen osoby bez věku. |
 | Dvě osoby starší 18 let jsme ponechali. | Věk je neobvyklý, ale možný; neobvyklost sama není důvodem k vyřazení. |
 | Žádnou položku jsme neobrátili. | Všechny korelace mezi položkami jsou kladné a alfa nehlásí záporně korelující položky. |
 | Skór počítáme z alespoň 8 z 9 položek. | Průměr z dostupných položek nepřijde o osoby s jednou chybějící odpovědí; pravidlo je zvoleno předem. |
-| Q-Q grafy posuzujeme podle celkového průběhu bodů, ve skupinách bez pásu. | Skór má jen 36 hodnot; při velkém vzorku z úzkého pásu vybíhají schody i bez podstatné odchylky tvaru. |
+| Q-Q grafy mají přímku y = x a posuzujeme je podle celkového průběhu bodů, ve skupinách bez pásu. | Skór má jen 36 hodnot; při velkém vzorku z úzkého pásu vybíhají schody i bez podstatné odchylky tvaru. |
 | Používáme Welchův t-test. | Nepředpokládá shodu rozptylů a při shodných rozptylech ztrácí jen málo; volba podle Levenova testu se nedoporučuje. |
 | Levenův test s mediánem slouží jen jako popis. | Varianta s mediánem je odolnější vůči zešikmení; nevýznamný výsledek shodu rozptylů nedokazuje. |
 | Cohenovo d se společnou SD a bootstrapovým intervalem se seedem. | Obvyklý standard srovnatelný s jinými studiemi; seed zajistí opakovatelný interval. |

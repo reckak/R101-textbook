@@ -17,6 +17,8 @@ stopifnot(!anyDuplicated(names(chunks)),
 
 # Package-build notes from the local R installation are allowed only where packages load.
 loading_chunks <- c("l07-nacteni", "l07-reseni-samostatne")
+# The age histogram deliberately keeps the warning about the three missing ages.
+expected_warnings <- list("fig-testy-vek" = list("Removed 3 rows", 1L))
 grDevices::pdf(file = NULL)
 for (chunk in chunks) {
   if (chunk$skip) next
@@ -37,7 +39,14 @@ for (chunk in chunks) {
   relevant <- if (chunk$label %in% loading_chunks) {
     seen_warnings[!grepl("was built under R version", seen_warnings, fixed = TRUE)]
   } else seen_warnings
-  if (length(relevant)) stop("Unexpected warning in ", chunk$label, ": ", paste(relevant, collapse = "; "))
+  if (chunk$label %in% names(expected_warnings)) {
+    expected <- expected_warnings[[chunk$label]]
+    cat("EXPECTED WARNINGS:", relevant, sep = "\n  ")
+    stopifnot(length(relevant) == expected[[2]],
+              all(grepl(expected[[1]], relevant, fixed = TRUE)))
+  } else if (length(relevant)) {
+    stop("Unexpected warning in ", chunk$label, ": ", paste(relevant, collapse = "; "))
+  }
 }
 grDevices::dev.off()
 
@@ -72,6 +81,19 @@ stopifnot(identical(as.integer(table(adolescenti$n_miss_monit)), c(743L, 15L, 2L
 manual <- with(adolescenti, (c01_99 + c02_99 + c03_99 + c04_99 + c05_99 + c06_99 + c07_99 + c08_99 + c09_99) / 9)
 stopifnot(sum(is.na(manual)) == 25L, isTRUE(all.equal(as.numeric(manual), adolescenti$monit[!is.na(manual)] |>
   (\(x) { y <- rep(NA_real_, length(manual)); y[!is.na(manual)] <- x; y })())))
+
+# Q-Q plots use the identity line: the normal with the data's mean and SD.
+qq_twice <- lapply(1:2, function(i) ggplot2::ggplot_build(run("fig-testy-qq"))$data)
+qq_line <- qq_twice[[1]][[2]]
+qq_points <- qq_twice[[1]][[3]]
+monit_valid <- na.omit(adolescenti$monit)
+n_valid <- length(monit_valid)
+stopifnot(isTRUE(all.equal(qq_line$y, qq_line$x)),
+          isTRUE(all.equal(sort(qq_points$x), qnorm(ppoints(n_valid), mean(monit_valid),
+                                                    sd(monit_valid) * sqrt((n_valid - 1) / n_valid)))),
+          identical(qq_twice[[1]][[1]][c("ymin", "ymax")], qq_twice[[2]][[1]][c("ymin", "ymax")]))
+group_line <- ggplot2::ggplot_build(run("fig-testy-qq-pohlavi"))$data[[1]]
+stopifnot(isTRUE(all.equal(group_line$y, group_line$x)))
 
 # The score matches the source script after correcting the input path.
 source_lines <- readLines("scripts/week_07.R", encoding = "UTF-8", warn = FALSE)
