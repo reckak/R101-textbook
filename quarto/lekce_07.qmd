@@ -31,12 +31,12 @@ Položky `c01_99` až `c09_99` popisují, jak často podle dospívajícího rodi
 
 ### Balíčky a načtení dat
 
-Nově použijeme tři balíčky. **`rstatix`** obsahuje statistické testy, které přijímají tabulku a vracejí výsledek opět jako tabulku, takže se dobře kombinují s pipe operátorem. **`ggh4x`** rozšiřuje ggplot2 mimo jiné o křivku normálního rozdělení přizpůsobenou datům. **`ggmosaic`** kreslí mozaikové grafy; použijeme jej jen v nepovinném oddílu. Pokud je ještě nemáte, nainstalujte je jednorázově v konzoli:
+Nově použijeme dva balíčky. **`rstatix`** obsahuje statistické testy, které přijímají tabulku a vracejí výsledek opět jako tabulku, takže se dobře kombinují s pipe operátorem. **`ggh4x`** rozšiřuje ggplot2 mimo jiné o křivku normálního rozdělení přizpůsobenou datům. Tuto křivku ggh4x počítá pomocí balíčku **`fitdistrplus`**, který se s ním automaticky nenainstaluje; nenačítáme jej, ale musí být nainstalovaný. Pokud balíčky ještě nemáte, nainstalujte je jednorázově v konzoli:
 
 ```{r}
 #| label: l07-instalace
 #| eval: false
-install.packages(c("rstatix", "ggh4x", "ggmosaic"))
+install.packages(c("rstatix", "ggh4x", "fitdistrplus"))
 ```
 
 Ostatní balíčky znáte z předchozích lekcí. Ve skriptu je načtěte a data načtěte funkcí `read_sav()` z balíčku haven:
@@ -787,25 +787,23 @@ chi_kohorta$expected
 
 Nevýznamný výsledek **nedokazuje**, že podíly jsou přesně stejné. Pozorovaný rozdíl 2,3 procentního bodu je ale malý. Druhá podmínka zkreslení, výrazně odlišný podíl pohlaví v kohortách, tedy splněna není, a věk by proto rozdíl mezi chlapci a dívkami neměl podstatně zkreslovat. Přímo to ověříme v oddílu [-@sec-testy-uvnitr].
 
-### Nepovinně: mozaikový graf {#sec-testy-mozaika}
+### Graf podílů {#sec-testy-graf-podilu}
 
-Kontingenční tabulku lze zobrazit **mozaikovým grafem**. Šířka sloupce odpovídá velikosti kohorty a výška obdélníků podílu chlapců a dívek uvnitř ní; plocha obdélníku je tedy úměrná počtu osob v buňce. Balíček ggmosaic přidává vrstvu `geom_mosaic()`, ve které proměnnou na ose `x` zapisujeme uvnitř `product()`:
+Kontingenční tabulku zobrazíme sloupcovým grafem podílů, který znáte z druhé lekce (oddíl [-@sec-podily]). `position = "fill"` dorovná každý sloupec do výšky 1, takže výšky úseků ukazují podíl chlapců a dívek uvnitř kohorty, tedy řádková procenta z tabulky. Funkce `scales::percent` zobrazí na ose `y` procenta místo podílů:
 
 ```{r}
-#| label: fig-testy-mozaika
-#| fig-cap: "Mozaikový graf složení kohort podle pohlaví (n = 765)."
-#| fig-alt: "Mozaikový graf se dvěma sloupci; širší sloupec mladší kohorty a užší sloupec starší kohorty jsou rozděleny na chlapce a dívky téměř ve stejné výšce."
-library(ggmosaic)
-
+#| label: fig-testy-podily
+#| fig-cap: "Složení kohort podle pohlaví (n = 765)."
+#| fig-alt: "Dva stejně vysoké sloupce mladší a starší kohorty rozdělené na růžový úsek dívek dole a modrý úsek chlapců nahoře; hranice mezi úseky leží v obou sloupcích téměř ve stejné výšce, kolem 58 až 60 %."
 analyza_tabulka |>
-  ggplot() +
-  geom_mosaic(aes(x = product(kohorta), fill = pohlavi)) +
+  ggplot(aes(x = kohorta, fill = pohlavi)) +
+  geom_bar(position = "fill") +
   scale_fill_manual(values = c("chlapci" = "#3F72AF", "dívky" = "#FC5185")) +
-  labs(x = "Kohorta", y = "Pohlaví", fill = "Pohlaví") +
-  theme_mosaic()
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "Kohorta", y = "Podíl osob", fill = "Pohlaví")
 ```
 
-Sloupec mladší kohorty je širší, protože je v ní více osob (440 oproti 325). Hranice mezi chlapci a dívkami leží v obou sloupcích téměř ve stejné výšce, přibližně 40 až 42 % od spodního okraje. Graf tak ukazuje totéž co řádková procenta: složení obou kohort podle pohlaví je téměř stejné. Kdyby pohlaví a kohorta souvisely, byla by hranice v obou sloupcích zřetelně posunutá. `theme_mosaic()` je motiv z balíčku ggmosaic, který odstraní osy a mřížku nevhodné pro mozaikový graf.
+Dívky tvoří spodní úsek a chlapci horní; ggplot2 skládá úseky tak, že první úroveň faktoru (`chlapci`) je nahoře. Hranice mezi nimi leží v obou sloupcích téměř ve stejné výšce: dívky tvoří 57,7 % mladší a 60,0 % starší kohorty. Graf tak ukazuje totéž co řádková procenta: složení obou kohort podle pohlaví je téměř stejné. Kdyby pohlaví a kohorta souvisely, byla by hranice v obou sloupcích zřetelně posunutá. Graf podílů ale nezobrazuje, kolik osob je v každé kohortě: oba sloupce mají stejnou výšku, ačkoli mladší kohorta je větší (440 oproti 325). Počty proto uvádíme v tabulce nebo v popisku grafu.
 
 ### Vlastní kategorie podle věku: `case_when()` {#sec-testy-case-when}
 
@@ -1024,6 +1022,7 @@ Závěr: Starší dospívající uváděli nižší rodičovský monitoring než
 | Po `factor()` přibylo `NA`. | Zda data neobsahují hodnotu, která chybí v `levels`; nejprve zkontrolujte `count()`. |
 | Kohorta je po `if_else()` text místo faktoru. | Opravu kódu proveďte před převodem na faktor, nebo výsledek znovu převeďte pomocí `factor()`. |
 | Ruční součet položek dává mnoho `NA`. | Sčítání sloupců vrátí `NA` při jediné chybějící položce; použijte `rowwise()` a `mean(..., na.rm = TRUE)`. |
+| Graf varuje „The package "fitdistrplus" is required“ a chybí normální křivka. | Nainstalujte balíček `fitdistrplus`, který `stat_theodensity()` používá. |
 | `stat_theodensity()` hlásí neznámý argument. | Rozdělení se zadává argumentem `distri`, nikoli `distribution`. |
 | Znaménko rozdílu v t-testu je opačné, než čekáte. | Pořadí úrovní faktoru: `estimate` je první minus druhá skupina (`group1`, `group2`). |
 | t-test má stupně volnosti s desetinnou částí. | Je to Welchův test; necelé stupně volnosti jsou u něj normální. |
@@ -1044,7 +1043,7 @@ Před testem zkontrolujte data: četnosti kategorií, rozsah věku a položek. C
 
 - Wickham, H., Çetinkaya-Rundel, M., & Grolemund, G. *R for Data Science* (2. vydání): [Pivoting](https://r4ds.hadley.nz/data-tidy.html#sec-pivoting), [case_when()](https://r4ds.hadley.nz/logicals.html#case_when), [Facets](https://r4ds.hadley.nz/layers.html#facets) a [A numerical and a categorical variable](https://r4ds.hadley.nz/data-visualize.html#a-numerical-and-a-categorical-variable). Kniha statistické testy neprobírá; cvičení 5 a 6 jsou vlastními úlohami inspirovanými uvedenými oddíly.
 - Kassambara, A. Balíček rstatix: [dokumentace t_test](https://rpkgs.datanovia.com/rstatix/reference/t_test.html), [levene_test](https://rpkgs.datanovia.com/rstatix/reference/levene_test.html) a [cohens_d](https://rpkgs.datanovia.com/rstatix/reference/cohens_d.html).
-- Dokumentace ggh4x: [stat_theodensity](https://teunbrand.github.io/ggh4x/reference/stat_theodensity.html); dokumentace janitor: [tabyl](https://sfirke.github.io/janitor/articles/tabyls.html); úvod k balíčku [ggmosaic](https://haleyjeppson.github.io/ggmosaic/).
+- Dokumentace ggh4x: [stat_theodensity](https://teunbrand.github.io/ggh4x/reference/stat_theodensity.html) a dokumentace janitor: [tabyl](https://sfirke.github.io/janitor/articles/tabyls.html).
 - Delacre, M., Lakens, D., & Leys, C. (2017). Why psychologists should by default use Welch's t-test instead of Student's t-test. *International Review of Social Psychology, 30*(1), 92–101. <https://doi.org/10.5334/irsp.82> (oprava doplňkových simulací: <https://doi.org/10.5334/irsp.661>)
 - Zimmerman, D. W. (2004). A note on preliminary tests of equality of variances. *British Journal of Mathematical and Statistical Psychology, 57*(1), 173–181. <https://doi.org/10.1348/000711004849222>
 - Cohen, J. (1992). A power primer. *Psychological Bulletin, 112*(1), 155–159. <https://doi.org/10.1037/0033-2909.112.1.155>
