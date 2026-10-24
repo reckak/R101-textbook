@@ -16,7 +16,7 @@ stopifnot(!anyDuplicated(names(chunks)),
           identical(names(chunks)[vapply(chunks, function(x) x$skip, logical(1))], "l07-instalace"))
 
 # Package-build notes from the local R installation are allowed only where packages load.
-loading_chunks <- c("l07-nacteni", "fig-testy-mozaika", "l07-reseni-samostatne")
+loading_chunks <- c("l07-nacteni", "l07-reseni-samostatne")
 grDevices::pdf(file = NULL)
 for (chunk in chunks) {
   if (chunk$skip) next
@@ -80,6 +80,7 @@ score_end <- score_end[score_end > grep("na_monit > 1", source_lines)[1]][1] - 1
 source_env <- new.env()
 source_code <- sub('read_sav("data/long2.sav")', 'read_sav("data/raw/monitoring_teaching.sav")',
                    source_lines[1:score_end], fixed = TRUE)
+# Plot-only packages are not needed for the score; ggmosaic is no longer on CRAN.
 source_code <- source_code[!grepl("^library\\((ggh4x|ggmosaic|qqplotr)\\)", source_code)]
 invisible(capture.output(suppressWarnings(suppressMessages(
   eval(parse(text = source_code), envir = source_env)))))
@@ -127,6 +128,11 @@ stopifnot(near(within_r$r, c(-0.16, 0.01), 0.006), identical(within_r$n, c(432L,
 stopifnot(identical(unname(as.integer(cetnosti)), c(186L, 130L, 254L, 195L)),
           !grepl("Yates", chi_kohorta$method), near(unname(chi_kohorta$statistic), 0.40),
           near(chi_kohorta$p.value, 0.53), all(chi_kohorta$expected > 134))
+shares <- ggplot2::ggplot_build(run("fig-testy-podily"))$data[[1]]
+boys <- shares[shares$fill == "#3F72AF", ]
+boys <- boys[order(boys$x), ]
+# Boys (first level) are stacked on top; the girls' share is the boundary height.
+stopifnot(all(abs(boys$ymax - 1) < 1e-12), near(boys$ymin, c(0.577, 0.600), 0.001))
 yates <- chisq.test(cetnosti)
 stopifnot(near(unname(yates$statistic), 0.31), near(yates$p.value, 0.58))
 stopifnot(identical(as.integer(table(adolescenti$kohorta, adolescenti$kohorta_moje, useNA = "ifany")),

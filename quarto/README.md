@@ -1,5 +1,24 @@
 # Autorská dokumentace učebnice R101
 
+## Sedmá kapitola bez ggmosaic, 24. 10. 2026
+
+Po sloučení PR #30 selhalo sestavení v GitHub Actions: `pak` nenašel
+`any::ggmosaic` a hlásil konflikt závislostí i u ostatních balíčků. Balíček
+ggmosaic byl 10. 11. 2025 odstraněn z CRAN (nebyly opraveny hlášené problémy),
+takže by jej přes `install.packages()` nenainstalovali ani studenti. Místní
+render prošel jen díky starší instalaci.
+
+Nepovinný mozaikový graf (`sec-testy-mozaika`) nahradil sloupcový graf podílů
+s `position = "fill"` (`sec-testy-graf-podilu`, `fig-testy-podily`), známý
+z druhé lekce. Výklad upozorňuje, že graf podílů na rozdíl od mozaiky
+nezobrazuje velikost kohort. ggmosaic odstraněn z instalace, CI a z instalačního
+bloku lekce. `check-lesson-07.R` ověřuje podíly dívek v grafu (57,7 % a 60,0 %);
+z podkladového skriptu dál vyřazuje `library(ggmosaic)`. Výsledky testů se nemění.
+
+Ověření: render celé knihy, `check-r.R` (7 kapitol) a `check-html.cjs`
+(sedmá kapitola: 7 řešení, 67 kopírování, 14 grafů, mobil 390/390 px) prošly;
+nový graf vizuálně zkontrolován. Běh GitHub Actions ověří pull request.
+
 ## Sedmá kapitola: základní statistické testy, 24. 10. 2026
 
 Podkladem je `scripts/week_07.R`, zachovaný beze změny (SHA-256

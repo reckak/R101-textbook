@@ -42,7 +42,6 @@ jobs:
             any::qqplotr
             any::rstatix
             any::ggh4x
-            any::ggmosaic
             any::knitr
             any::rmarkdown
       - name: Render complete book
