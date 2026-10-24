@@ -147,3 +147,10 @@ status_l06 <- system2(
   c("--vanilla", "quarto/_verification/check-lesson-06.R")
 )
 stopifnot(status_l06 == 0L)
+
+# Execute lesson 07 independently, including all tests, decisions and the standalone solution.
+status_l07 <- system2(
+  file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript"),
+  c("--vanilla", "quarto/_verification/check-lesson-07.R")
+)
+stopifnot(status_l07 == 0L)

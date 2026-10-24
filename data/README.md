@@ -1,4 +1,4 @@
-# Data k páté a šesté lekci
+# Data k páté až sedmé lekci
 
 Veřejné vstupy lekce jsou výslovně vyjmenované v `_quarto.yml`. Kopírují se do
 `_book/data/raw/`, odkud je lze stáhnout i bez přístupu do IS MUNI. Kapitola
@@ -58,3 +58,21 @@ Oba soubory jsou výjimkou z ignorování `data/clean/` (viz `.gitignore`) a jso
 výslovně uvedené v `project.resources`. Generátor nebyl dodán; jde o soubory
 vyučujícího, nikoli o výstup páté lekce. Ostatní soubory v `data/clean/`
 zůstávají místními výstupy a nezveřejňují se.
+
+## Vstup sedmé lekce
+
+| Soubor | Původ a použití |
+| --- | --- |
+| `raw/monitoring_teaching.sav` | Schválený výukový výřez z místního souboru `long2.sav` (768 × 210): data dvou kohort dospívajících z roku 1999 (6. třídy a 1. ročníky SŠ). Podle vyučujícího souvisí s projektem [Cesty do dospělosti](https://www.fss.muni.cz/vyzkum/resene-projekty/18505) (FSS MU, GAČR GAP407/12/0854, 2012–2016); stránka projektu sběr z roku 1999 sama nepopisuje. Nesimulovaná data. |
+
+Výřez je povoleným seznamem 13 sloupců: `id`, `pohlavi`, `kohorta`, `vekr` a položky
+`c01_99` až `c09_99`. Zachovává všech 768 řádků, hodnoty i popisky proměnných a hodnot,
+včetně jedné chybně zapsané kohorty 66, kterou lekce opravuje. Neobsahuje školu, třídu,
+věk v měsících, národnost, známky, rodinnou situaci ani další dotazníky. Jde o konkrétní
+minimalizaci sdílených údajů, nikoli o tvrzení o formálně prokázané anonymitě.
+
+Generátor `scripts/prepare_lesson_07_data.R` vyžaduje místní `data/raw/long2.sav`, který je
+v `.gitignore`; spouští se z kořene projektu příkazem
+`Rscript --vanilla scripts/prepare_lesson_07_data.R` a ověřuje shodu výřezu s originálem.
+Soubor SPSS obsahuje časové razítko vytvoření, takže opakované spuštění změní bajty souboru,
+nikoli jeho obsah; hotový výřez v Gitu proto bez potřeby nepřegenerovávejte.

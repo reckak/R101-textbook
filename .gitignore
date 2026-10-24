@@ -20,8 +20,9 @@
 # Prepared public inputs for lesson 06; other files in data/clean are lesson outputs.
 !/data/clean/help_seeking_data.rds
 !/data/clean/help_seeking_codebook.rds
-# Original research exports contain identifying fields; publish only the approved subset.
+# Original research exports contain identifying fields; publish only the approved subsets.
 /data/raw/four_countries_data.xlsx
 /data/raw/four_countries_data2.xlsx
+/data/raw/long2.sav
 
 **/*.quarto_ipynb

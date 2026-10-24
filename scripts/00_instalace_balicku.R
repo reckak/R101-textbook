@@ -3,5 +3,6 @@
 # knitr a rmarkdown jsou potřebné pro vykreslení Quarto dokumentu s R.
 install.packages(c("tidyverse", "palmerpenguins", "ggthemes", "nycflights13",
                    "readxl", "haven", "janitor", "labelled", "psych", "qqplotr",
+                   "rstatix", "ggh4x", "ggmosaic",
                    "knitr", "rmarkdown"))
 
