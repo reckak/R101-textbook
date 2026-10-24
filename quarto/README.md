@@ -1,5 +1,98 @@
 # Autorská dokumentace učebnice R101
 
+## Sedmá kapitola: základní statistické testy, 24. 10. 2026
+
+Podkladem je `scripts/week_07.R`, zachovaný beze změny (SHA-256
+`d4e9e790057fbad9b5ba5f83aeb48a7535f5c7a234332294898339cec403252b`).
+Kapitola `lekce_07.qmd` navazuje na boxplot a panely (lekce 2), `.by` (3),
+faktory (4), SPSS a popisky (5) a skóry, alfa a Q-Q grafy (6). Obsahuje šest
+průběžných cvičení a samostatně spustitelnou závěrečnou úlohu; všech 7 řešení
+je sbalených. Název určil uživatel.
+
+### Rozhodnutí uživatele
+
+- **Data:** zveřejněn jen výukový výřez `data/raw/monitoring_teaching.sav`
+  (13 sloupců, viz `data/README.md`); původní `long2.sav` (SHA-256
+  `ae5cc618ba3e7fc1b4718301094ef9c37995cb9bcb618401c7de3dd522dea6fe`) je
+  v `.gitignore`. Generátor `scripts/prepare_lesson_07_data.R`.
+- **Původ:** uživatel uvedl, že data jsou „myslím“ z projektu Cesty do dospělosti.
+  Stránka FSS MU (GAČR GAP407/12/0854, 2012–2016) sběr z roku 1999 ani kohorty
+  nepopisuje; kapitola proto vazbu uvádí jako údaj vyučujícího. **Neověřeno.**
+- **Kohorta 66:** opravena na 6 (věk 12,2; mladší kohorta 11,8–13,9, starší
+  15,8–19,1). Komentář podkladu žádal `NA`, kód podkladu hodnotu přeřazoval.
+- **Welchův t-test** jako výchozí (Delacre et al., 2017; Zimmerman, 2004);
+  Levene jen popisně, Studentův test pro srovnání.
+- **χ² test bez Yatesovy korekce** (`correct = FALSE`; Campbell, 2007).
+- Výklad každého testu: účel, princip, předpoklady, funkce, výstup; tabulka
+  rozhodnutí; závěr s odpovědí na otázku, velikostí rozdílu a omezeními.
+
+### Opravy podkladu a jejich dopad
+
+- Cesta `data/long2.sav` neexistuje; kapitola čte `data/raw/monitoring_teaching.sav`.
+- `if_else(kohorta == 66, "mladší kohorta", kohorta)` po `as_factor()` tiše
+  převádělo kohortu na text a ponechávalo prázdnou úroveň „66“. Oprava kódu
+  probíhá před převodem; převod přes `factor(levels, labels)` s českými názvy
+  (`chlapci`/`dívky`, `mladší`/`starší`). Výsledky se nemění.
+- `stat_theodensity(distribution = "norm")` – argument se ignoroval (ggh4x
+  používá `distri`); výchozí rozdělení je normální, takže grafy se nemění.
+- `geom_point(stat = "summary", fun.y = "mean")` – `fun.y` se ignoroval a
+  použil se `mean_se()` se zprávou; nahrazeno `stat_summary(fun = mean,
+  geom = "point")`. Poloha bodu (průměr) se nemění.
+- Chybějící `+` před `theme_mosaic()`: motiv se nepoužil a vypisoval se
+  objekt motivu. Opraveno.
+- Boxplot kohort používal `drop_na(pohlavi)`; kapitola vyřazuje chybějící skór
+  a u analýz pohlaví i pohlaví (`analyza_pohlavi`, 755 osob).
+- Úkol 7 míchal `kohorta_moje` (souhrny), `kohorta` (grafy, testy). Kapitola
+  používá zaznamenanou `kohorta` všude; `kohorta_moje` (`case_when()`) slouží
+  jen k nácviku a srovnání (16 nezařazených: 3 bez věku, 13 starších 17 let).
+- χ² test: podklad testoval `kohorta_moje` na vektorech s NA (výstup n = 768,
+  χ² = 0,235, p = 0,63, s Yatesovou korekcí). Kapitola: `kohorta`, 765 úplných
+  případů, bez korekce χ²(1) = 0,40, p = 0,53 (s korekcí 0,31, p = 0,58).
+  Závěr se nemění.
+- Studentův test (t(753) = −3,30, p = 0,001) nahrazen Welchovým
+  (t(681,95) = −3,31, p = 0,00098); intervaly se liší v tisícinách.
+- `cohens_d(ci = TRUE)` počítá bootstrap; podklad bez seedu a s `ci.type =
+  "norm"`. Kapitola: výchozí percentilový bootstrap a `set.seed(123)`
+  (d = −0,24 [−0,38; −0,09]); kontrola ověřuje opakovatelnost.
+- `psych::corr.test()` nahrazen `cor.test()` (jedna dvojice, přímý výstup
+  s CI); výsledek r = −0,28 [−0,35; −0,22] shodný. Doplněna korelace uvnitř
+  kohort (−0,16 a 0,01) jako argument, proč celková korelace hlavně opakuje
+  rozdíl kohort.
+- Q-Q grafy: podklad `identity = TRUE`; kapitola nastavení šesté lekce.
+  **Zjištění:** skór má jen 36 hodnot a při n = 758 leží asi polovina bodů mimo
+  pás `"ts"` (127 pod, 270 nad), u pásu `"pointwise"` 274; po rozprostření
+  hodnot uvnitř jejich intervalu (jitter ±1/18, jen autorská kontrola) zůstává
+  mimo pás jen 19 bodů u stropu 4. Kapitola proto pás u celkového grafu ukazuje
+  a vysvětluje, proč jej nelze číst doslova; skupinové Q-Q grafy jsou bez pásu.
+- Histogramy mají šířku 1/9 s `center = 1` místo výchozích 30 intervalů.
+- Komentáře podkladu o JASP a pokyny „Do textu“ nejsou v lekci; jejich obsah
+  pokrývají cvičení, vzorový zápis výsledku a závěr analýzy.
+- Přejmenování: `df` → `adolescenti` (`df` je i funkce stats),
+  `na_monit` → `n_miss_monit` jako v lekci 6. Kontrola ověřuje shodu skóru
+  `monit` i pořadí osob s podkladem (ř. 1–144, opravená cesta).
+
+### Ověření
+
+Nový `check-lesson-07.R` (zapojený do `check-r.R`) spouští všechny bloky a
+řešení v čisté relaci bez neočekávaných varování, ověřuje číselné interpretace,
+shodu skóru s podkladem, Welch/Student/`t.test()`, opakovatelnost bootstrapu,
+χ² bez korekce, `case_when()`, testy uvnitř kohort, samostatné závěrečné řešení
+a při místním `long2.sav` shodu výřezu s originálem. `check-html.cjs` rozšířen
+na sedmou kapitolu (stažení s bajtovou shodou, obsah publikovaného `data/raw`,
+klávesnicově dostupné tabulky).
+
+Render celé knihy (Quarto 1.9.38, R 4.5.1, UTF-8 locale), `check-r.R` pro všech
+sedm kapitol a `check-html.cjs` prošly. V sedmé kapitole 7 sbalených
+a rozbalitelných řešení, kopírování 67 bloků, 14 grafů, 419 místních cílů odkazů,
+mobil 390/390 px, bez chyb JavaScriptu. Všech 14 grafů bylo prohlédnuto
+a interpretace upraveny podle nich. Zdroje ověřeny přes scite (Delacre et al.
+2017 má opravu doplňkových simulací, 10.5334/irsp.661; hlavní závěr nemění).
+R hlásí obvyklá upozornění na balíčky sestavené pod R 4.5.3. Nové balíčky
+`rstatix`, `ggh4x`, `ggmosaic` doplněny do instalace a CI. Test pro IS MUNI
+k lekci zatím nevznikl. Veřejné nasazení lokální kontrola nepotvrzuje. Kontrola
+rozdílů prošla u všech autorských souborů; původní `week_07.R` obsahuje vlastní
+koncové mezery, které se kvůli zachování podkladu neupravují.
+
 ## Mobilní tabulka častých potíží, 18. 10. 2026
 
 GitHub Actions odhalily v šesté lekci přesah tabulky „Časté potíže“

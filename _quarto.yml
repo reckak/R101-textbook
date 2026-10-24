@@ -8,6 +8,7 @@ project:
     - data/raw/international.sav
     - data/raw/help_seeking.xlsx
     - data/raw/four_countries_teaching.xlsx
+    - data/raw/monitoring_teaching.sav
     - data/clean/help_seeking_data.rds
     - data/clean/help_seeking_codebook.rds
 book:
@@ -20,6 +21,7 @@ book:
     - quarto/lekce_04.qmd
     - quarto/lekce_05.qmd
     - quarto/lekce_06.qmd
+    - quarto/lekce_07.qmd
 lang: cs
 language:
   code-copy-button-tooltip: "Zkopírovat"

@@ -34,9 +34,9 @@ function check(condition, message) { if (!condition) throw new Error(message); }
     const homeLink = page.locator('#quarto-sidebar a.sidebar-link').first();
     check(['/', '/index.html'].includes(new URL(await homeLink.getAttribute('href'), page.url()).pathname), 'Home navigation missing');
     check((await page.locator('h1 .chapter-number').innerText()).trim() === '1', 'First lesson must be chapter 1');
-    for (const chapterNumber of [1, 2, 3, 4, 5, 6]) {
+    for (const chapterNumber of [1, 2, 3, 4, 5, 6, 7]) {
       await page.setViewportSize({ width: 1440, height: 1000 });
-      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat', 4: 'Vektory, faktory', 5: 'Import dat', 6: 'Práce se skóry' };
+      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat', 4: 'Vektory, faktory', 5: 'Import dat', 6: 'Práce se skóry', 7: 'Základní statistické' };
       await page.locator('#quarto-sidebar a.sidebar-link').filter({ hasText: titles[chapterNumber] }).click();
       await page.waitForLoadState('networkidle');
       check((await page.locator('h1 .chapter-number').innerText()).trim() === String(chapterNumber), 'Wrong chapter number');
@@ -49,7 +49,7 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       const mainBox = await page.locator('main').boundingBox();
       check(tocBox.x >= mainBox.x + mainBox.width - 1 && tocBox.y < 180, 'TOC not at top right');
       check(await toc.locator('a[data-scroll-target]').count() > 5, 'TOC incomplete');
-      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny', 4: '#sec-struktury-faktory', 5: '#sec-import-labelled', 6: '#sec-skory-rozdeleni' }[chapterNumber];
+      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny', 4: '#sec-struktury-faktory', 5: '#sec-import-labelled', 6: '#sec-skory-rozdeleni', 7: '#sec-testy-ttest' }[chapterNumber];
       await toc.locator('a[data-scroll-target="' + tocTarget + '"]').click();
       await page.waitForFunction(id => Math.abs(document.querySelector(id).getBoundingClientRect().top) < 200, tocTarget);
       await page.evaluate(() => window.scrollTo(0, 0));
@@ -148,9 +148,10 @@ function check(condition, message) { if (!condition) throw new Error(message); }
         }
         const publicFiles = fs.readdirSync(path.join(root, 'data', 'raw')).sort();
         check(JSON.stringify(publicFiles) === JSON.stringify([
-          'ceske_odpovedi.csv', 'four_countries_teaching.xlsx', 'help_seeking.xlsx', 'international.sav', 'students.txt'
+          'ceske_odpovedi.csv', 'four_countries_teaching.xlsx', 'help_seeking.xlsx', 'international.sav',
+          'monitoring_teaching.sav', 'students.txt'
         ]), 'Published data directory contains unexpected files');
-      } else {
+      } else if (chapterNumber === 6) {
         await screenshot('html-downloads', '#sec-skory-data');
         await screenshot('html-table', '#sec-skory-alfa > .cell:first-of-type');
         await screenshot('html-graph', '#fig-skory-final');
@@ -174,11 +175,34 @@ function check(condition, message) { if (!condition) throw new Error(message); }
         const cleanFiles = fs.readdirSync(path.join(root, 'data', 'clean')).sort();
         check(JSON.stringify(cleanFiles) === JSON.stringify(['help_seeking_codebook.rds', 'help_seeking_data.rds']),
           'Published data/clean directory contains unexpected files');
+      } else {
+        await screenshot('html-downloads', '#sec-testy-data');
+        await screenshot('html-table', '#sec-testy-ttest > .cell:first-of-type');
+        await screenshot('html-graph', '#fig-testy-boxplot-pohlavi');
+        await screenshot('html-chi', '#sec-testy-chi');
+        await screenshot('html-solution', '#sec-testy-samostatne .callout');
+        const downloads = page.locator('main a[download]');
+        check(await downloads.count() === 1, 'Lesson 07 must expose one downloadable file');
+        for (const link of await downloads.all()) {
+          const href = await link.getAttribute('href');
+          const filename = await link.getAttribute('download');
+          const response = await context.request.get(new URL(href, page.url()).href);
+          const bytes = await response.body();
+          const original = fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'raw', filename));
+          check(response.ok() && bytes.equals(original), 'Download differs from source: ' + filename);
+          const [download] = await Promise.all([page.waitForEvent('download'), link.click()]);
+          check(await download.failure() === null, 'Download click failed: ' + filename);
+          check(download.suggestedFilename() === filename, 'Wrong download filename');
+        }
+        for (const id of ['#sec-testy-rozhodnuti', '#sec-testy-potize']) {
+          check(await page.locator(id + ' .table-responsive').getAttribute('tabindex') === '0',
+            'Lesson 07 table must be keyboard focusable: ' + id);
+        }
       }
       await page.setViewportSize({ width: 390, height: 844 });
       await screenshot('html-mobile');
       if (chapterNumber >= 5) {
-        const downloadSection = chapterNumber === 5 ? '#sec-import-data' : '#sec-skory-data';
+        const downloadSection = { 5: '#sec-import-data', 6: '#sec-skory-data', 7: '#sec-testy-data' }[chapterNumber];
         await screenshot('html-mobile-downloads', downloadSection);
         const downloadTable = page.locator(downloadSection + ' .table-responsive');
         check(await downloadTable.evaluate(el => getComputedStyle(el).overflowX === 'auto'),

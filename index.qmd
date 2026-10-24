@@ -21,3 +21,5 @@ Ve [čtvrté kapitole](quarto/lekce_04.qmd) prozkoumáte, jak R ukládá data do
 V [páté kapitole](quarto/lekce_05.qmd) načtete data z textových souborů, Excelu a SPSS. Zkontrolujete jejich strukturu, typy a kódy chybění, připojíte popisky pomocí balíčku labelled a uložíte připravenou tabulku. Datové soubory si stáhnete přímo z kapitoly.
 
 V [šesté kapitole](quarto/lekce_06.qmd) spojíte odpovědi na dotazníkové položky do skórů: obrátíte reverzní položky, odhadnete reliabilitu pomocí Cronbachova alfa a rozhodnete o chybějících odpovědích. Vztah dvou skórů zobrazíte v bodovém grafu s trendovou přímkou a křivkou a tvar jejich rozdělení posoudíte histogramem a Q-Q grafem s pásem spolehlivosti.
+
+V [sedmé kapitole](quarto/lekce_07.qmd) projdete malou analýzu od kontroly dat k závěru. Porovnáte rodičovský monitoring chlapců a dívek t-testem, rozdíl vyjádříte Cohenovým d, posoudíte shodu rozptylů Levenovým testem, vztah věku a monitoringu korelací a nezávislost dvou kategoriálních proměnných χ² testem. Naučíte se číst výstupy testů, zdůvodnit rozhodnutí v analýze a napsat závěr, který uvádí velikost rozdílu i omezení.
