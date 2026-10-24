@@ -19,6 +19,16 @@ Ověření: render celé knihy, `check-r.R` (7 kapitol) a `check-html.cjs`
 (sedmá kapitola: 7 řešení, 67 kopírování, 14 grafů, mobil 390/390 px) prošly;
 nový graf vizuálně zkontrolován. Běh GitHub Actions ověří pull request.
 
+**Doplněk po prvním běhu CI:** `check-lesson-07.R` v CI selhal na varování
+„The package "fitdistrplus" is required for `stat_theodensity()`“. Balíček
+je u ggh4x jen v `Suggests`, takže se automaticky neinstaluje; render přitom
+proběhl a grafy neměly normální křivku. Místně byl balíček nainstalovaný
+z dřívějška, proto chybu místní kontrola nezachytila. `fitdistrplus` doplněn
+do instalačního bloku lekce (s vysvětlením), `00_instalace_balicku.R`, CI
+a do tabulky častých potíží. Místně znovu prošly `check-lesson-07.R`, render
+sedmé kapitoly a `check-html.cjs`; selhání bez balíčku nebylo místně
+reprodukováno, vychází z logu GitHub Actions.
+
 ## Sedmá kapitola: základní statistické testy, 24. 10. 2026
 
 Podkladem je `scripts/week_07.R`, zachovaný beze změny (SHA-256
