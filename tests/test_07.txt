@@ -1,0 +1,99 @@
+::Převod kódů na faktor::Proměnná kohorta obsahuje kódy 6 a 10 a navíc jednou chybně zapsaný kód 66. Co se stane s hodnotou 66, pokud ji předem neopravíme a spustíme mutate(kohorta = factor(kohorta, levels = c(6, 10), labels = c("mladší", "starší")))?
+ :r1 R skončí chybou, protože hodnota 66 není uvedena v levels.
+ :r2 Hodnota 66 se bez varování změní na NA.
+ :r3 Hodnota 66 se zařadí do kategorie „starší“, protože je větší než 10.
+ :r4 Vznikne třetí kategorie s názvem „66“.
+:r1 0 Funkce factor() v této situaci chybu ani varování nevypíše. Právě proto je potřeba před převodem zkontrolovat četnosti pomocí count().
+:r2 ok Každá hodnota, která není uvedena v levels, se tiše převede na NA. Osoba by tak bez upozornění ztratila kohortu, a proto chybný kód opravujeme před převodem a po převodu kontrolujeme počet NA.
+:r3 0 Funkce factor() hodnoty nezařazuje podle velikosti. Kategorii přiřadí jen kódům, které jsou v levels přesně uvedeny.
+:r4 0 Při zadaném argumentu levels nová kategorie nevznikne. Kategorie odpovídají jen kódům 6 a 10 a jejich popiskům v labels.
+--
+::Skór sečtením položek::Osoba odpověděla na osm z devíti položek rodičovského monitoringu a u položky c03_99 má NA. Jaký skór dostane ze vzorce (c01_99 + c02_99 + c03_99 + c04_99 + c05_99 + c06_99 + c07_99 + c08_99 + c09_99) / 9?
+ :r1 Průměr z osmi dostupných odpovědí.
+ :r2 Součet osmi odpovědí vydělený devíti, protože NA se počítá jako 0.
+ :r3 R skončí chybou, protože nelze sčítat chybějící hodnotu.
+ :r4 NA, protože součet s jedinou chybějící hodnotou je také NA.
+:r1 0 Průměr z dostupných odpovědí dává až postup s rowwise() a mean(..., na.rm = TRUE). Ruční sčítání sloupců chybějící hodnoty nevynechává.
+:r2 0 R chybějící hodnotu nenahrazuje nulou. Kdyby to dělal, skór by byl uměle snížen.
+:r3 0 Sčítání s NA chybu nevyvolá. Výsledkem je chybějící hodnota.
+:r4 ok Sčítání sloupců probíhá po prvcích a jediná chybějící položka udělá NA z celého součtu. Ruční vzorec tak odpovídá přísnému pravidlu „bez jediné chybějící odpovědi“, které jsme výslovně nezvolili.
+--
+::Shapirův–Wilkův test u velké skupiny::U 442 dívek vyšel Shapirův–Wilkův test W = 0,983 a p < 0,001. Histogram a Q-Q graf přitom ukazují přibližně souměrné, jen mírně plošší rozdělení bez odlehlých hodnot. Co z toho plyne pro použití t-testu?
+ :r1 Odchylka je statisticky významná, ale u tak velké skupiny pro t-test nepodstatná.
+ :r2 T-test nelze použít, protože test normalitu zamítl.
+ :r3 Pravděpodobnost, že skóry mají normální rozdělení, je menší než 0,1 %.
+ :r4 Výsledek testu ukazuje, že rozdělení výběrového průměru není normální.
+:r1 ok U velkých výběrů má test velkou sílu a označí za významnou i malou odchylku; o vhodnosti t-testu proto rozhodujeme podle grafů a velikosti skupin. T-test předpokládá přibližně normální rozdělení výběrového průměru, které je u stovek osob zajištěno i při mírné odchylce tvaru dat.
+:r2 0 Testy normality se jako rozhodovací pravidlo nedoporučují. U velkých skupin zamítají i odchylky, které t-test podstatně neovlivní.
+:r3 0 P-hodnota není pravděpodobnost platnosti nulové hypotézy. Vyjadřuje, jak dobře se data slučují s nulovou hypotézou o normálním rozdělení.
+:r4 0 Test posuzuje rozdělení jednotlivých skórů, nikoli rozdělení výběrového průměru. To je u 442 osob díky centrální limitní větě přibližně normální.
+--
+::Levenův test a volba t-testu::Levenův test shody rozptylů monitoringu mezi chlapci a dívkami vyšel F = 0,29 a p = 0,59. Jaký další postup lekce doporučuje?
+ :r1 Použít Studentův t-test, protože Levenův test prokázal shodu rozptylů.
+ :r2 Použít Welchův t-test jen tehdy, kdyby Levenův test vyšel významně; jinak Studentův.
+ :r3 Použít Welchův t-test; Levenův test slouží jen jako popis.
+ :r4 Levenův test zopakovat s průměrem místo mediánu a podle něj se rozhodnout.
+:r1 0 Nevýznamný výsledek shodu rozptylů nedokazuje. Data jsou s ní jen slučitelná a u malých vzorků mívá test malou sílu.
+:r2 0 Takový dvoustupňový postup simulace nedoporučují, protože chybu I. druhu nekontroluje lépe a často ji zhoršuje.
+:r3 ok Welchův test shodu rozptylů nepředpokládá a při shodných rozptylech dává téměř stejný výsledek jako Studentův. Proto ho používáme jako výchozí a Levenův test bereme jen jako popis.
+:r4 0 Varianta s průměrem je citlivější na zešikmení a odlehlé hodnoty. Hlavně ale výsledek Levenova testu nemá rozhodovat o variantě t-testu.
+--
+::Znaménko rozdílu v t_test()::Funkce t_test(monit ~ pohlavi, detailed = TRUE) vrátila estimate = −0,139, group1 = chlapci a group2 = dívky. Co znamená hodnota estimate?
+ :r1 Chlapci mají průměrný skór o 0,139 bodu vyšší než dívky.
+ :r2 Rozdíl je nevýznamný, protože je záporný.
+ :r3 Skupiny se liší o 0,139 směrodatné odchylky.
+ :r4 Dívky mají průměrný skór o 0,139 bodu vyšší než chlapci.
+:r1 0 Estimate je průměr první skupiny minus průměr druhé, tedy chlapci minus dívky. Záporná hodnota proto znamená vyšší průměr druhé skupiny, dívek.
+:r2 0 Znaménko vyjadřuje jen směr rozdílu podle pořadí skupin. O významnosti rozhoduje p-hodnota a interval spolehlivosti.
+:r3 0 Estimate je rozdíl průměrů v jednotkách skóru. Rozdíl v jednotkách směrodatné odchylky vyjadřuje Cohenovo d.
+:r4 ok Estimate je průměr skupiny group1 minus průměr skupiny group2. Záporné znaménko tedy znamená, že vyšší průměr mají dívky; po obrácení pořadí úrovní faktoru by se změnilo jen znaménko.
+--
+::Interval spolehlivosti rozdílu průměrů::Welchův t-test ukázal, že dívky mají průměrný monitoring o 0,14 bodu vyšší než chlapci, 95% CI [0,06; 0,22]. Která interpretace intervalu je správná?
+ :r1 Přibližně 95 % dívek má skór o 0,06 až 0,22 bodu vyšší než chlapci.
+ :r2 S daty jsou slučitelné populační rozdíly průměrů od 0,06 do 0,22 bodu.
+ :r3 Skutečný rozdíl v populaci je přesně 0,14 bodu a interval udává chybu měření skóru.
+ :r4 V intervalu od 0,06 do 0,22 leží 95 % skórů celého vzorku.
+:r1 0 Interval se týká rozdílu populačních průměrů, nikoli rozdílů mezi jednotlivými osobami. Rozdělení obou skupin se z velké části překrývají.
+:r2 ok Interval je sestrojen postupem, který by při opakovaných výběrech zachytil skutečný rozdíl v 95 % případů. Protože interval nulu neobsahuje, odpovídá to p < 0,05 v oboustranném testu.
+:r3 0 Hodnota 0,14 je výběrový odhad, nikoli přesná populační hodnota. Interval vyjadřuje nejistotu tohoto odhadu, nikoli chybu měření jednotlivých skórů.
+:r4 0 Skóry jednotlivých osob leží na škále od 1,25 do 4. Interval spolehlivosti popisuje rozdíl průměrů, nikoli rozsah skórů.
+--
+::Velikost účinku::Rozdíl monitoringu mezi dívkami a chlapci vyšel p < 0,001 a Cohenovo d = 0,24, 95% CI [0,09; 0,38]. Které tvrzení je správné?
+ :r1 Rozdíl je statisticky významný, ale malý.
+ :r2 Jde o velký účinek, protože p-hodnota je menší než 0,001.
+ :r3 Přibližně 24 % dívek má vyšší skór než chlapci.
+ :r4 Cohenovo d je test, který potvrzuje, že rozdíl nevznikl náhodou.
+:r1 ok Cohenovo d vyjadřuje rozdíl průměrů v jednotkách společné směrodatné odchylky; průměry se tu liší asi o čtvrtinu SD. Hodnota 0,24 i celý interval leží v oblasti malých účinků podle Cohenových hrubých hranic.
+:r2 0 Statistická významnost neříká, jak velký rozdíl je. U velkých vzorků může být významný i malý rozdíl.
+:r3 0 Hodnota d není podíl osob. Udává, o kolik směrodatných odchylek se liší průměry skupin.
+:r4 0 Cohenovo d test není. Na otázku náhody odpovídá t-test, d popisuje velikost rozdílu.
+--
+::Korelace ve dvou oddělených shlucích::Věk dospívajících tvoří dva oddělené shluky (mladší a starší kohorta) bez osob mezi 14 a 15,75 roku. Korelace věku a monitoringu je v celém vzorku r = −0,28, uvnitř kohort −0,16 a 0,01. Jak výsledek nejlépe interpretovat?
+ :r1 S každým rokem věku klesá monitoring o 0,28 bodu.
+ :r2 Korelace uvnitř kohort jsou chybné, protože vycházejí z menšího počtu osob než celková korelace.
+ :r3 Celková korelace hlavně opakuje rozdíl mezi kohortami.
+ :r4 Výsledek dokazuje, že vyšší věk způsobuje pokles rodičovského monitoringu.
+:r1 0 Korelační koeficient není sklon přímky v jednotkách skóru za rok. Vyjadřuje sílu a směr lineárního vztahu.
+:r2 0 Menší skupiny mají širší intervaly spolehlivosti, ale korelace v nich nejsou chybné. Ukazují vztah uvnitř skupin s podobným věkem.
+:r3 ok Přímka v celém vzorku hlavně spojuje průměry obou kohort přes prázdný prostor mezi nimi. Korelace v datech složených z odlišných skupin může svádět k mylným závěrům, proto nejprve prohlížíme graf. Uvnitř kohort je vztah slabý (−0,16) nebo žádný (0,01).
+:r4 0 Data jsou průřezová a observační, kauzální závěr z nich nevyplývá. Kohorty se navíc liší i typem školy.
+--
+::Malé očekávané četnosti v χ² testu::Ve čtyřpolní tabulce (2 × 2) vyšly u χ² testu nezávislosti některé očekávané četnosti menší než 5 a R vypsal varování o nepřesné aproximaci. Jaký postup je vhodný?
+ :r1 Zapnout Yatesovu korekci na spojitost, která problém malých četností odstraní.
+ :r2 Použít Fisherův exaktní test nebo p-hodnotu z Monte Carlo simulace.
+ :r3 Vynechat z tabulky buňky s malými četnostmi a test spustit znovu.
+ :r4 Místo χ² testu porovnat četnosti t-testem.
+:r1 0 Yatesova korekce je u tabulek 2 × 2 zbytečně konzervativní a test ztrácí sílu. Předpoklad dostatečných očekávaných četností nenahrazuje.
+:r2 ok Fisherův exaktní test (fisher.test()) počítá p-hodnotu přesně z tabulek se stejnými okrajovými součty a používá se hlavně u tabulek 2 × 2. Monte Carlo simulace (chisq.test() s argumentem simulate.p.value = TRUE) vytváří tabulky za předpokladu nezávislosti a nevyžaduje velké očekávané četnosti.
+:r3 0 Vynecháním buněk by se změnila otázka i data. Kontingenční tabulka musí obsahovat všechny kombinace kategorií.
+:r4 0 T-test porovnává průměry číselné proměnné. Pro vztah dvou kategoriálních proměnných se nehodí.
+--
+::Chybějící hodnoty v case_when()::Sloupec vekr obsahuje hodnoty 12,5; 16 a NA. Jaké hodnoty vytvoří case_when(vekr < 15 ~ "mladší", vekr >= 15 ~ "starší")?
+ :r1 "mladší", "starší" a "starší"
+ :r2 "mladší", "starší" a "mladší"
+ :r3 R skončí chybou, protože podmínky nepokrývají chybějící hodnotu.
+ :r4 "mladší", "starší" a NA
+:r1 0 Chybějící věk nesplní ani poslední podmínku. Funkce case_when() nepřiřazuje poslední kategorii automaticky.
+:r2 0 Porovnání NA < 15 nevrací TRUE, ale NA. Chybějící věk tedy první podmínku nesplní.
+:r3 0 Funkce case_when() chybou neskončí. Řádku, který nesplní žádnou podmínku, přiřadí NA.
+:r4 ok Porovnání s chybějící hodnotou dává NA, takže chybějící věk nesplní žádnou podmínku a dostane NA. Pro samostatnou kategorii bychom přidali is.na(vekr) ~ "neuvedeno".
