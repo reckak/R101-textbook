@@ -46,4 +46,4 @@ Změny připravujte v samostatné větvi a předávejte pull requestem. GitHub A
 
 ## Licence
 
-Text učebnice a kód jsou k dispozici pod [licencí MIT](LICENSE). Licence se nevztahuje na data ve složce `data/` ani na materiály třetích stran; jejich původ uvádí [data/README.md](data/README.md).
+Text učebnice včetně obrázků, cvičení a otázek pro IS MUNI je k dispozici pod licencí [CC BY 4.0](LICENSE-TEXT.md). Zdrojový kód, tedy skripty a ukázky kódu v kapitolách, je pod [licencí MIT](LICENSE). Žádná z obou licencí se nevztahuje na data ve složce `data/` ani na materiály třetích stran; jejich původ uvádí [data/README.md](data/README.md).
