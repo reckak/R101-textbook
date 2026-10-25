@@ -172,6 +172,18 @@ boys <- boys[order(boys$x), ]
 stopifnot(all(abs(boys$ymax - 1) < 1e-12), near(boys$ymin, c(0.577, 0.600), 0.001))
 yates <- chisq.test(cetnosti)
 stopifnot(near(unname(yates$statistic), 0.31), near(yates$p.value, 0.58))
+# rstatix agrees with chisq.test(); the Monte Carlo p-value is reproducible with the seed.
+tidy_chi <- chisq_test(cetnosti, correct = FALSE)
+stopifnot(tidy_chi$n == 765L, tidy_chi$df == 1L, tidy_chi$p.signif == "ns",
+          near(tidy_chi$statistic, unname(chi_kohorta$statistic), 0.001),
+          near(tidy_chi$p, chi_kohorta$p.value, 0.001),
+          isTRUE(all.equal(unname(expected_freq(tidy_chi)), unname(chi_kohorta$expected))))
+simulated_p <- function() { set.seed(123); chisq.test(cetnosti, simulate.p.value = TRUE, B = 10000)$p.value }
+sim_p <- simulated_p()
+stopifnot(identical(sim_p, simulated_p()), near(sim_p, 0.55))
+na_category <- run("l07-reseni-case-when-na")
+stopifnot(identical(na_category$n[na_category$kohorta_vek == "neuvedeno"], c(2L, 1L)),
+          !anyNA(na_category$kohorta_vek))
 stopifnot(identical(as.integer(table(adolescenti$kohorta, adolescenti$kohorta_moje, useNA = "ifany")),
                     c(441L, 0L, 0L, 311L, 2L, 14L)),
           sum(adolescenti$vekr > 17 & is.na(adolescenti$kohorta_moje), na.rm = TRUE) == 13L)

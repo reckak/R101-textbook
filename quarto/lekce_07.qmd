@@ -471,7 +471,8 @@ Pro porovnání průměrů dvou nezávislých skupin použijeme **t-test pro dva
 1. **Nezávislost pozorování.** Každá osoba je v datech jednou a patří jen do jedné skupiny. To ověříme níže. Nezávislost ovšem narušuje i sběr dat ve třídách a školách: spolužáci si mohou být podobnější než náhodně vybraní dospívající. Pouhým *t*-testem tento předpoklad neověříme; plyne z plánu výzkumu. Míru podobnosti uvnitř tříd a škol by bylo možné posoudit a ve výsledcích zohlednit **smíšeným (víceúrovňovým) lineárním modelem**, ve kterém by škola a třída vystupovaly jako náhodné faktory. To je nad rámec této lekce a výukový výřez dat proměnné škola a třída ani neobsahuje. K tomuto omezení se vrátíme v závěru.
 2. **Úroveň měření.** Průměr má smysl jen u proměnné, jejíž rozdíly lze považovat za stejně velké. Skór je průměrem devíti čtyřstupňových položek a nabývá 36 různých hodnot. Jako u skórů v šesté lekci jej považujeme přibližně za intervalovou proměnnou; jde o běžné, ale ne samozřejmé rozhodnutí.
 3. **Normalita.** *t*-test předpokládá, že **výběrový průměr** má v každé skupině přibližně normální rozdělení. U velkých skupin to podle centrální limitní věty platí i tehdy, když samotné skóry normální rozdělení nemají, pokud nejsou extrémně zešikmené nebo nemají výrazně odlehlé hodnoty. Máme 313 a 442 osob a rozdělení jsou přibližně souměrná, takže tento předpoklad nás netrápí. U malých skupin (řádově desítky osob) bychom rozdělení posuzovali pečlivěji.
-4. **Shoda rozptylů** (homoskedasticita). Tento předpoklad má jen **Studentův** *t*-test. **Welchův** *t*-test jej nepotřebuje, viz oddíl [-@sec-testy-ttest].
+4. **Absence výrazně odlehlých hodnot.** Průměr i směrodatná odchylka jsou citlivé na extrémní hodnoty: jediná velmi vzdálená hodnota může posunout průměr skupiny i zvětšit směrodatnou chybu, a tím změnit *t* i *p*-hodnotu. Odlehlé hodnoty proto hledáme v grafech. Histogramy ani boxploty výše žádné nezobrazily, což u skóru omezeného škálou 1–4 není překvapivé. Kdybychom odlehlou hodnotu našli, nejprve bychom ověřili, zda nejde o chybu v datech; možnou hodnotu neodstraňujeme jen proto, že je neobvyklá (oddíl [-@sec-testy-vek]).
+5. **Shoda rozptylů** (homoskedasticita). Tento předpoklad má jen **Studentův** *t*-test. **Welchův** *t*-test jej nepotřebuje, viz oddíl [-@sec-testy-ttest].
 
 Nezávislost ve smyslu „každá osoba jednou“ ověříme jako v šesté lekci:
 
@@ -534,7 +535,8 @@ analyza_pohlavi |>
 **K čemu slouží.** Levenův test posuzuje, zda se skupiny liší rozptylem, tedy tím, jak moc jsou hodnoty kolem středu skupiny rozptýlené.
 
 **Princip.** Nulová hypotéza zní: rozptyly v populaci jsou ve všech skupinách stejné; alternativní hypotéza, že se liší. Test pro každou osobu spočítá, jak daleko je její hodnota od středu její skupiny (absolutní odchylku), a potom porovná průměrné odchylky mezi skupinami. Je-li jedna skupina rozptýlenější, mají její členové v průměru větší odchylky. Výsledkem je statistika *F* jako v analýze rozptylu. Funkce `levene_test()` z rstatix ve výchozím nastavení měří odchylky od **mediánu** skupiny (`center = median`). Této variantě se říká také Brownův–Forsytheův test a je méně citlivá na zešikmená rozdělení než původní varianta s průměrem.
-**Předpoklady.** Nezávislá pozorování. Test je spolehlivější u větších skupin.
+
+**Předpoklady.** Nezávislá pozorování a absence výrazně odlehlých (extrémních) hodnot. Jediná extrémní hodnota má velkou odchylku od středu své skupiny, a může tak sama vyvolat dojem, že je skupina rozptýlenější. Varianta s mediánem je vůči odlehlým hodnotám odolnější než varianta s průměrem, data si ale i tak předem prohlédneme v grafu; naše boxploty žádné odlehlé hodnoty neukázaly. Kromě toho je Levenův test spolehlivější u větších skupin.
 
 ```{r}
 #| label: l07-levene
@@ -546,7 +548,7 @@ Zápis `monit ~ pohlavi` je **rovnice modelu** (v R *formula*): vlevo od vlnovky
 
 **Výstup.** `df1` = 1 jsou stupně volnosti mezi skupinami (počet skupin − 1), `df2` = 753 stupně volnosti uvnitř skupin (755 osob − 2 skupiny). `statistic` je *F* = 0,29 a `p` = 0,59. Data jsou tedy dobře slučitelná se shodnými populačními rozptyly, což odpovídá téměř stejným *SD* 0,56 a 0,58.
 
-**Rozhodnutí.** Výsledek Levenova testu použijeme jen jako **popis**, nikoli jako přepínač mezi Studentovým a Welchovým *t*-testem. Nevýznamný Levenův test nedokazuje, že rozptyly jsou shodné; u malých vzorků mívá malou sílu odhalit i podstatný rozdíl. Simulace navíc ukazují, že dvoustupňový postup „nejprve Levene, podle výsledku Student nebo Welch“ před chybou I. druhu nechrání a často ji naopak zhoršuje ([Zimmerman, 2004](https://doi.org/10.1348/000711004849222)). Proto rovnou použijeme Welchův test.
+**Rozhodnutí.** Výsledek Levenova testu použijeme jen jako **popis**, nikoli jako „přepínač“ mezi Studentovým a Welchovým *t*-testem. Nevýznamný Levenův test nedokazuje, že rozptyly jsou shodné; u malých vzorků mívá malou sílu odhalit i podstatný rozdíl. Simulace navíc ukazují, že dvoustupňový postup „nejprve Levene, podle výsledku Student nebo Welch“ před chybou I. druhu nechrání a často ji naopak zhoršuje ([Zimmerman, 2004](https://doi.org/10.1348/000711004849222)). Proto rovnou použijeme Welchův test.
 
 ## *t*-test pro dva nezávislé výběry {#sec-testy-ttest}
 
@@ -561,11 +563,11 @@ $$
 Hodnota *t* udává, kolika směrodatným chybám odpovídá pozorovaný rozdíl. Při platné nulové hypotéze se *t* řídí *t*-rozdělením s určitým počtem stupňů volnosti; z něj se spočítá *p*-hodnota. Obě varianty testu se liší výpočtem směrodatné chyby:
 
 - **Studentův *t*-test** spojí rozptyly obou skupin do jednoho společného (*pooled*) odhadu. Předpokládá tedy, že populační rozptyly jsou stejné. Stupně volnosti jsou *n*₁ + *n*₂ − 2.
-- **Welchův *t*-test** odhaduje rozptyl každé skupiny zvlášť, směrodatná chyba je $\sqrt{s_1^2/n_1 + s_2^2/n_2}$. Shodu rozptylů nepředpokládá a stupně volnosti se odhadují ze dat, proto obvykle nejsou celé číslo.
+- **Welchův *t*-test** odhaduje rozptyl každé skupiny zvlášť, směrodatná chyba je $\sqrt{s_1^2/n_1 + s_2^2/n_2}$. Shodu rozptylů nepředpokládá a stupně volnosti se odhadují z dat, proto obvykle nejsou celé číslo.
 
 Když jsou rozptyly stejné, dávají obě varianty téměř stejný výsledek. Když se liší, zejména při různé velikosti skupin, může Studentův test dávat zkreslené *p*-hodnoty, zatímco Welchův test chybu I. druhu drží blízko zvolené hladiny. Proto se pro psychologický výzkum doporučuje používat Welchův test jako výchozí ([Delacre et al., 2017](https://doi.org/10.5334/irsp.82)). Welchův test je také výchozí volbou funkce `t.test()` v R.
 
-**Předpoklady** jsme prošli v oddílu [-@sec-testy-predpoklady]: nezávislá pozorování, přibližně intervalová proměnná a přibližně normální rozdělení výběrového průměru; u Studentova testu navíc shoda rozptylů.
+**Předpoklady** jsme prošli v oddílu [-@sec-testy-predpoklady]: nezávislá pozorování, přibližně intervalová proměnná a přibližně normální rozdělení výběrového průměru a absence výrazně odlehlých hodnot; u Studentova testu navíc shoda rozptylů.
 
 **Funkce v R.** Funkce `t_test()` z rstatix přijímá tabulku a rovnici modelu; argument `detailed = TRUE` vypíše i průměry skupin a interval spolehlivosti. Ve výchozím nastavení (`var.equal = FALSE`) počítá Welchův test. Výsledek je tabulka s mnoha sloupci, proto ji vypíšeme pomocí `glimpse()`, který zobrazí každý sloupec na samostatném řádku:
 
@@ -578,11 +580,11 @@ glimpse(welch_pohlavi)
 
 **Výstup.** Projděme sloupce:
 
-- `estimate` = −0,139 je rozdíl průměrů **první minus druhé skupiny**, tedy chlapci − dívky. Které skupiny jsou první a druhá, ukazují `group1` a `group2` a určuje to pořadí úrovní faktoru (`levels` v oddílu [-@sec-testy-kategorie]). Záporné znaménko tedy znamená, že dívky mají vyšší průměr. Kdybychom pořadí úrovní obrátili, změnilo by se jen znaménko.
+- `estimate` = −0,139 je rozdíl průměrů **první minus druhé skupiny**, tedy chlapci − dívky. Které skupiny jsou první a druhá, ukazují `group1` a `group2`; vyplývá to z pořadí úrovní faktoru (`levels` v oddílu [-@sec-testy-kategorie]). Záporné znaménko tedy znamená, že dívky mají vyšší průměr. Kdybychom pořadí úrovní obrátili, změnilo by se jen znaménko.
 - `estimate1` = 2,72 a `estimate2` = 2,86 jsou průměry chlapců a dívek, `n1` = 313 a `n2` = 442 počty osob. Shodují se s popisnou tabulkou, což je užitečná kontrola, že test pracoval se správnými daty.
 - `statistic` = −3,31 je *t*: rozdíl je 3,3krát větší než jeho směrodatná chyba.
-- `df` = 681,95 jsou Welchovy stupně volnosti; necelé číslo je u Welchova testu normální.
-- `p` = 0,000976: kdyby se populační průměry nelišily, dostali bychom tak velký nebo větší rozdíl zhruba v 1 výběru z 1 000. Rozdíl je statisticky významný na hladině 0,05.
+- `df` = 681,95 jsou Welchovy stupně volnosti; necelé číslo je u Welchova testu v pořádku.
+- `p` = 0,000976: kdyby se populační průměry nelišily, dostali bychom tak velký nebo větší rozdíl zhruba v 1 výběru z 1 000. Rozdíl je statisticky významný na hladině 0,05 (a byl by i při použití konzervativnějších hladin, např. 0,01).
 - `conf.low` = −0,22 a `conf.high` = −0,06 tvoří **95% interval spolehlivosti** pro rozdíl populačních průměrů. Interval je sestrojen postupem, který by při opakovaném výběru zachytil skutečný rozdíl v 95 % případů. S daty jsou tedy slučitelné rozdíly od 0,06 do 0,22 bodu ve prospěch dívek. Interval neobsahuje nulu, což odpovídá *p* < 0,05.
 - `method` a `alternative` připomínají, že jde o *t*-test s oboustrannou alternativní hypotézou (`two.sided`), tedy rozdíl v libovolném směru.
 
@@ -610,7 +612,7 @@ Hodnoty *t*, *df*, *p* i interval spolehlivosti se shodují s `t_test()`. Výhod
 
 Statistická významnost neříká, jak velký rozdíl je. Při velkém vzorku může být významný i rozdíl tak malý, že nemá praktický význam; při malém vzorku může vyjít nevýznamně i velký rozdíl. Proto vždy uvádíme také **velikost účinku** (*effect size*).
 
-Nejpřímější velikostí účinku je **rozdíl průměrů v jednotkách skóru** s intervalem spolehlivosti, který už máme: 0,14 bodu [0,06; 0,22]. Ten je srozumitelný, pokud čtenář zná škálu. Pro porovnání mezi studiemi s různými škálami se používá **standardizovaný** rozdíl, **Cohenovo d**: rozdíl průměrů vydělený společnou směrodatnou odchylkou obou skupin.
+Nejpřímější velikostí účinku je **rozdíl průměrů v jednotkách skóru** s intervalem spolehlivosti, který už máme: 0,14 bodu [0,06; 0,22]. Ten je srozumitelný, pokud čtenář zná škálu. Pro srovnání mezi studiemi s různými škálami se u dvou skupin často používá **standardizovaný** rozdíl, **Cohenovo d**: rozdíl průměrů vydělený společnou směrodatnou odchylkou obou skupin.
 
 $$
 d = \frac{M_1 - M_2}{SD_{\text{společná}}}
@@ -627,15 +629,15 @@ analyza_pohlavi |>
   cohens_d(monit ~ pohlavi, var.equal = TRUE, ci = TRUE)
 ```
 
-**Výstup.** `effsize` = −0,24 je *d* pro chlapce − dívky; znaménko se řídí stejným pořadím skupin jako u *t*-testu. Dívky tedy mají průměr o 0,24 směrodatné odchylky vyšší. Bootstrapový 95% interval spolehlivosti je od −0,38 do −0,09. Sloupec `magnitude` uvádí slovní označení podle Cohenových hranic: `small`, malý účinek. Celý interval leží v oblasti malých účinků; data tedy nesvědčí pro střední nebo velký rozdíl.
+**Výstup.** `effsize` = −0,24 je *d* pro chlapce − dívky; znaménko se řídí stejným pořadím skupin jako u *t*-testu. Dívky tedy mají průměr o 0,24 směrodatné odchylky vyšší. Bootstrapový 95% interval spolehlivosti je od −0,38 do −0,09. Sloupec `magnitude` uvádí slovní označení podle Cohenových hrubých hranic: `small`, malý účinek. Celý interval leží v oblasti malých účinků; data tedy nesvědčí o středním ani velkém rozdílu.
 
-**Rozhodnutí.** Pro *d* používáme společnou směrodatnou odchylku, přestože *t*-test je Welchův. Volba varianty testu a volba jmenovatele velikosti účinku jsou samostatná rozhodnutí: společná *SD* je obvyklý standard, se kterým lze výsledek porovnat s jinými studiemi. Protože *SD* obou skupin jsou téměř stejné, vyšlo by *d* s průměrem rozptylů (`var.equal = FALSE`) prakticky stejně. Kdyby se *SD* výrazně lišily, bylo by vhodné zvážit a ve zprávě uvést, kterou *SD* standardizujeme.
+**Rozhodnutí.** Pro *d* používáme společnou směrodatnou odchylku, přestože *t*-test je Welchův. Volba varianty testu a volba jmenovatele velikosti účinku jsou samostatná rozhodnutí: společná *SD* je obvyklý standard, se kterým lze výsledek porovnat s jinými studiemi. Protože *SD* obou skupin jsou téměř stejné, vyšlo by *d* s průměrem rozptylů (`var.equal = FALSE`) prakticky stejně. Kdyby se *SD* výrazně lišily, bylo by vhodné zvážit a ve zprávě uvést, kterou *SD* používáme ke standardizaci.
 
 ### Zápis výsledku
 
 Ve zprávě začínáme popisem rozdílu a test i velikost účinku uvádíme jako doplňující informaci. V češtině píšeme desetinnou čárku a hodnoty v závorkách oddělujeme středníkem:
 
-> Dívky uváděly vyšší rodičovský monitoring (*M* = 2,86; *SD* = 0,58; *n* = 442) než chlapci (*M* = 2,72; *SD* = 0,56; *n* = 313). Rozdíl činil 0,14 bodu na škále 1–4, 95% CI [0,06; 0,22], Welchův *t*(681,95) = 3,31, *p* < 0,001; *d* = 0,24, 95% CI [0,09; 0,38], tedy malý účinek.
+> Dívky uváděly vyšší rodičovský monitoring (*M* = 2,86; *SD* = 0,58; *n* = 442) než chlapci (*M* = 2,72; *SD* = 0,56; *n* = 313). Průměrný rozdíl činil 0,14 bodu na škále 1–4, 95% CI [0,06; 0,22], Welchův *t*(681,95) = 3,31, *p* < 0,001; *d* = 0,24, 95% CI [0,09; 0,38], tedy malý účinek.
 
 Znaménka jsme ve zprávě uvedli kladná, protože jsme rozdíl popsali slovy jako „dívky více než chlapci“. Hodnotu *p* = 0,000976 zapisujeme podle APA jako *p* < 0,001.
 
@@ -675,9 +677,9 @@ analyza_kohorta |>
   labs(x = "Kohorta", y = "Rodičovský monitoring (1–4)")
 ```
 
-Mladší kohorta má průměr 2,93 (*SD* 0,56, *n* = 434), starší 2,62 (*SD* 0,54, *n* = 324). Levenův test (*F* = 0,20, *p* = 0,66) ani *SD* neukazují na rozdíl rozptylů. Welchův test dává rozdíl 0,31 bodu, 95% CI [0,24; 0,39], *t*(711,40) = 7,80, *p* < 0,001. Cohenovo *d* je 0,57 s bootstrapovým intervalem přibližně [0,42; 0,72], tedy střední účinek. Kladné znaménko znamená, že vyšší průměr má první skupina, mladší kohorta.
+Mladší kohorta má průměr 2,93 (*SD* 0,56, *n* = 434), starší 2,62 (*SD* 0,54, *n* = 324). Levenův test (*F* = 0,20, *p* = 0,66) ani *SD* nenasvědčují rozdílu rozptylů. Welchův test ukazuje rozdíl mezi průměry 0,31 bodu, 95% CI [0,24; 0,39], *t*(711,40) = 7,80, *p* < 0,001. Cohenovo *d* je 0,57 s bootstrapovým intervalem přibližně [0,42; 0,72], tedy střední účinek. Kladné znaménko znamená, že vyšší průměr má první skupina, tzn. mladší kohorta.
 
-Rozdíl kohort je přibližně dvakrát větší než rozdíl pohlaví, v jednotkách skóru i podle *d*, a jeho interval se s intervalem pro pohlaví nepřekrývá. Podle výpovědí dospívajících tedy rodiče starších dospívajících vědí o jejich životě méně. Kohorty se ale neliší jen věkem: mladší jsou na základní a starší na střední škole. Data jsou průřezová, takže nejde o sledování změny u týchž osob.
+Rozdíl kohort je přibližně dvakrát větší než rozdíl pohlaví, v jednotkách skóru i podle *d*, a jeho interval se s intervalem pro pohlaví nepřekrývá. Podle výpovědí dospívajících tedy rodiče starších dospívajících vědí o jejich životě méně. Kohorty se ale neliší jen věkem: mladší jsou na základní a starší na střední škole. Data jsou průřezová, takže nejde o sledování změny u týchž osob v průběhu času.
 :::
 
 ## Korelace věku a monitoringu {#sec-testy-korelace}
@@ -700,7 +702,7 @@ analyza_vek |>
   labs(x = "Věk (roky)", y = "Rodičovský monitoring (1–4)", color = "Kohorta")
 ```
 
-Body posouváme jen svisle (`width = 0`), protože věk je zaznamenán s přesností na měsíc a překrývání nezpůsobuje. `alpha = 0.6` udělá body částečně průhledné, aby byla vidět místa, kde se jich mnoho překrývá. Barvu jsme zadali jen v `aes()` vrstvy bodů, proto přímka zůstává jedna pro celý vzorek.
+Body posouváme jen svisle (`width = 0`), protože věk je zaznamenán s přesností na měsíc a překryv bodů nezpůsobuje. `alpha = 0.6` udělá body částečně průhledné, aby byla vidět místa, kde se jich mnoho překrývá. Barvu jsme zadali jen v `aes()` vrstvy bodů, proto přímka zůstává jedna pro celý vzorek.
 
 Graf ukazuje dva oddělené shluky bodů. Starší kohorta leží v průměru níže, ale v obou shlucích se vyskytují nízké i vysoké skóry. Přímka klesá a prochází prázdným prostorem mezi 14 a 15,75 roku, kde nejsou žádná data. Uvnitř shluků žádný zřetelný sklon na první pohled vidět není.
 
@@ -710,7 +712,7 @@ Graf ukazuje dva oddělené shluky bodů. Starší kohorta leží v průměru n�
 
 **Princip.** Nulová hypotéza zní: populační korelace je nulová (ρ = 0). Testová statistika $t = r\sqrt{n-2}/\sqrt{1-r^2}$ má při platné nulové hypotéze *t*-rozdělení s *n* − 2 stupni volnosti. Interval spolehlivosti pro *r* se počítá pomocí Fisherovy transformace, proto nemusí být souměrný kolem *r*.
 
-**Předpoklady.** Nezávislá pozorování a **lineární vztah**: *r* shrnuje jen přímkový trend a nevhodně popíše zakřivený vztah. Citlivý je na odlehlé hodnoty a na **shluky** (skupiny) bodů. Test a interval navíc předpokládají přibližně normální rozdělení obou proměnných, u velkých vzorků je ale odolný vůči mírným odchylkám.
+**Předpoklady.** Nezávislá pozorování a **lineární vztah**: *r* shrnuje jen lineární trend a nevhodně popíše zakřivený vztah. Je citlivý na odlehlé hodnoty a na **shluky** (skupiny) bodů. Statistický test a výpočet intervalu spolehlivosti navíc předpokládají přibližně normální rozdělení obou proměnných, u velkých vzorků je ale odolný vůči mírným odchylkám.
 
 **Funkce v R.** `cor.test()` ze základního R přijímá zápis s vlnovkou, ve kterém jsou obě proměnné na pravé straně (`~ vekr + monit`), protože žádnou z nich nevysvětlujeme tou druhou, a tabulku v argumentu `data`:
 
@@ -719,7 +721,7 @@ Graf ukazuje dva oddělené shluky bodů. Starší kohorta leží v průměru n�
 cor.test(~ vekr + monit, data = analyza_vek)
 ```
 
-**Výstup.** `cor` = −0,28 je výběrová korelace: starší osoby mají v průměru nižší skór. `t` = −8,11 a `df` = 753 (755 osob − 2) jsou testová statistika a stupně volnosti, *p*-hodnota je řádově 10⁻¹⁵, tedy mnohem menší než 0,05. 95% interval spolehlivosti pro populační korelaci je od −0,35 do −0,22.
+**Výstup.** `cor` = −0,28 je výběrová korelace (bodový odhad korelace v populaci na základě dat ze vzorku): starší osoby mají v průměru nižší skór. `t` = −8,11 a `df` = 753 (755 osob − 2) jsou testová statistika a stupně volnosti, *p*-hodnota je řádově 10⁻¹⁵, tedy mnohem menší než 0,05. 95% interval spolehlivosti pro populační korelaci je od −0,35 do −0,22.
 
 Stejný test spočítá funkce `cor_test()` z rstatix, která se používá stejně jako `t_test()` nebo `levene_test()`. Je vhodnější pro práci s pipe operátorem a s tidyverse: tabulka je prvním argumentem, proměnné zapisujeme jen názvy (bez vlnovky a bez `$`) a výsledek je tibble, se kterým můžeme dál pracovat pomocí dplyr. Navíc respektuje seskupení pomocí `group_by()`, takže stejným zápisem spočítá korelaci zvlášť v každé skupině; to využijeme ve cvičení 4.
 
@@ -762,12 +764,12 @@ analyza_vek |>
 
 Protože `color = kohorta` je v hlavním `aes()`, rozdělí se podle kohorty body i přímky a `geom_smooth()` odhadne přímku v každé kohortě zvlášť (oddíl [-@sec-vrstvy]). V mladší kohortě přímka mírně klesá, ve starší je téměř vodorovná. Pásy spolehlivosti se rozšiřují k vyššímu věku, kde je v každé kohortě jen několik osob; sklon tam proto ovlivňují jednotlivci, ve starší kohortě například dvě dívky starší 18 let.
 
-V mladší kohortě je korelace −0,16 (*n* = 432, 95% CI [−0,25; −0,06], *p* = 0,001), ve starší 0,01 (*n* = 323, 95% CI [−0,10; 0,12], *p* = 0,88). Uvnitř kohort je tedy vztah věku a monitoringu slabý nebo žádný a mnohem slabší než −0,28 v celém vzorku. Většina celkové korelace vzniká rozdílem mezi kohortami, nikoli vztahem mezi věkem a monitoringem uvnitř skupin. Uvnitř kohort se navíc věk liší jen o dva až tři roky, takže silnou korelaci ani nelze čekat. Korelace v datech složených z odlišných skupin může svádět k mylným závěrům; proto vždy nejprve prohlédněte graf.
+V mladší kohortě je korelace −0,16 (*n* = 432, 95% CI [−0,25; −0,06], *p* = 0,001), ve starší 0,01 (*n* = 323, 95% CI [−0,10; 0,12], *p* = 0,88). Uvnitř kohort je tedy vztah věku a monitoringu slabý nebo žádný a mnohem slabší než −0,28 v celém vzorku. Většina celkové korelace vzniká rozdílem mezi kohortami, nikoli vztahem mezi věkem a monitoringem uvnitř skupin. Uvnitř kohort se navíc věk liší jen o dva až tři roky, takže silnou korelaci ani nelze čekat právě kvůli omezenému rozsahu jedné z korelovaných proměnných (věku). Korelace v datech složených z odlišných skupin může svádět k mylným závěrům; proto vždy nejprve prohlédněte graf.
 :::
 
 ## Může být rozdíl mezi pohlavími zkreslen věkem? {#sec-testy-zkresleni}
 
-Víme, že monitoring je ve starší kohortě nižší. Kdyby navíc byl podíl dívek v kohortách výrazně odlišný, mohl by být rozdíl mezi chlapci a dívkami zčásti **rozdílem mezi kohortami**. Představte si krajní případ: všechny dívky by byly z mladší kohorty a všichni chlapci ze starší. Dívky by pak měly vyšší monitoring jen proto, že jsou mladší. Proměnné, která souvisí s vysvětlující proměnnou (pohlavím) i s výsledkem (monitoringem) a může tak vztah mezi nimi zkreslit, se říká **matoucí proměnná** (*confounder*).
+Víme, že monitoring je ve starší kohortě nižší. Kdyby navíc byl podíl dívek v kohortách výrazně odlišný, mohl by být rozdíl mezi chlapci a dívkami zčásti **rozdílem mezi kohortami**. Představte si krajní případ: všechny dívky by byly z mladší kohorty a všichni chlapci ze starší. Dívky by pak měly vyšší monitoring jen proto, že jsou mladší. Proměnné, která souvisí s vysvětlující proměnnou (pohlavím) i s výsledkem (monitoringem) a může tak vztah mezi nimi zkreslit, se říká **zavádějící proměnná** (*confounder*).
 
 Zkreslení věkem by vyžadovalo, aby platily obě podmínky: (1) kohorta souvisí s monitoringem, což jsme zjistili, a (2) kohorta souvisí s pohlavím. Druhou podmínku nyní ověříme kontingenční tabulkou a χ² testem.
 
@@ -793,21 +795,24 @@ analyza_tabulka |>
 - `adorn_pct_formatting(digits = 1)` zobrazí procenta s jedním desetinným místem;
 - `adorn_ns(position = "front")` připíše před procenta původní počty.
 
-Řádková procenta volíme proto, že nás zajímá složení každé kohorty podle pohlaví. V mladší kohortě je 42,3 % chlapců a 57,7 % dívek, ve starší 40,0 % chlapců a 60,0 % dívek. Podíly se liší jen o 2,3 procentního bodu. Analýza zahrnuje 765 osob s údajem o pohlaví; ve cvičení 1 jsme procenta počítali včetně tří osob bez pohlaví, proto byla mírně jiná.
+Řádková procenta volíme proto, že nás zajímá složení každé kohorty podle pohlaví. V mladší kohortě je 42,3 % chlapců a 57,7 % dívek, ve starší 40,0 % chlapců a 60,0 % dívek. Podíly se liší jen o 2,3 procentního bodu. Analýza zahrnuje 765 osob s údajem o pohlaví; ve cvičení 1 jsme procenta počítali včetně tří osob, které neuvedly pohlaví, proto byla mírně jiná.
 
 ### χ² test nezávislosti {#sec-testy-chi}
 
 **K čemu slouží.** χ² (chí-kvadrát) test nezávislosti posuzuje, zda spolu souvisejí dvě kategoriální proměnné, tedy zda se rozdělení jedné proměnné liší podle kategorií druhé.
 
-**Princip.** Nulová hypotéza zní: proměnné jsou v populaci nezávislé, zde tedy podíl dívek je v obou kohortách stejný. Pro každou buňku tabulky se spočítá **očekávaná četnost**, kterou bychom při nezávislosti čekali: součet řádku × součet sloupce / celkový počet. Statistika χ² sčítá přes všechny buňky, jak moc se pozorované četnosti *O* liší od očekávaných *E*:
+**Princip.** Nulová hypotéza zní: proměnné jsou v populaci nezávislé; zde by to tedy znamenalo shodný podíl dívek v obou kohortách na úrovni populace. Pro každou buňku tabulky se spočítá **očekávaná četnost**, kterou bychom při nezávislosti čekali: součet řádku × součet sloupce / celkový počet. Statistika χ² sčítá přes všechny buňky, jak moc se pozorované četnosti *O* liší od očekávaných *E*:
 
 $$
 \chi^2 = \sum \frac{(O - E)^2}{E}
 $$
 
-Čím více se pozorované a očekávané četnosti liší, tím je χ² větší. Při platné nulové hypotéze se řídí rozdělením χ² se (počet řádků − 1) × (počet sloupců − 1) stupni volnosti; pro tabulku 2 × 2 je to 1.
+Čím více se pozorované a očekávané četnosti liší, tím je χ² větší. Při platné nulové hypotéze se řídí rozdělením χ² se stupni volnosti, které se rovnají: (počet řádků − 1) × (počet sloupců − 1); pro tabulku 2 × 2 je to 1 stupeň volnosti.
 
-**Předpoklady.** Každá osoba je v tabulce právě jednou a pozorování jsou nezávislá. Očekávané četnosti nesmějí být příliš malé; obvyklé vodítko je alespoň 5 v každé buňce. Při velmi malých četnostech se používá Fisherův přesný test.
+**Předpoklady.** Každá osoba je v tabulce právě jednou a pozorování jsou nezávislá. Očekávané četnosti nesmějí být příliš malé; obvyklé vodítko je alespoň 5 v každé buňce. Pokud tento předpoklad splněn není, má rozdělení statistiky χ² jiný tvar, než předpokládá test, a *p*-hodnota může být nepřesná. Pak máme dvě hlavní možnosti:
+
+- U **čtyřpolní tabulky** (2 × 2) se používá hlavně **Fisherův exaktní test** (`fisher.test()`), který *p*-hodnotu počítá přesně z možných tabulek se stejnými součty řádků a sloupců.
+- *p*-hodnotu lze také získat **Monte Carlo simulací** (argument `simulate.p.value = TRUE` funkce `chisq.test()`). R přitom mnohokrát vytvoří tabulky, jaké bychom dostali, kdyby proměnné byly nezávislé: jako bychom náhodně promíchali pořadí hodnot aspoň jednoho sloupce, například pohlaví, a tím zrušili jakoukoli vazbu s kohortou. Součty řádků a sloupců se promícháním nemění. V každé simulované tabulce R spočítá χ² a dostane tak rozdělení statistiky χ² za předpokladu nezávislosti. *p*-hodnota je pak podíl simulovaných hodnot, které jsou alespoň tak velké jako χ² v našich datech. Simulace nevyžaduje velké očekávané četnosti; protože je náhodná, nastavujeme `set.seed()`.
 
 **Funkce v R.** Funkce `chisq.test()` potřebuje tabulku počtů. Vytvoříme ji funkcí `table()` ze základního R, které předáme dva sloupce. Tabulku uložíme a vypíšeme:
 
@@ -827,6 +832,25 @@ chi_kohorta$expected
 ```
 
 **Výstup.** `X-squared` = 0,40 je statistika χ², `df` = 1 stupně volnosti a `p-value` = 0,53. Data jsou tedy dobře slučitelná s nezávislostí pohlaví a kohorty. Očekávané četnosti (`$expected`) jsou 134 až 258, daleko nad hranicí 5, takže předpoklad je splněn. Pozorované četnosti se od očekávaných liší jen o několik osob: v mladší kohortě je 186 chlapců oproti očekávaným 182. Pro představu: s Yatesovou korekcí by vyšlo χ² = 0,31 a *p* = 0,58; závěr by se zde nezměnil, protože rozdíl je daleko od hranice významnosti.
+
+Stejný test nabízí i rstatix funkcí `chisq_test()`. Stejně jako `t_test()` vrací výsledek jako tibble, se kterým můžeme dál pracovat pomocí dplyr:
+
+```{r}
+#| label: l07-chisq-rstatix
+chisq_test(cetnosti, correct = FALSE)
+```
+
+Výsledek se shoduje s `chisq.test()`: `statistic` = 0,398 je χ², `df` = 1 a `p` = 0,528. Navíc vidíme počet osob v tabulce (`n` = 765), což je užitečná kontrola, že test pracoval se všemi osobami s údajem o kohortě i pohlaví. Sloupec `p.signif` převádí *p*-hodnotu na hvězdičky; `ns` (*not significant*) znamená *p* ≥ 0,05. Očekávané četnosti z výsledku vypíše funkce `expected_freq()`.
+
+Pro ukázku spočítáme *p*-hodnotu také Monte Carlo simulací s 10 000 simulovanými tabulkami (`B = 10000`):
+
+```{r}
+#| label: l07-chisq-simulace
+set.seed(123)
+chisq.test(cetnosti, simulate.p.value = TRUE, B = 10000)
+```
+
+Statistika `X-squared` = 0,40 je stejná jako předtím, mění se jen způsob výpočtu *p*-hodnoty. `df = NA` připomíná, že *p*-hodnota nepochází z teoretického rozdělení χ² se stupni volnosti, ale ze simulovaných tabulek. Simulovaná *p*-hodnota 0,55 je blízká hodnotě 0,53 z běžného testu; malý rozdíl vzniká náhodností simulace a tím, že tabulek se stejnými součty je jen konečně mnoho. Závěr je stejný. V našich datech simulaci nepotřebujeme, protože očekávané četnosti jsou velké; uplatní se u tabulek s malými očekávanými četnostmi.
 
 Nevýznamný výsledek **nedokazuje**, že podíly jsou přesně stejné. Pozorovaný rozdíl 2,3 procentního bodu je ale malý. Druhá podmínka zkreslení, výrazně odlišný podíl pohlaví v kohortách, tedy splněna není, a věk by proto rozdíl mezi chlapci a dívkami neměl podstatně zkreslovat. Přímo to ověříme v oddílu [-@sec-testy-uvnitr].
 
@@ -885,17 +909,37 @@ adolescenti |>
   count(kohorta, kohorta_vek)
 ```
 
-Nyní mají všechny osoby s udaným věkem kategorii a ta se shoduje se zaznamenanou kohortou: 441 mladších a 324 starších. Podmínky na sebe navazují bez mezery a bez překryvu, takže každá hodnota věku splní právě jednu. Nezařazené zůstaly jen tři osoby bez údaje o věku: srovnání s `NA` dává `NA`, ne `TRUE`, a proto nesplní žádnou podmínku (oddíl [-@sec-upravy-na]). Úplná shoda je zde možná jen díky tomu, že se věk kohort nepřekrývá. Hranice by vždy měla vycházet z plánu výzkumu (zde ze školního ročníku), ne až z prohlédnutí dat.
+Nyní mají všechny osoby s udaným věkem kategorii a ta se shoduje se zaznamenanou kohortou: 441 mladších a 324 starších. Podmínky na sebe navazují bez mezery a bez překryvu, takže každá hodnota věku splní právě jednu. Nezařazené zůstaly jen tři osoby bez údaje o věku: srovnání s `NA` dává vždy `NA`, ne `TRUE`, a proto chybějící hodnoty nesplní žádnou podmínku (oddíl [-@sec-upravy-na]). Úplná shoda je zde možná jen díky tomu, že se věk kohort nepřekrývá. Hranice by vždy měla vycházet z plánu výzkumu (zde ze školního ročníku), ne až z prohlédnutí dat.
+
+Kdybychom chtěli osoby bez údaje o věku zařadit do samostatné kategorie, museli bychom pro ně přidat výslovnou podmínku s funkcí `is.na()`:
+
+```{r}
+#| label: l07-reseni-case-when-na
+adolescenti |>
+  mutate(
+    kohorta_vek = case_when(
+      vekr < 15 ~ "mladší",
+      vekr >= 15 ~ "starší",
+      is.na(vekr) ~ "neuvedeno"
+    )
+  ) |>
+  count(kohorta, kohorta_vek)
+```
+
+Tři osoby bez věku nyní mají kategorii „neuvedeno“: dvě ze zaznamenané mladší a jedna ze starší kohorty. V `count()` se proto už neobjevuje `NA`. Podmínka `is.na(vekr)` je potřeba, protože srovnání `vekr < 15` ani `vekr >= 15` u chybějícího věku nevrací `TRUE`. Kategorie „neuvedeno“ je ale jen označení, nikoli údaj o věku; do analýzy podle věku by tyto osoby stejně nevstupovaly.
 :::
 
 ## Rozdíl mezi pohlavími uvnitř kohort {#sec-testy-uvnitr}
 
-Nejpřímější kontrolou zkreslení je porovnat chlapce a dívky **zvlášť v každé kohortě**. Uvnitř kohorty jsou si dospívající věkem podobní, takže věk tam rozdíl mezi pohlavími vysvětlit nemůže. Nejprve popisné statistiky pro každou kombinaci kohorty a pohlaví; `.by` může obsahovat více sloupců:
+Nejpřímější kontrolou zkreslení je porovnat chlapce a dívky **zvlášť v každé kohortě**. Uvnitř kohorty jsou si dospívající věkem podobní, takže věk tam rozdíl mezi pohlavími stěží může vysvětlit. Nejprve vypočteme popisné statistiky pro každou kombinaci kohorty a pohlaví; `.by` může obsahovat více sloupců:
 
 ```{r}
 #| label: l07-popis-uvnitr
 analyza_pohlavi |>
-  summarise(M = mean(monit), SD = sd(monit), n = n(), .by = c(kohorta, pohlavi)) |>
+  summarise(M = mean(monit),
+            SD = sd(monit),
+            n = n(),
+            .by = c(kohorta, pohlavi)) |>
   arrange(kohorta, pohlavi)
 ```
 
@@ -914,7 +958,7 @@ analyza_pohlavi |>
   labs(x = NULL, y = "Rodičovský monitoring (1–4)")
 ```
 
-`labeller = label_both` zobrazí v záhlaví panelu název proměnné i kategorii („kohorta: mladší“). Graf ukazuje dvě věci současně: v obou panelech leží medián i průměr dívek o kousek výše než u chlapců a celý panel starší kohorty je posunutý níže. Obě skupiny se v každém panelu stále z velké části překrývají. Jediný bod pod spodním vousem u chlapců mladší kohorty je skór 1,25; jde o možnou hodnotu na okraji škály, nikoli o chybu.
+`labeller = label_both` zobrazí v záhlaví panelu název proměnné i kategorii („kohorta: mladší“). Graf ukazuje dvě věci současně: v obou panelech leží medián i průměr dívek o kousek výše než u chlapců; a celý panel starší kohorty je posunutý níže. Obě skupiny se v každém panelu stále z velké části překrývají. Jediný bod pod spodním vousem u chlapců mladší kohorty je skór 1,25; jde o možnou hodnotu na okraji škály, nikoli o chybu.
 
 Testy rstatix respektují seskupení pomocí `group_by()`: pro každou skupinu provedou samostatný test a výsledky spojí do jedné tabulky.
 
@@ -935,7 +979,7 @@ analyza_pohlavi |>
   cohens_d(monit ~ pohlavi, var.equal = TRUE, ci = TRUE)
 ```
 
-**Výstup.** Levenův test v žádné kohortě neukazuje na rozdíl rozptylů (*p* = 0,81 a 0,33). Welchův *t*-test dává v mladší kohortě rozdíl −0,15 bodu, 95% CI [−0,25; −0,04], *t*(390,85) = −2,67, *p* = 0,008, ve starší −0,15 bodu, 95% CI [−0,27; −0,03], *t*(291,12) = −2,48, *p* = 0,014. Cohenovo *d* je −0,26 a −0,28 s intervaly přibližně [−0,45; −0,08] a [−0,53; −0,07]. Záporné znaménko opět znamená vyšší průměr dívek.
+**Výstup.** Levenův test v žádné kohortě neukazuje signifikantní rozdíl rozptylů (*p* = 0,81 a 0,33). Welchův *t*-test ukazuje v mladší kohortě rozdíl mezi průměry −0,15 bodu, 95% CI [−0,25; −0,04], *t*(390,85) = −2,67, *p* = 0,008, ve starší −0,15 bodu, 95% CI [−0,27; −0,03], *t*(291,12) = −2,48, *p* = 0,014. Cohenovo *d* je −0,26 a −0,28 s 95% intervaly spolehlivosti přibližně [−0,45; −0,08] a [−0,53; −0,07]. Záporné znaménko opět znamená vyšší průměr dívek.
 
 Rozdíl mezi pohlavími je tedy **v obou kohortách téměř stejný** a stejně velký jako v celém vzorku (−0,14; *d* = −0,24). Kdyby rozdíl v celém vzorku vznikal jen odlišným složením kohort, uvnitř kohort by zmizel nebo se výrazně zmenšil. To se nestalo. *p*-hodnoty jsou vyšší než v celém vzorku, protože každý test pracuje jen s částí osob, a intervaly spolehlivosti jsou proto širší. To je důvod, proč velikost rozdílu porovnáváme podle odhadů a intervalů, nikoli podle toho, zda vyšla *p*-hodnota pod 0,05.
 
@@ -962,7 +1006,7 @@ analyza_pohlavi |>
   theme(legend.position = "bottom")
 ```
 
-Ve všech čtyřech skupinách je rozdělení přibližně souměrné a bez odlehlých hodnot; normální křivka vystihuje celkový tvar. Empirická hustota má ve všech panelech nižší a plošší vrchol než normální křivka, nejzřetelněji u dívek mladší kohorty. To odpovídá záporné špičatosti, kterou jsme zjistili v celém vzorku; tvar se tedy mezi skupinami podstatně neliší. Výšky sousedních sloupců kolísají více než v celém vzorku, protože každá skupina má jen 130 až 248 osob. Takové nepravidelnosti jsou u menších skupin očekávané a samy o sobě neznamenají odchylku od normálního rozdělení. V horním řádku leží rozdělení mladší kohorty výše na škále než v dolním řádku starší kohorty, a v obou řádcích jsou dívky posunuté o kousek doprava. Předpoklady *t*-testu uvnitř kohort jsou tedy splněny stejně jako v celém vzorku.
+Ve všech čtyřech skupinách je rozdělení přibližně souměrné a bez odlehlých hodnot; normální křivka přiměřeně vystihuje celkový tvar. Empirická hustota má ve všech panelech nižší a plošší vrchol než normální křivka, nejzřetelněji u dívek mladší kohorty. To odpovídá záporné špičatosti, kterou jsme zjistili v celém vzorku; tvar se tedy mezi skupinami podstatně neliší. Výšky sousedních sloupců kolísají více než v celém vzorku, protože každá skupina má jen 130 až 248 osob. Takové nepravidelnosti jsou u menších skupin očekávané a samy o sobě neznamenají odchylku od normálního rozdělení. V horním řádku leží rozdělení mladší kohorty výše na škále než v dolním řádku starší kohorty, a v obou řádcích jsou dívky posunuté o kousek doprava. Předpoklady *t*-testu uvnitř kohort jsou tedy splněny stejně jako v celém vzorku.
 
 `facet_grid(radky ~ sloupce)` se hodí pro dvě kategoriální proměnné, protože srovnávané panely leží pod sebou nebo vedle sebe. `facet_wrap()` by stejné čtyři panely seřadil do řádků za sebou bez této struktury.
 :::
@@ -1107,7 +1151,7 @@ Závěr: Starší dospívající uváděli nižší rodičovský monitoring než
 | `shapiro_test()` hlásí chybu kvůli počtu hodnot. | Test pracuje se 3 až 5 000 hodnotami; u větších dat posuzujte normalitu graficky. |
 | Interval Cohenova *d* se při každém spuštění mírně liší. | Bootstrap je náhodný; před výpočtem nastavte `set.seed()`. |
 | `chisq.test()` vypisuje „with Yates' continuity correction“. | U tabulky 2 × 2 je korekce výchozí; vypněte ji pomocí `correct = FALSE`. |
-| `chisq.test()` varuje, že aproximace může být nepřesná. | Některé očekávané četnosti jsou malé (pod 5); zvažte Fisherův přesný test `fisher.test()`. |
+| `chisq.test()` varuje, že aproximace může být nepřesná. | Některé očekávané četnosti jsou malé (pod 5); u tabulky 2 × 2 zvažte Fisherův exaktní test `fisher.test()`, jinak *p*-hodnotu z Monte Carlo simulace (`simulate.p.value = TRUE`). |
 | Graf vypisuje „Removed … rows“. | Zda jste vyřadili osoby bez skóru nebo skupiny, například pomocí `drop_na(pohlavi, monit)`. |
 | Test po `group_by()` vrací jen jeden řádek nebo chybu. | Zda je tabulka seskupena správnou proměnnou a zda v každé skupině jsou obě porovnávané kategorie. |
 | `case_when()` nechal některé řádky jako `NA`. | Zda podmínky pokrývají všechny hodnoty bez mezer; `NA` ve vstupu nesplní žádnou podmínku. |

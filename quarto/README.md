@@ -1,5 +1,29 @@
 # Autorská dokumentace učebnice R101
 
+## Sedmá kapitola: odlehlé hodnoty, χ² alternativy, `NA` v `case_when()`, 25. 10. 2026
+
+Na připomínky uživatele:
+
+- **Odlehlé hodnoty jako předpoklad:** u Levenova testu (odchylka extrémní
+  hodnoty zvětší rozptyl skupiny; varianta s mediánem odolnější) a jako nový
+  bod 4 v předpokladech *t*-testu (shoda rozptylů je nyní bod 5), doplněno
+  i do souhrnu předpokladů u Welchova testu. Předpoklad Levenova testu oddělen
+  prázdným řádkem od „Principu“ (dříve se slil do jednoho odstavce).
+- **χ² předpoklady:** Fisherův exaktní test hlavně pro tabulky 2 × 2;
+  *p*-hodnota z Monte Carlo simulace s vysvětlením (promíchání jednoho sloupce,
+  pevné okrajové součty). Nové bloky `l07-chisq-rstatix` (`chisq_test()`:
+  χ² = 0,398, *p* = 0,528, *n* = 765, shodné s `chisq.test()`) a
+  `l07-chisq-simulace` (`set.seed(123)`, `B = 10000`, *p* = 0,5523).
+  Tabulka potíží sjednocena na „Fisherův exaktní test“ a doplněna o simulaci.
+- **Cvičení 5:** blok `l07-reseni-case-when-na` s podmínkou `is.na(vekr)`;
+  „neuvedeno“ 2 osoby z mladší a 1 ze starší kohorty.
+- Redakční úpravy uživatele zachovány; v nich opraveno: „Levenů test je“,
+  „pro porovnámí … používá“ (zdvojené „pro porovnání“), „kvůli omezeném
+  rozsahu“, „podíl dívek je v obou“, „rozdíl rozdíl rozptylů“, mezery na konci
+  řádků v bloku `l07-popis-uvnitr`.
+- `check-lesson-07.R`: shoda `chisq_test()`/`expected_freq()` s `chisq.test()`,
+  opakovatelnost simulované *p*, kategorie „neuvedeno“.
+
 ## Sedmá kapitola: APA, cor_test, Shapirův–Wilkův test, 25. 10. 2026
 
 Na pokyn uživatele (jen kapitola 7):
