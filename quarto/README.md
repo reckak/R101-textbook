@@ -23,6 +23,13 @@ Na připomínky uživatele:
   řádků v bloku `l07-popis-uvnitr`.
 - `check-lesson-07.R`: shoda `chisq_test()`/`expected_freq()` s `chisq.test()`,
   opakovatelnost simulované *p*, kategorie „neuvedeno“.
+- **Nepovinné načtení z URL** (`sec-testy-url`, bloky `l07-url-sav`
+  a `l07-url-download`, `eval: false`) podle vzoru lekce 6. URL míří na pevný
+  commit `e5f64370bf336a93af04addac052368c2b09f389`, ve kterém
+  `monitoring_teaching.sav` vznikl a od té doby se nezměnil. Nový síťový
+  `check-lesson-07-downloads.R` spouští oba bloky; data z URL i stažený soubor
+  se shodují s místním vstupem (`identical()`, MD5). `check-lesson-07.R`
+  povoluje tyto dva přeskočené bloky.
 
 ## Sedmá kapitola: APA, cor_test, Shapirův–Wilkův test, 25. 10. 2026
 
