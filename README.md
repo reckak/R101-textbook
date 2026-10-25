@@ -43,3 +43,7 @@ node quarto/_verification/check-html.cjs
 ```
 
 Změny připravujte v samostatné větvi a předávejte pull requestem. GitHub Actions při PR ověří celou knihu; po změně `main` ji po úspěšných kontrolách publikuje na GitHub Pages. Sloučení samo nepotvrzuje úspěšné nasazení. Nastavení, závislosti a kontrolu veřejného webu popisuje [provozní návod](docs/provoz.md).
+
+## Licence
+
+Text učebnice a kód jsou k dispozici pod [licencí MIT](LICENSE). Licence se nevztahuje na data ve složce `data/` ani na materiály třetích stran; jejich původ uvádí [data/README.md](data/README.md).
