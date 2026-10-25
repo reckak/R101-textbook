@@ -71,6 +71,40 @@ look_for(adolescenti)
 
 U každé proměnné vidíme popisek (`label`), typ a popisky hodnot. Pohlaví má kódy 1 = `muzske` a 2 = `zenske`, kohorta 6 = `mladší kohorta` a 10 = `starší kohorta`. Popisky položek začínají výpustkou (například „…s kým trávíš svůj volný čas“): úvodní otázka dotazníku v souboru uložena není, a proto ji z významu odpovědí jen odvozujeme. Věk `vekr` je v letech s desetinnou částí (věk v měsících vydělený 12) a `id` je textový identifikátor osoby.
 
+### Alternativa: načtení dat z URL {#sec-testy-url}
+
+Stejně jako soubory RDS v šesté lekci (oddíl [-@sec-skory-url]) můžete soubor SPSS místo ručního stažení načíst přímo z internetu. `read_sav()` přijímá místo cesty k souboru také URL: soubor si sama stáhne do dočasné složky a načte jej. Odkaz směřuje na pevnou verzi dat v repozitáři učebnice (dlouhý řetězec znaků je identifikátor této verze), takže pozdější změny repozitáře nezmění vstupní data příkladu. Následující alternativu můžete spustit, máte-li připojení k internetu:
+
+```{r}
+#| label: l07-url-sav
+#| eval: false
+data_url <- str_c(
+  "https://raw.githubusercontent.com/reckak/R101-textbook/",
+  "e5f64370bf336a93af04addac052368c2b09f389/data/raw/monitoring_teaching.sav"
+)
+adolescenti <- read_sav(data_url)
+dim(adolescenti)
+```
+
+Výsledek je stejný jako při načtení z disku: 768 řádků a 13 sloupců včetně popisků proměnných a hodnot. Adresa musí vést na samotný soubor (`raw.githubusercontent.com`), nikoli na stránku souboru na `github.com`. Ta vrací webovou stránku v HTML a `read_sav()` by skončila chybou.
+
+Takto načtená data existují jen v aktuální relaci R; po restartu by se stahovala znovu. Trvalou místní kopii vytvoříte tak, že soubor nejprve stáhnete funkcí `download.file()` do složky `data/raw` a potom jej načtete z disku stejně jako v předchozím oddílu. Kód využívá objekt `data_url` z předchozího bloku:
+
+```{r}
+#| label: l07-url-download
+#| eval: false
+dir.create("data/raw", recursive = TRUE, showWarnings = FALSE)
+download.file(
+  url = data_url,
+  destfile = "data/raw/monitoring_teaching.sav",
+  mode = "wb"
+)
+
+adolescenti <- read_sav("data/raw/monitoring_teaching.sav")
+```
+
+Soubor SPSS je binární, proto uvádíme `mode = "wb"`, aby se stažené bajty zapsaly beze změny (pátá lekce). `download.file()` přepíše existující soubor stejného jména. Při dalším spuštění skriptu stačí načtení z disku a internet už není potřeba.
+
 ## Kontrola kategoriálních proměnných {#sec-testy-kategorie}
 
 ### Četnosti a nečekaná hodnota

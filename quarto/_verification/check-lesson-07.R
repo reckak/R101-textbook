@@ -13,7 +13,8 @@ chunks <- lapply(starts, function(start) {
 names(chunks) <- vapply(chunks, function(chunk) chunk$label, character(1))
 stopifnot(!anyDuplicated(names(chunks)),
           !any(vapply(chunks, function(x) x$expected_error, logical(1))),
-          identical(names(chunks)[vapply(chunks, function(x) x$skip, logical(1))], "l07-instalace"))
+          identical(names(chunks)[vapply(chunks, function(x) x$skip, logical(1))],
+                    c("l07-instalace", "l07-url-sav", "l07-url-download")))
 
 # Package-build notes from the local R installation are allowed only where packages load.
 loading_chunks <- c("l07-nacteni", "l07-reseni-samostatne")
