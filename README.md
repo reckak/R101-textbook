@@ -43,3 +43,7 @@ node quarto/_verification/check-html.cjs
 ```
 
 Změny připravujte v samostatné větvi a předávejte pull requestem. GitHub Actions při PR ověří celou knihu; po změně `main` ji po úspěšných kontrolách publikuje na GitHub Pages. Sloučení samo nepotvrzuje úspěšné nasazení. Nastavení, závislosti a kontrolu veřejného webu popisuje [provozní návod](docs/provoz.md).
+
+## Licence
+
+Text učebnice včetně obrázků, cvičení a otázek pro IS MUNI je k dispozici pod licencí [CC BY 4.0](LICENSE-TEXT.md). Zdrojový kód, tedy skripty a ukázky kódu v kapitolách, je pod [licencí MIT](LICENSE). Žádná z obou licencí se nevztahuje na data ve složce `data/` ani na materiály třetích stran; jejich původ uvádí [data/README.md](data/README.md).

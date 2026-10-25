@@ -13,6 +13,8 @@ project:
     - data/clean/help_seeking_codebook.rds
 book:
   title: "R101: Praktický úvod do R"
+  page-footer:
+    center: "© 2026 Karel Rečka · Text: [CC BY 4.0](https://github.com/reckak/R101-textbook/blob/main/LICENSE-TEXT.md) · Kód: [MIT](https://github.com/reckak/R101-textbook/blob/main/LICENSE)"
   chapters:
     - index.qmd
     - quarto/lekce_01.qmd
