@@ -43,6 +43,12 @@ jobs:
             any::rstatix
             any::ggh4x
             any::fitdistrplus
+            any::broom
+            any::car
+            any::performance
+            any::see
+            any::betaDelta
+            any::effectsize
             any::knitr
             any::rmarkdown
       - name: Render complete book

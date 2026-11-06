@@ -1,5 +1,99 @@
 # Autorská dokumentace učebnice R101
 
+## Osmá kapitola (čtecí týden) a devátá kapitola: lineární regrese, 6. 11. 2026
+
+Na pokyn uživatele je osmá kapitola jen stránkou „Čtecí týden“ bez kódu a cvičení
+(doporučené opakování s křížovými odkazy). Podkladem deváté kapitoly je
+`scripts/week_09.R`, zachovaný beze změny (SHA-256
+`be522d33396b91b95a4ea6bf9871fc0be40b369c23e6ff293adf0d0af35ec040`), a dřívější zadání
+domácího úkolu vyučujícího (úkoly 1–7), jehož kroky kapitola pokrývá; úkol 7 (modely
+podle pohlaví) je závěrečnou úlohou. Kapitola obsahuje osm průběžných cvičení
+a samostatně spustitelnou závěrečnou úlohu; všech 9 řešení je sbalených.
+
+### Data a rozhodnutí uživatele
+
+- **Vstup:** místní `data/raw/ZZ_ckrvliry.sav` (124 × 21, SHA-256
+  `f72385b6c7fdaff884b09c76d54aa7f0968300517189a2df43dd6b0fd5ca47cb`) má slovenské názvy
+  (`cas_mesiace`, `spokojnost`, `investicie`, `zavazok`…), nikoli názvy podkladu
+  (`delka_vztahu`, `spokojenost`…). Na pokyn uživatele vznikl výřez
+  `data/clean/vztahy_zavazek.rds` s českými názvy a jednotkami u časů
+  (`vek_roky`, `delka_vztahu_mesice`) a faktory s českými úrovněmi. Generátor
+  `scripts/prepare_lesson_09_data.R`; podrobnosti v `data/README.md`. Původní `.sav`
+  je v `.gitignore`, RDS je výjimkou z ignorované `data/clean/`.
+- **Výřez + `id`:** bez škál žárlivosti, `nezavezne_chodenie` a téměř konstantních
+  `manželia`, `rozvedený`, `deti` (rozhodnutí uživatele).
+- **Rozsah škál 0–6** potvrdil uživatel; data neobsahují chybějící ani neplatné hodnoty.
+- **Didaktické úpravy:** `.sav` se od starších místních exportů (`ZZ.csv`, `ZZ.jasp`)
+  liší v upravených hodnotách, které vytvářejí vlivná pozorování. Uživatel rozhodl je
+  ponechat a studentům uvést jen, že některá data jsou upravena pro didaktické účely,
+  bez počtu. Protože je repozitář veřejný, neuvádí jejich identitu ani tato dokumentace.
+- **Citace práce** dodal uživatel (Mikulíková, 2008, IS MU `th/r2kr5`).
+
+### Úpravy podkladu a jejich dopad
+
+- Nové názvy proměnných; `df` → `vztahy` a `analyza` (`df` je i funkce stats), `fit_1`
+  se nepřepisuje (`model_1`, `model_2`, `model_3`), `|>` místo `%>%`.
+- **Filtr:** podle zadání proměnná `filtr` (1/0) a `filter(filtr == 1)`; 120 ze 124 osob.
+- **Model 1:** podle zadání `zavazek ~ investice` (podklad: jen délka vztahu). Varianta
+  podkladu (nejdřív délka, pak složky investičního modelu, ΔR² = 0,192) je cvičením 5.
+  Model 2 nejprve s délkou v měsících, pak převod na roky (úkol 6); plný model je shodný
+  s `fit_2` podkladu (kontrola ověřuje koeficienty).
+- **Popis:** souhrn doplněn o počet platných a chybějících hodnot a kontrolu rozsahu
+  0–6 (`between()`); histogramy z-skórů s normální křivkou vynechány, výklad naopak
+  zdůrazňuje, že normalita prediktorů není předpokladem.
+- **Korelace:** `cor()` nahrazeno `rstatix::cor_mat()` s `cor_mark_significant()` a
+  `cor_test()` pro intervaly (zadání žádá i signifikanci).
+- **Semiparciální R²:** `alternative = "two.sided"`; výchozí jednostranný interval
+  s horní mezí 1 by byl matoucí.
+- **Diagnostika:** grafy `plot(fit, which = 1:5)` s `labels.id = analyza$id` (podklad
+  označoval čísla řádků); `which = 6` vynechán jako duplicitní. Histogram reziduí přes
+  `augment()` místo `hist()`. Durbinův–Watsonův test jen zmíněn (pořadí řádků nemá
+  význam; `car::durbinWatsonTest()` navíc počítá p-hodnotu bootstrapem bez seedu).
+  Testy `ncvTest()` a Shapiro–Wilk uvedeny jen v textu jako doplněk grafů.
+- **DFBETAS:** práh opraven z „> 1/√n“ na obvyklé 2/√n; překlep „násobku standardních
+  bych“; část je nepovinná.
+- **Bootstrap** doplněn podle zadání: `car::Boot(R = 5000)`, `set.seed(123)`, percentilové
+  95% CI. Závěry se nemění; CI spokojenosti [0,01; 0,42] je širší než klasický
+  [0,07; 0,36].
+- **Analýza citlivosti:** podklad vyřazoval `subset = -c(64, 74)` podle pozice řádku;
+  v dnešních datech jde o osoby `id` 66 a 76, nikoli o nejvlivnější pozorování.
+  Kapitola vybírá dvě osoby s největší Cookovou vzdáleností podle `id` (124 a 21);
+  spokojenost 0,21 → 0,16, alternativy −0,18 → −0,12, investice 0,11 → 0,12 (*p* = 0,035).
+- **Intervaly:** mřížka 0,5–6,5 roku přesahovala pozorované maximum 6,33; nyní jen
+  pozorovaný rozsah. Referenční hodnoty 3,5 / 5 / 2,5 nahrazeny průměry. Objekt `pi`
+  (zakrýval konstantu π) přejmenován; `left_join(pi)` bez `by` (spojení podle `.fitted`)
+  nahrazeno `bind_cols()`; překlep v komentáři `Graf CI\ nci` nepřevzat. Očištěná pozorování jsou
+  nepovinný oddíl.
+- **Prediktivní přesnost (úkol 6):** nový oddíl s grafem predikce × skutečnost.
+- Pokyny „Do textu“ a zmínky o JASP v kapitole nejsou; jejich obsah pokrývá vzorový
+  zápis analýzy, výsledků a závěru.
+
+### Zdroje
+
+Rusbult (1980), Rusbult, Martz & Agnew (1998; strany 357–387 podle Crossref/scite) a
+Le & Agnew (2003) ověřeny přes scite (bez editoriálních poznámek). Metaanalýza uvádí
+vysvětlení „nearly two-thirds of the variance“, z toho věta o srovnání s naším *R*².
+Fox & Weisberg (2019) a dokumentace balíčků jako odkazy.
+
+### Ověření
+
+Nový `check-lesson-09.R` (zapojený do `check-r.R`) spouští všechny bloky a řešení
+v čisté relaci bez neočekávaných varování, ověřuje čísla v textu, shodu modelu
+s podkladem, opakovatelnost bootstrapu, samostatné závěrečné řešení a při místním
+`.sav` shodu RDS se zdrojem. `check-html.cjs` rozšířen na kapitoly 8 a 9 (stažení RDS
+s bajtovou shodou, přesný obsah `_book/data/clean`, klávesnicově dostupné tabulky;
+u krátké osmé kapitoly stačí posun osnovy na konec stránky; mobilní tabulka ke stažení
+je první `.table-responsive` oddílu).
+
+Render celé knihy (Quarto 1.9.38, R 4.5.1, UTF-8 locale), `check-r.R` (všechny
+kapitoly) a `check-html.cjs` prošly. Devátá kapitola: 9 sbalených a rozbalitelných
+řešení, kopírování 70 bloků, 16 grafů, 376 místních cílů odkazů, mobil 390/390 px;
+osmá: bez kódu, 16 odkazů. Všech 16 grafů bylo prohlédnuto a interpretace upraveny
+podle nich (rozptyl reziduí ve středním pásmu predikcí, odklon křivky u alternativ,
+směry vlivu v grafech přidané proměnné a DFBETAS). Nové balíčky `broom`, `car`,
+`performance`, `see`, `betaDelta`, `effectsize` doplněny do instalace a CI; `boot` je
+součástí instalace R. Test pro IS MUNI k lekci zatím nevznikl.
+
 ## Sedmá kapitola: odlehlé hodnoty, χ² alternativy, `NA` v `case_when()`, 25. 10. 2026
 
 Na připomínky uživatele:
