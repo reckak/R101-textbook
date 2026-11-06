@@ -1,5 +1,39 @@
 # Autorská dokumentace učebnice R101
 
+## Devátá kapitola: připomínky uživatele, 6. 11. 2026
+
+Na připomínky uživatele k PR #38:
+
+- **Redakční úpravy uživatele** (vizuální editor RStudia) zachovány; v nich opraveno:
+  „konsturky“, věta o `if_else()` („vrací kontroluje … uvedný“), „ne ji měnit podle až
+  dodatečně podle výsledků“, „( protože“, zdvojené „*R*² *R*²“ v definici
+  adjustovaného *R*². Řešení cvičení 1 sjednoceno s pojmenovanými argumenty
+  `true`/`false`. Editor odstranil ID tabulek; `tbl-regrese-promenne`
+  a `tbl-regrese-bootstrap` vráceny (při další práci ve vizuálním editoru zkontrolovat).
+- **Definice závazku:** „psychickou připoutanost ke vztahu“ nahrazeno „citovou vázanost
+  na vztah (*psychological attachment*)“ a „dlouhodobé zaměření na jeho budoucnost“.
+- **Terminologie:** *intercept* = **konstanta** (dříve „úsek“), koeficienty prediktorů
+  = **(regresní) směrnice** (dříve „koeficient X“, „sklon“); „regresní koeficienty“
+  jen jako souhrnný pojem (konstanta + směrnice), dále standardizované koeficienty β,
+  koeficient determinace, korelační koeficient a koeficient součinu v interakci.
+  „Upravené *R*²“ sjednoceno na „adjustované *R*²“ (podle redakce uživatele).
+  Pojmy definuje oddíl `sec-regrese-jednoducha-princip`. Starší kapitoly používají
+  „sklon přímky“ jen v grafickém smyslu, beze změny.
+- **Křížové odkazy:** slovní zmínky o předchozích lekcích doplněny odkazy na oddíly
+  (`sec-testy-ttest`, `sec-skory-alfa`, `sec-import-labels`, `sec-testy-kategorie`,
+  `sec-upravy-filter`, `sec-testy-skor`, `sec-import-across`, `sec-testy-pearson`,
+  `sec-skory-graf`, `sec-testy-levene` pro rovnici modelu, `sec-struktury-recyklace`).
+- **Nepovinné načtení z URL** (`sec-regrese-url`, bloky `l09-url-rds`
+  a `l09-url-download`, `eval: false`) podle vzoru lekcí 6 a 7. URL míří na commit
+  `7f756045fbceb86a6c5e9009e00aae59d354e1c7`, ve kterém `vztahy_zavazek.rds` vznikl
+  a od té doby se nezměnil. Nový síťový `check-lesson-09-downloads.R` spouští oba bloky
+  (shoda `identical()` a MD5 s místním souborem); `check-lesson-09.R` povoluje tyto
+  přeskočené bloky. Platnost odkazu závisí na tom, že commit zůstane v historii
+  (PR slučovat merge commitem, ne squash, nebo URL po sloučení přepsat).
+- **Čitelnost *R*²:** znak „²“ za kurzivním *R* se dotýkal písmene. Kapitola nyní
+  zapisuje `*R*^2^` a `*sr*^2^` (HTML `<sup>`) a `lesson.css` přidává `em + sup`
+  odsazení 0,12 em. Ostatní kapitoly kurzivní symbol s exponentem nepoužívají.
+
 ## Osmá kapitola (čtecí týden) a devátá kapitola: lineární regrese, 6. 11. 2026
 
 Na pokyn uživatele je osmá kapitola jen stránkou „Čtecí týden“ bez kódu a cvičení
