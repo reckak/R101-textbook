@@ -14,7 +14,8 @@ names(chunks) <- vapply(chunks, function(chunk) chunk$label, character(1))
 stopifnot(!anyDuplicated(names(chunks)),
           !any(vapply(chunks, function(x) x$expected_error, logical(1))),
           identical(names(chunks)[vapply(chunks, function(x) x$skip, logical(1))],
-                    c("l09-instalace", "l09-oprava-ukazka")))
+                    c("l09-instalace", "l09-url-rds", "l09-url-download",
+                      "l09-oprava-ukazka")))
 
 # Package-build notes from the local R installation are allowed only where packages load.
 loading_chunks <- c("l09-nacteni", "l09-reseni-samostatne")
