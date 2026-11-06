@@ -1,0 +1,18 @@
+---
+title: "Čtecí týden"
+---
+
+## V tomto týdnu není nová lekce {#sec-cteni-tyden}
+
+Osmý týden semestru je **čtecí týden**. Nepřináší novou látku v R ani nová cvičení. Využijte jej k zopakování a k doplnění toho, co jste v předchozích lekcích nestihli.
+
+## Doporučené opakování {#sec-cteni-opakovani}
+
+Devátá lekce se věnuje lineární regresi a navazuje na většinu dosavadní látky. Před ní se vyplatí projít zejména tyto části:
+
+- výběr řádků a nové proměnné pomocí `filter()` a `mutate()` ([třetí lekce](lekce_03.qmd), oddíly [-@sec-upravy-filter] a [-@sec-upravy-mutate]) a souhrny podle skupin s `.by` (oddíl [-@sec-upravy-by]),
+- faktory a jejich úrovně ([čtvrtá lekce](lekce_04.qmd), oddíl [-@sec-struktury-faktory]),
+- bodový graf s regresní přímkou a tvar rozdělení skórů včetně Q-Q grafu ([šestá lekce](lekce_06.qmd), oddíly [-@sec-skory-graf] a [-@sec-skory-rozdeleni]),
+- rovnici modelu s vlnovkou, principy testování hypotéz a Pearsonovu korelaci ([sedmá lekce](lekce_07.qmd), oddíly [-@sec-testy-levene], [-@sec-testy-shapiro] a [-@sec-testy-pearson]).
+
+Ze statistiky si připomeňte, co vyjadřuje korelační koeficient, jak se čte interval spolehlivosti a co je regresní přímka. Pokud jste některou závěrečnou úlohu z předchozích lekcí nevypracovali, zkuste ji nyní vyřešit samostatně a teprve potom si rozbalte vzorové řešení.

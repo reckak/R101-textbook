@@ -1,4 +1,4 @@
-# Data k páté až sedmé lekci
+# Data k páté až sedmé a deváté lekci
 
 Veřejné vstupy lekce jsou výslovně vyjmenované v `_quarto.yml`. Kopírují se do
 `_book/data/raw/`, odkud je lze stáhnout i bez přístupu do IS MUNI. Kapitola
@@ -76,3 +76,31 @@ v `.gitignore`; spouští se z kořene projektu příkazem
 `Rscript --vanilla scripts/prepare_lesson_07_data.R` a ověřuje shodu výřezu s originálem.
 Soubor SPSS obsahuje časové razítko vytvoření, takže opakované spuštění změní bajty souboru,
 nikoli jeho obsah; hotový výřez v Gitu proto bez potřeby nepřegenerovávejte.
+
+## Vstup deváté lekce
+
+| Soubor | Původ a použití |
+| --- | --- |
+| `clean/vztahy_zavazek.rds` | Výukový výřez z místního souboru `raw/ZZ_ckrvliry.sav` (124 × 21), dat z bakalářské práce: Mikulíková, L. (2008). *Záväzok a žiarlivosť vo vzťahu. Kvalita alternatív moderujúca vzťah záväzku a žiarlivosti.* Masarykova univerzita, Fakulta sociálních studií. <https://is.muni.cz/th/r2kr5/>. Data jsou pro výuku upravena (viz níže). |
+
+Výřez má 124 řádků ve stejném pořadí jako zdroj a 12 sloupců s českými názvy:
+`id` (doplněné pořadí 1–124), `pohlavi` (`pohlavie`), `narodnost` (`národnosť`),
+`vek_roky` (`vek`), `vazny_vztah`, `spolecne_bydleni` (`spolubyvanie`), `zasnoubeni`
+(`zasnuveny`), `delka_vztahu_mesice` (`cas_mesiace`), `spokojenost` (`spokojnost`),
+`alternativy`, `investice` (`investicie`) a `zavazek` (`zavazok`). Kategorie jsou faktory
+s českými úrovněmi (kód 1 = `muž`, `slovenská`, `ano`; kód 2 = `žena`, `česká`, `ne`),
+skóry škál jsou průměry položek na škále 0–6 (rozsah potvrdil vyučující). Vynechány jsou
+škály žárlivosti, `nezavezne_chodenie` a téměř konstantní `manželia`, `rozvedený` a `deti`.
+Popisky a formáty SPSS se do RDS neukládají.
+
+**Didaktické úpravy.** Zdrojový soubor `.sav` obsahuje oproti starším místním exportům
+(`ZZ.csv`, `ZZ.jasp`) úpravy provedené vyučujícím pro výukové účely. Vyučující rozhodl
+upravené hodnoty ponechat a v lekci uvést jen, že některá data jsou upravena pro didaktické
+účely, bez uvedení jejich počtu a identity. Protože je repozitář veřejný, neuvádí je ani
+tato dokumentace; lze je zjistit porovnáním místních souborů.
+
+Generátor `scripts/prepare_lesson_09_data.R` vyžaduje místní `data/raw/ZZ_ckrvliry.sav`,
+který je v `.gitignore`; spouští se z kořene projektu příkazem
+`Rscript --vanilla scripts/prepare_lesson_09_data.R` v UTF-8 locale a ověřuje shodu hodnot.
+Hotový soubor je v Gitu jako výjimka z ignorované složky `data/clean/` a je uvedený
+v `project.resources`.
