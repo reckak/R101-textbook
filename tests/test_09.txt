@@ -1,0 +1,99 @@
+::Normalita v lineární regresi::Závazek i spokojenost jsou v datech výrazně levostranně zešikmené (šikmost −1,24 a −1,94). Co z toho plyne pro lineární regresi, ve které závazek vysvětlujeme spokojeností?
+ :r1 Obě proměnné musíme před odhadem modelu transformovat, aby měly normální rozdělení.
+ :r2 Lineární regresi nelze použít, a je proto nutné zvolit neparametrickou metodu.
+ :r3 Zešikmení proměnných samo nevadí, normalita se předpokládá u reziduí modelu.
+ :r4 Stačí transformovat závislou proměnnou, protože prediktory normální být nemusejí.
+:r1 0 Lineární regrese nepředpokládá normální rozdělení prediktorů ani závislé proměnné. Transformace kvůli tvaru rozdělení proměnných proto není nutná.
+:r2 0 Zešikmení proměnných není důvodem regresi opustit. Předpoklady posuzujeme podle reziduí odhadnutého modelu, nikoli podle rozdělení jednotlivých proměnných.
+:r3 ok Předpoklad normality se týká reziduí, tedy chyb modelu. Zešikmení proměnných je užitečné zaznamenat, protože osoby s neobvyklými hodnotami mohou model ovlivnit, ale samo o sobě předpoklad neporušuje.
+:r4 0 Ani závislá proměnná nemusí mít normální rozdělení. Posuzujeme rozdělení reziduí, které může být přibližně normální i u zešikmené závislé proměnné.
+--
+::Interpretace regresní směrnice::Model lm(zavazek ~ investice, data = analyza) má konstantu 4,25 a směrnici investic 0,21. Investice i závazek jsou měřeny na škále 0–6 a data pocházejí z průřezové dotazníkové studie. Jak směrnici správně interpretovat?
+ :r1 Investice vysvětlují 21 % rozptylu závazku.
+ :r2 Dvě osoby lišící se o jeden bod v investicích se v průměru liší o 0,21 bodu v závazku.
+ :r3 Když člověk zvýší investice o jeden bod, jeho závazek tím vzroste o 0,21 bodu.
+ :r4 Pearsonova korelace investic a závazku je 0,21.
+:r1 0 Podíl vysvětleného rozptylu udává R², nikoli směrnice. V tomto modelu je R² = 0,078, tedy investice vysvětlují jen 7,8 % rozptylu závazku.
+:r2 ok Směrnice udává průměrný rozdíl v závislé proměnné mezi osobami, které se v prediktoru liší o jednu jednotku, a to v jednotkách obou proměnných.
+:r3 0 Formulace „zvýší“ a „vzroste“ popisuje příčinný účinek změny u jednoho člověka. Z průřezových dat bez manipulace lze popsat jen rozdíly mezi osobami, nikoli příčinu.
+:r4 0 Směrnice a korelace jsou různé veličiny; korelace investic a závazku je 0,28. Směrnice je v jednotkách proměnných, korelace je bezrozměrná.
+--
+::Chybějící argument data::Student spustí lm(zavazek ~ investice) a R vypíše chybu object 'zavazek' not found, přestože tabulka analyza sloupec zavazek obsahuje. Co je nejpravděpodobnější příčinou?
+ :r1 Sloupec zavazek obsahuje chybějící hodnoty, které lm() nepřijme.
+ :r2 Před použitím lm() je nutné načíst balíček broom.
+ :r3 Názvy proměnných v rovnici modelu musejí být v uvozovkách.
+ :r4 Chybí argument data = analyza, takže R hledá proměnné mezi objekty v prostředí.
+:r1 0 Chybějící hodnoty chybu nevyvolají. Funkce lm() ve výchozím nastavení vynechá řádky s chybějícími hodnotami a model odhadne z ostatních.
+:r2 0 Funkce lm() patří do základního R a balíček broom nepotřebuje. Broom slouží až k převodu výsledků na tabulky pomocí tidy(), glance() a augment().
+:r3 0 V rovnici modelu se názvy proměnných píší bez uvozovek. Problém je v tom, že R neví, ve které tabulce je má hledat.
+:r4 ok Bez argumentu data hledá R proměnné z rovnice mezi samostatnými objekty v prostředí. Objekt zavazek tam neexistuje, protože je to jen sloupec tabulky analyza.
+--
+::Změna směrnice po přidání prediktorů::V jednoduché regresi je směrnice investic 0,21. Po přidání spokojenosti, alternativ a délky vztahu klesne na 0,11. Investice přitom slabě korelují se všemi třemi přidanými prediktory. Jak tuto změnu vysvětlit?
+ :r1 Nová směrnice popisuje vztah investic při stejných hodnotách ostatních, korelujících prediktorů.
+ :r2 Jeden z modelů je chybně odhadnutý a platná je jen hodnota z vícenásobné regrese.
+ :r3 Přidáním prediktorů se zmenšil počet osob v modelu, a proto se zmenšila i směrnice.
+ :r4 Směrnice ve vícenásobné regresi jsou standardizované, a proto vycházejí menší.
+:r1 ok Ve vícenásobné regresi jde o jedinečný vztah při kontrole ostatních prediktorů. Část celkového vztahu investic se závazkem souvisí s tím, že lidé s vyššími investicemi bývají spokojenější, mají horší alternativy a delší vztahy.
+:r2 0 Oba modely jsou správně odhadnuté, ale odpovídají na různé otázky. Jednoduchý model popisuje celkový vztah, vícenásobný vztah po zohlednění ostatních prediktorů.
+:r3 0 V datech nic nechybí, oba modely jsou odhadnuté na stejných 120 osobách. Změna je důsledkem korelací mezi prediktory, nikoli velikosti vzorku.
+:r4 0 Funkce lm() vrací nestandardizované směrnice v jednotkách proměnných v jednoduché i vícenásobné regresi. Standardizované β je nutné spočítat zvlášť.
+--
+::Změna jednotky prediktoru::Ve vícenásobném modelu je směrnice délky vztahu v měsících 0,0137. Délku vztahu převedeme na roky pomocí mutate(delka_vztahu_roky = delka_vztahu_mesice / 12) a model odhadneme znovu se stejnými ostatními prediktory. Co se změní?
+ :r1 Směrnice se vydělí dvanácti a bude přibližně 0,001.
+ :r2 Nic, protože změna jednotky prediktoru na směrnici nemá vliv.
+ :r3 Směrnice bude přibližně 0,16, ale její t-hodnota, p-hodnota i R² modelu zůstanou stejné.
+ :r4 Směrnice bude přibližně 0,16 a díky srozumitelnější jednotce se zvýší i R² modelu.
+:r1 0 Rok je dvanáctkrát větší jednotka než měsíc, takže rozdíl o jeden rok odpovídá dvanáctkrát většímu rozdílu v závazku. Směrnice se proto dvanácti násobí, nedělí.
+:r2 0 Směrnice je vždy vyjádřena na jednu jednotku prediktoru, a s jednotkou se proto mění. Nemění se testy ani vysvětlený rozptyl.
+:r3 ok Směrnice se vynásobí dvanácti (0,0137 · 12 ≈ 0,16). Změna jednotky mění jen měřítko směrnice, nikoli model, takže t-hodnota, p-hodnota, ostatní koeficienty i R² zůstávají stejné.
+:r4 0 Směrnice se sice vynásobí dvanácti, ale R² se nezmění. Model s délkou v letech předpovídá přesně stejné hodnoty jako model s délkou v měsících.
+--
+::Porovnání vnořených modelů::Model 1 obsahuje jen investice (R² = 0,078), model 2 investice, spokojenost, alternativy a délku vztahu (R² = 0,296). Funkce anova(model_1, model_2) vrátí F(3, 115) = 11,86 a p < 0,001. Co tento test ověřuje?
+ :r1 Zda model 2 vysvětluje alespoň polovinu rozptylu závazku.
+ :r2 Zda tři přidané prediktory vysvětlují v populaci nějaký rozptyl navíc oproti investicím.
+ :r3 Zda se směrnice investic v obou modelech statisticky významně liší.
+ :r4 Zda mají rezidua obou modelů přibližně normální rozdělení.
+:r1 0 Test nemá žádnou pevnou hranici vysvětleného rozptylu. Model 2 ostatně vysvětluje jen 29,6 % rozptylu, a přesto je přírůstek statisticky významný.
+:r2 ok Test porovnává vnořené modely a ověřuje nulovou hypotézu, že přidané prediktory v populaci nic nevysvětlují. Přírůstek R² o 0,218 (21,8 procentního bodu) je výrazně větší, než by odpovídalo pouhé výběrové variabilitě.
+:r3 0 Test se týká vysvětleného rozptylu celých modelů, nikoli rozdílu směrnice investic. Změnu směrnice investic vysvětlujeme korelacemi mezi prediktory.
+:r4 0 Normalitu reziduí posuzujeme diagnostickými grafy, například Q-Q grafem. Funkce anova() porovnává součty čtverců reziduí obou modelů.
+--
+::Trychtýř v grafu reziduí::V grafu Residuals vs Fitted se rozptyl reziduí s rostoucí predikovanou hodnotou zmenšuje, takže body tvoří trychtýř. Červená křivka je přitom přibližně vodorovná. Co graf naznačuje?
+ :r1 Nelineární vztah, protože body netvoří rovnoměrný pás kolem nuly.
+ :r2 Silnou multikolinearitu, tedy vysoké korelace mezi prediktory.
+ :r3 Zkreslené bodové odhady směrnic, které je nutné přepočítat bez odlehlých osob.
+ :r4 Heteroskedasticitu, kvůli které mohou být standardní chyby a intervaly nepřesné.
+:r1 0 Na nelinearitu by ukazoval oblouk nebo vlna červené křivky. Vodorovná křivka s měnícím se rozptylem bodů ukazuje na jiný problém.
+:r2 0 Multikolinearitu tento graf neukazuje; posuzujeme ji pomocí VIF. Graf reziduí proti predikovaným hodnotám ověřuje linearitu a homoskedasticitu.
+:r3 0 Heteroskedasticita bodové odhady regresních koeficientů nezkresluje. Odlehlé osoby navíc nevyřazujeme jen proto, že nezapadají do modelu.
+:r4 ok Měnící se rozptyl reziduí znamená porušení homoskedasticity. Bodové odhady zůstávají nezkreslené, ale klasické standardní chyby, intervaly a p-hodnoty mohou být nepřesné, a proto je ověřujeme například bootstrapem.
+--
+::Leverage a Cookova vzdálenost::Osoby 33 a 124 mají v regresním modelu podobně vysokou leverage (0,20 a 0,19, průměr je 0,04). Osoba 33 má standardizované reziduum 1,81, osoba 124 reziduum −3,28. Které tvrzení je správné?
+ :r1 Osoba 124 je vlivnější, protože vysokou leverage kombinuje s velkým reziduem.
+ :r2 Obě osoby jsou stejně vlivné, protože vliv na koeficienty určuje jen leverage.
+ :r3 Osoba 33 je vlivnější, protože kladné reziduum zvyšuje Cookovu vzdálenost.
+ :r4 Vysoká leverage znamená, že obě osoby mají neobvykle nízký závazek.
+:r1 ok Cookova vzdálenost kombinuje leverage a velikost rezidua. Osoba 124 má Cookovu vzdálenost 0,49, osoba 33 jen 0,16, protože leží blíže trendu ostatních.
+:r2 0 Leverage vyjadřuje jen „páku“ danou neobvyklými hodnotami prediktorů. Zda bod přímku skutečně ovlivní, záleží také na tom, jak daleko leží od trendu ostatních.
+:r3 0 Pro Cookovu vzdálenost rozhoduje velikost rezidua, nikoli jeho znaménko. Osoba 124 má reziduum v absolutní hodnotě téměř dvakrát větší.
+:r4 0 Leverage závisí jen na hodnotách prediktorů, nikoli na závislé proměnné. Osoba 33 má navíc vysoký závazek (5,0) a vysokou leverage jí dává velmi nízká spokojenost.
+--
+::Seed u bootstrapu::Před výpočtem bootstrapu regresního modelu funkcí Boot() z balíčku car spouštíme set.seed(123). Proč?
+ :r1 Seed zajistí, že bootstrap vybírá osoby bez vracení.
+ :r2 Seed zvýší počet opakování, a tím zpřesní intervaly spolehlivosti.
+ :r3 Seed zajistí, že opakované spuštění vytvoří stejné náhodné výběry a stejné intervaly.
+ :r4 Seed odstraní vliv odlehlých pozorování na bootstrapové intervaly.
+:r1 0 Bootstrap vybírá osoby s vracením, takže některá se v novém vzorku objeví vícekrát a jiná vůbec. Seed na způsobu výběru nic nemění.
+:r2 0 Počet opakování určuje argument R. Seed jen nastavuje výchozí bod generátoru náhodných čísel.
+:r3 ok Bootstrap je náhodný postup a bez seedu by se meze intervalů při každém spuštění mírně lišily. Stejný seed vede ke stejným výběrům, takže výsledek lze reprodukovat.
+:r4 0 Seed výsledky neupravuje, jen zajišťuje jejich opakovatelnost. Závislost výsledků na vlivných pozorováních ověřujeme analýzou citlivosti.
+--
+::Predikční interval::Pro osobu s průměrnou spokojeností, investicemi a alternativami ve vztahu trvajícím 3,4 roku předpovídá model závazek 5,02. Interval spolehlivosti je [4,89; 5,16], predikční interval [3,62; 6,42]. Co vyjadřuje predikční interval?
+ :r1 Rozmezí, ve kterém bude s 95% pravděpodobností ležet závazek jedné nové takové osoby.
+ :r2 Nejistotu odhadu průměrného závazku všech osob s těmito hodnotami prediktorů.
+ :r3 Rozmezí, ve kterém leží 95 % naměřených hodnot závazku v celém vzorku.
+ :r4 Bootstrapový interval, který je širší kvůli heteroskedasticitě reziduí.
+:r1 ok Predikční interval zahrnuje nejistotu odhadu průměru i rozptyl jednotlivců kolem průměru, a je proto mnohem širší. Jeho horní mez přesahuje maximum škály 6, protože model hranice škály nezná.
+:r2 0 Nejistotu odhadu průměrného závazku vyjadřuje interval spolehlivosti [4,89; 5,16]. Predikční interval se týká jednotlivce, nikoli průměru.
+:r3 0 Predikční interval platí pro osoby s konkrétními hodnotami prediktorů, nikoli pro celý vzorek. Navíc jde o předpověď pro novou osobu, nikoli o popis naměřených hodnot.
+:r4 0 Predikční interval počítá funkce augment() s argumentem interval = "prediction" z odhadnutého modelu, bez bootstrapu. Širší je proto, že zahrnuje rozptyl jednotlivců kolem průměru.
