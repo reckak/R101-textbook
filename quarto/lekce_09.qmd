@@ -627,7 +627,7 @@ plot(model_3, which = 1, labels.id = analyza$id, id.n = 3)
 plot(model_3, which = 2, labels.id = analyza$id, id.n = 3)
 ```
 
-**Co graf ukazuje:** standardizovaná rezidua (rezidua vydělená jejich odhadnutou směrodatnou odchylkou) proti hodnotám, které bychom očekávali při normálním rozdělení; princip znáte ze šesté lekce (oddíl [-@sec-skory-qqplotr]). **Jaký předpoklad ověřuje:** normalitu reziduí. **Jak jej číst:** při normálním rozdělení leží body přibližně na přímce; malé odchylky na koncích jsou běžné. **Co je problém:** systematické prohnutí (zešikmení) nebo výrazné odchylky na koncích (těžké chvosty).
+**Co graf ukazuje:** standardizovaná rezidua (rezidua vydělená jejich směrodatnou odchylkou) proti hodnotám, které bychom očekávali při normálním rozdělení; princip znáte ze šesté lekce (oddíl [-@sec-skory-qqplotr]). **Jaký předpoklad ověřuje:** normalitu reziduí. **Jak jej číst:** při normálním rozdělení leží body přibližně na přímce; malé odchylky na koncích jsou běžné. **Co je problém:** systematické prohnutí (zešikmení) nebo výrazné odchylky na koncích (těžké chvosty).
 
 **Co vidíme:** Uprostřed a v horní části leží body na přímce, horní konec se mírně stáčí pod ni (nejvyšší rezidua jsou menší, než by odpovídalo normálnímu rozdělení, opět kvůli stropu škály). Dolní konec se výrazně odchyluje pod přímku: několik osob má mnohem nižší závazek, než model předpovídá: největší odchylky vykazují osoby 21 a 124 se standardizovanými rezidui kolem −3,5 a −3,3. Rezidua jsou tedy **zešikmená doleva**, stejně jako sám závazek. Shapirův–Wilkův test by tuto odchylku potvrdil (*W* = 0,94, *p* \< 0,001), ale z grafu je patrný i její charakter.
 
@@ -668,7 +668,7 @@ plot(model_3, which = 3, labels.id = analyza$id, id.n = 3)
 Rozlišujeme tři vlastnosti pozorování:
 
 - **Odlehlé pozorování** (*outlier*) má velké reziduum: model jeho hodnotu závislé proměnné předpovídá špatně. Za podezřelá se obvykle považují standardizovaná rezidua větší než 2 a výrazně podezřelá větší než 3 v absolutní hodnotě.
-- **Leverage** (sloupec `.hat`) ponecháváme v angličtině, protože ustálený český ekvivalent nemá; doslova jde o **páku**. Vyjadřuje, jakou „páku“ má pozorování na polohu regresní přímky: je tím větší, čím extrémnější (neobvyklejší) hodnoty nebo kombinaci hodnot má pozorování v **prediktorech**. Podobně jako dlouhá páka může takový bod přímku snadno naklonit k sobě. Leverage nezávisí na závislé proměnné, takže sama o sobě neříká, zda bod přímku skutečně ovlivnil. Průměrná leverage je *p*/*n*, kde *p* je počet koeficientů včetně konstanty; zde 5/120 ≈ 0,04. Hodnoty nad dvoj- až trojnásobkem průměru jsou neobvyklé.
+- **Leverage** (sloupec `.hat`) ponecháváme v angličtině, protože ustálený český ekvivalent nemá; doslova jde o **páku**. Vyjadřuje, jakou „páku“ má pozorování na polohu regresní přímky, resp. roviny: je tím větší, čím extrémnější (neobvyklejší) hodnoty nebo kombinaci hodnot má pozorování v **prediktorech**. Podobně jako dlouhá páka může takový bod přímku snadno naklonit k sobě. Leverage nezávisí na závislé proměnné, takže sama o sobě neříká, zda bod přímku skutečně ovlivnil. Průměrná leverage je *p*/*n*, kde *p* je počet koeficientů včetně konstanty; zde 5/120 ≈ 0,04. Hodnoty nad dvoj- až trojnásobkem průměru jsou neobvyklé.
 - **Vlivné pozorování** výrazně mění odhadnuté koeficienty. Míru vlivu shrnuje **Cookova vzdálenost**, která kombinuje velikost rezidua a leverage: bod je vlivný, když je zároveň odlehlý a má vysokou leverage. Orientační hranice jsou 4/*n* (zde 0,033) pro bližší pohled a 0,5 až 1 pro výrazně vlivná pozorování.
 
 ```{r}
@@ -678,7 +678,7 @@ Rozlišujeme tři vlastnosti pozorování:
 plot(model_3, which = 4, labels.id = analyza$id, id.n = 3)
 ```
 
-**Co graf ukazuje:** Cookovu vzdálenost každého pozorování v pořadí řádků. **Jak jej číst:** všechny sloupce by měly být nízké a žádný by neměl výrazně vyčnívat. **Co vidíme:** výrazně vyčnívá osoba 124 s Cookovou vzdáleností 0,49, dále osoby 21 (0,18) a 33 (0,16). Ostatní pozorování mají Cookovu vzdálenost pod 0,06.
+**Co graf ukazuje:** Cookovu vzdálenost každého pozorování v pořadí řádků. **Jak jej číst:** všechny sloupce by měly být nízké a žádný by neměl výrazně vyčnívat nad ostatní. **Co vidíme:** výrazně vyčnívá osoba 124 s Cookovou vzdáleností 0,49, dále osoby 21 (0,18) a 33 (0,16). Ostatní pozorování mají Cookovu vzdálenost pod 0,06.
 
 ```{r}
 #| label: fig-regrese-leverage
@@ -687,7 +687,7 @@ plot(model_3, which = 4, labels.id = analyza$id, id.n = 3)
 plot(model_3, which = 5, labels.id = analyza$id, id.n = 3)
 ```
 
-**Co graf ukazuje:** na ose *x* leverage, na ose *y* standardizovaná rezidua; čárkované křivky vyznačují hranice Cookovy vzdálenosti. **Jak jej číst:** nebezpečné jsou body, které jsou zároveň **vpravo** (vysoká leverage) a **vysoko nebo nízko** (velké reziduum); body za čárkovanou křivkou jsou výrazně vlivné. **Co vidíme:** osoba 124 má vysokou leverage (0,19, téměř pětinásobek průměru) i velké záporné reziduum a leží těsně u hranice Cookovy vzdálenosti 0,5. Osoba 33 má podobně vysokou leverage, ale menší reziduum. Osoba 21 má největší reziduum, ale běžné hodnoty prediktorů, a proto menší vliv na koeficienty. Šestý graf (`which = 6`) zobrazuje Cookovu vzdálenost proti leverage a přináší stejnou informaci, proto jej vynecháváme.
+**Co graf ukazuje:** na ose *x* leverage, na ose *y* standardizovaná rezidua; přerušované čáry vyznačují hranice Cookovy vzdálenosti. **Jak jej číst:** nebezpečné jsou body, které jsou zároveň **vpravo** (vysoká leverage) a **vysoko nebo nízko** (velké reziduum); body za přerušovanými čarami jsou výrazně vlivné. **Co vidíme:** osoba 124 má vysokou leverage (0,19, téměř pětinásobek průměru) i velké záporné reziduum a leží těsně u hranice Cookovy vzdálenosti 0,5. Osoba 33 má podobně vysokou leverage, ale menší reziduum. Osoba 21 má největší reziduum, ale běžné hodnoty prediktorů, a proto menší vliv na koeficienty. Šestý graf (`which = 6`) zobrazuje Cookovu vzdálenost proti leverage a přináší velmi podobnou informaci, proto jej vynecháváme.
 
 Které osoby to jsou a proč vybočují, zjistíme z tabulky `diagnostika`. Seřadíme ji podle Cookovy vzdálenosti a připojíme hodnoty prediktorů:
 
@@ -702,7 +702,7 @@ diagnostika |>
 
 Tibble ve výchozím nastavení vypisuje jen sloupce, které se vejdou na šířku konzole, a ostatní uvede pod tabulkou. `print(width = Inf)` vypíše všechny sloupce.
 
-Osoba 124 má velmi nízkou spokojenost (1,5), vysoké investice (5,2) a nejkvalitnější alternativy v celém vzorku (4,5); tato neobvyklá kombinace prediktorů jí dává vysokou leverage. Její závazek (2,04) je o 2,1 bodu nižší, než model předpovídá. Osoba 21 má vysokou spokojenost (5,4) a závazek 1,97, nejnižší ve vzorku; model jí předpovídá 4,34. Osoba 33 má nejnižší spokojenost ve vzorku (0,8), ale vysoký závazek (5,0). Všechny tyto hodnoty jsou na škále možné, nelze je tedy bez dalšího prohlásit za chyby. Jak moc na nich závisejí výsledky, ověříme v oddílu [-@sec-regrese-citlivost].
+Osoba 124 má velmi nízkou spokojenost (1,5), vysoké investice (5,2) a nejkvalitnější alternativy v celém vzorku (4,5); tato neobvyklá kombinace prediktorů jí dává vysokou leverage. Její závazek (2,04) je o 2,1 bodu nižší, než model předpovídá. Osoba 21 má vysokou spokojenost (5,4) a závazek 1,97, nejnižší ve vzorku; model jí předpovídá 4,34. Osoba 33 má nejnižší spokojenost ve vzorku (0,8), ale vysoký závazek (5,0). Všechny tyto hodnoty jsou na škále možné, nelze je tedy bez dalšího zdůvodnění prohlásit za neplatné. Jak moc na nich závisejí výsledky, ověříme v oddílu [-@sec-regrese-citlivost].
 
 ### Rezidua podle jednotlivých prediktorů {#sec-regrese-car-rezidua}
 
@@ -717,11 +717,11 @@ Grafy `plot()` ukazují model jako celek. Balíček car nabízí grafy pro každ
 car::residualPlots(model_3)
 ```
 
-**Co graf ukazuje:** v každém panelu rezidua proti jednomu prediktoru, v posledním proti predikovaným hodnotám. Modrá křivka je kvadratický trend reziduí. **Jak jej číst:** náhodný mrak kolem nuly s přibližně rovnou křivkou je v pořádku; oblouk ukazuje na nelineární vztah k danému prediktoru, měnící se rozptyl na heteroskedasticitu. **Výpis** obsahuje pro každý prediktor test, zda by do modelu pomohlo přidat jeho druhou mocninu (`Test stat`, `Pr(>|Test stat|)`), a v řádku `Tukey test` celkový test nelinearity.
+**Co graf ukazuje:** v každém panelu rezidua proti jednomu prediktoru, v posledním proti predikovaným hodnotám. Modrá křivka je kvadratický trend reziduí. **Jak jej číst:** náhodný mrak kolem nuly s přibližně rovnou křivkou je v pořádku; oblouk ukazuje na nelineární vztah k danému prediktoru, měnící se rozptyl na heteroskedasticitu. **Výpis** obsahuje pro každý prediktor test, zda by vysvětlený rozptyl statisticky významně vzrostl po přidání druhé mocniny daného prediktoru do modelu (`Test stat`, `Pr(>|Test stat|)`). Na řádku `Tukey test` je pak celkový test nelinearity.
 
-**Co vidíme:** U spokojenosti, alternativ a délky vztahu jsou křivky přibližně rovné a testy nevýznamné. U investic je křivka mírně prohnutá dolů (test *p* = 0,035): u nejnižších a nejvyšších investic model závazek mírně nadhodnocuje. Prohnutí je slabé, celkový Tukeyho test je nevýznamný (*p* = 0,22) a jeden test z pěti může vyjít významně i náhodou. Lineární člen investic proto ponecháváme a slabé zakřivení uvádíme jako možné omezení. U spokojenosti je vidět, jak daleko od ostatních leží tři osoby s velmi nízkou spokojeností.
+**Co vidíme:** U spokojenosti, alternativ a délky vztahu jsou křivky přibližně rovné a testy nevýznamné. U investic je křivka mírně prohnutá dolů (test *p* = 0,035): u nejnižších a nejvyšších investic model závazek mírně nadhodnocuje. Prohnutí je slabé, celkový Tukeyho test je nevýznamný (*p* = 0,22) a jeden test z pěti může vyjít jako statisticky významný i náhodou. Lineární člen investic proto ponecháváme a slabé zakřivení uvádíme jako možné omezení. U spokojenosti je vidět, jak daleko od ostatních leží tři osoby s velmi nízkou spokojeností.
 
-`car::crPlots()` (*component + residual plots*) zobrazuje vztah závislé proměnné a jednoho prediktoru **po odečtení vlivu ostatních prediktorů**: na ose *x* je prediktor, na ose *y* tzv. parciální rezidua. Čárkovaná přímka odpovídá lineárnímu vztahu podle modelu, plná křivka skutečnému tvaru vztahu v datech:
+`car::crPlots()` (*component + residual plots*) zobrazuje vztah závislé proměnné a jednoho prediktoru **po odečtení vlivu ostatních prediktorů**: na ose *x* je prediktor, na ose *y* tzv. parciální rezidua. Parciální reziduum je reziduum celého modelu, k němuž přičteme příspěvek posuzovaného prediktoru (jeho směrnici vynásobenou hodnotou prediktoru); vyjadřuje tedy tu část závazku, kterou model nepřipisuje ostatním prediktorům. Čárkovaná přímka odpovídá lineárnímu vztahu podle modelu. Plná křivka je vyhlazená křivka **loess**, kterou znáte z `geom_smooth()` (šestá lekce, oddíl [-@sec-skory-graf]): sleduje tvar vztahu v datech bez předpokladu linearity:
 
 ```{r}
 #| label: fig-regrese-crplots
@@ -732,35 +732,35 @@ car::residualPlots(model_3)
 car::crPlots(model_3)
 ```
 
-**Jak jej číst:** pokud se křivka drží blízko přímky, lineární člen vztah dobře popisuje; výrazně zakřivená křivka by vedla k úvaze o transformaci prediktoru nebo nelineárním členu. **Co vidíme:** u spokojenosti a délky vztahu sleduje křivka přímku téměř v celém rozsahu. U investic leží křivka uprostřed mírně nad přímkou, což odpovídá slabému prohnutí z předchozího grafu. U alternativ se křivka při hodnotách nad 3 odklání nad přímku: záporný vztah alternativ a závazku je v této oblasti slabší, než předpokládá přímka. Odchylky se ale týkají okrajů, kde je málo bodů, a jsou malé ve srovnání s rozptylem bodů; lineární členy proto považujeme za přiměřené.
+**Jak jej číst:** pokud se křivka drží blízko přímky, lineární člen vztah dobře popisuje; výrazně nelineární křivka by vedla k úvaze o transformaci prediktoru nebo nelineárním členu. **Co vidíme:** u spokojenosti a délky vztahu sleduje křivka přímku téměř v celém rozsahu. U investic leží křivka uprostřed mírně nad přímkou, což odpovídá slabému prohnutí z předchozího grafu. U alternativ se křivka při hodnotách nad 3 odklání nad přímku: záporný vztah alternativ a závazku je v této oblasti slabší, než předpokládá přímka. Odchylky se ale týkají okrajů, kde je málo bodů, a jsou malé ve srovnání s rozptylem bodů; lineární členy proto považujeme za přiměřené.
 
-`car::avPlots()` (*added-variable plots*) ukazuje **jedinečný** vztah každého prediktoru. Na ose *y* jsou rezidua závazku z modelu bez daného prediktoru, na ose *x* rezidua prediktoru vysvětleného ostatními prediktory. Obě osy jsou tedy „očištěné“ od ostatních prediktorů a sklon přímky v grafu je přesně směrnice daného prediktoru z modelu 3. Argument `id = list(n = 2, labels = analyza$id)` označí v každém panelu dva nejvzdálenější body jejich `id`:
+`car::avPlots()` (*added-variable plots*) ukazuje **jedinečný** vztah každého prediktoru. Na ose *y* jsou rezidua závazku z modelu bez daného prediktoru, na ose *x* rezidua prediktoru vysvětleného ostatními prediktory. Obě osy jsou tedy „očištěné“ od ostatních prediktorů a sklon přímky v grafu se přesně shoduje se směrnicí daného prediktoru z modelu 3. Argument `id = list(n = 2, labels = analyza$id)` označí jejich `id` v každém panelu dva body s největším reziduem a dva body nejvzdálenější ve vodorovném směru (s nejneobvyklejší hodnotou na ose *x*). V panelu proto mohou být označeny až čtyři body (méně, pokud se oba výběry překrývají):
 
 ```{r}
 #| label: fig-regrese-avplots
-#| fig-cap: "Grafy přidané proměnné (*added-variable plots*) pro čtyři prediktory."
+#| fig-cap: "Jedinečné vztahy prediktorů k závazku: grafy `car::avPlots()` (*added-variable plots*)."
 #| fig-alt: "Čtyři bodové grafy s modrou přímkou; přímka stoupá u investic, spokojenosti a délky vztahu a klesá u alternativ; v panelu spokojenosti leží osoby 33 a 124 daleko vlevo."
 #| fig-width: 8
 #| fig-height: 6.5
 car::avPlots(model_3, id = list(n = 2, labels = analyza$id))
 ```
 
-**Jak jej číst:** sklon přímky je směrnice prediktoru, rozptyl bodů kolem ní ukazuje, jak přesně je odhadnutá. Body daleko vlevo nebo vpravo, které leží mimo trend ostatních, mohou směrnici výrazně ovlivnit. **Co vidíme:** u spokojenosti leží osoby 33 a 124 daleko vlevo a působí opačně: osoba 33 (nízká spokojenost, vysoký závazek) leží nad přímkou a směrnici zmenšuje, osoba 124 (nízká spokojenost, nízký závazek) leží hluboko dole a směrnici zvětšuje. Směrnice spokojenosti proto závisí na tom, jak se tyto dvě osoby vyváží. U alternativ leží osoby 124 a 21 vpravo dole: mají kvalitnější alternativy, než by odpovídalo ostatním prediktorům, a velmi nízký závazek, a tím zápornou směrnici zesilují.
+**Jak jej číst:** sklon přímky je směrnice prediktoru, rozptyl bodů kolem ní odpovídá tomu, jak přesně je odhadnutá. Body daleko vlevo nebo vpravo, které leží mimo trend ostatních, mohou směrnici výrazně ovlivnit. **Co vidíme:** u spokojenosti leží osoby 33 a 124 daleko vlevo a jejich vliv na směrnici je protichůdný: osoba 33 (nízká spokojenost, vysoký závazek) leží nad přímkou a směrnici zmenšuje, osoba 124 (nízká spokojenost, nízký závazek) leží hluboko dole a směrnici zvětšuje. Směrnice spokojenosti proto závisí na tom, jak se tyto dvě osoby vyváží. U alternativ leží osoby 124 a 21 vpravo dole: mají kvalitnější alternativy, než by odpovídalo ostatním prediktorům, a velmi nízký závazek, a tím zápornou směrnici zesilují.
 
 ### Multikolinearita {#sec-regrese-vif}
 
-**Variance inflation factor** (VIF) udává, kolikrát je rozptyl odhadu směrnice větší kvůli tomu, že prediktor koreluje s ostatními prediktory. VIF = 1 znamená žádnou korelaci s ostatními prediktory; hodnoty nad 5 až 10 bývají považovány za problematické.
+**Variance inflation factor** (VIF) udává, kolikrát je rozptyl odhadu směrnice (čtverec její směrodatné chyby) větší kvůli tomu, že prediktor koreluje s ostatními prediktory. VIF = 1 nastává při nulové korelaci s ostatními prediktory; hodnoty nad 5 nebo 10 bývají považovány za problematické.
 
 ```{r}
 #| label: l09-vif
 car::vif(model_3)
 ```
 
-Všechny hodnoty VIF jsou mezi 1,05 a 1,16. Prediktory spolu korelují jen slabě (oddíl [-@sec-regrese-korelace]), multikolinearita tedy problém nepředstavuje a jedinečné vztahy prediktorů lze od sebe oddělit.
+Všechny hodnoty VIF jsou mezi 1,05 a 1,16. Prediktory spolu korelují jen slabě (oddíl [-@sec-regrese-korelace]), multikolinearita tedy problém nepředstavuje a jedinečné vztahy prediktorů se závislou proměnnou lze od sebe odlišit.
 
 ### Souhrnná kontrola: `check_model()` {#sec-regrese-check-model}
 
-Balíček performance kreslí většinu předchozích grafů najednou. Grafy obsahují také slovní nápovědu, jak by měly vypadat (anglicky):
+Balíček performance kreslí většinu předchozích grafů najednou. Grafy obsahují také slovní nápovědu, jak by měly vypadat při splnění předpokladů (anglicky):
 
 ```{r}
 #| label: fig-regrese-check-model
@@ -771,7 +771,7 @@ Balíček performance kreslí většinu předchozích grafů najednou. Grafy obs
 performance::check_model(model_3)
 ```
 
-Mřížka obsahuje šest grafů. **Posterior Predictive Check** porovnává rozdělení naměřeného závazku (zelená křivka) s rozdělením hodnot, které by mohl vytvořit model (modré křivky). Model předpokládá normálně rozdělené chyby, a nedokáže proto napodobit zešikmení závazku ani strop škály 6: naměřená hustota má ostřejší vrchol kolem 5,5 a u 6 končí, zatímco hodnoty vytvořené modelem sahají až k 8. **Linearity** a **Homogeneity of Variance** odpovídají grafům *Residuals vs Fitted* a *Scale-Location* a ukazují stejný pokles rozptylu reziduí s rostoucí predikcí. **Influential Observations** odpovídá grafu *Residuals vs Leverage*; body mimo čárkované hranice by byly výrazně vlivné. **Collinearity** zobrazuje VIF a **Normality of Residuals** Q-Q graf, zde v podobě odchylek od přímky (body by měly ležet kolem vodorovné čáry). `check_model()` je užitečný pro rychlý přehled, ale každý graf je třeba číst stejně pozorně jako jednotlivé grafy výše.
+Mřížka obsahuje šest grafů. **Posterior Predictive Check** ověřuje, zda model dokáže vytvořit data podobná těm naměřeným. Funkce vezme predikovaný závazek každé ze 120 osob a přičte k němu náhodnou chybu vylosovanou z normálního rozdělení s průměrem 0 a směrodatnou odchylkou rovnou reziduální směrodatné odchylce modelu (0,70). Vznikne tak jeden „umělý“ soubor 120 hodnot závazku, jaký by model očekával, kdyby přesně popisoval skutečnost. Postup se opakuje 50krát; každá modrá křivka je rozdělení (hustota) jednoho umělého souboru, zelená křivka rozdělení naměřeného závazku. Pokud model data dobře popisuje, leží zelená křivka uvnitř svazku modrých. (Název pochází z bayesovské statistiky; u modelu z `lm()` se simuluje z odhadnutých koeficientů.) Model předpokládá normální rozdělení chyb, které je souměrné, a nedokáže proto napodobit zešikmení závazku ani strop škály 6: naměřená hustota má ostřejší vrchol kolem 5,5 a u 6 končí, zatímco hodnoty vytvořené modelem sahají až k 8. **Linearity** a **Homogeneity of Variance** odpovídají grafům *Residuals vs Fitted* a *Scale-Location* a ukazují stejný pokles rozptylu reziduí s rostoucími predikovanými hodnotami. **Influential Observations** odpovídá grafu *Residuals vs Leverage*; body mimo čárkované hranice mají výrazný vliv na odhady koeficientů modelu. **Collinearity** zobrazuje VIF a **Normality of Residuals** Q-Q graf, zde v podobě odchylek od referenční přímky (body by měly ležet kolem vodorovné čáry). `check_model()` je užitečný pro rychlý přehled, ale každý graf je třeba číst stejně pozorně jako jednotlivé grafy výše.
 
 ### Cvičení 7: Proč má osoba 33 vysokou leverage {.exercise}
 
@@ -787,7 +787,7 @@ diagnostika |>
   print(width = Inf)
 ```
 
-Nejvyšší leverage mají osoby 33 (0,20) a 124 (0,19), přibližně pětinásobek průměrné leverage 0,04. Osoba 33 má spokojenost 0,8, o více než čtyři směrodatné odchylky pod průměrem 4,98 (*SD* = 0,94); takto extrémní hodnota jediného prediktoru stačí k vysoké leverage. Ostatní prediktory má blízko průměru. Cookova vzdálenost kombinuje leverage s velikostí rezidua. Osoba 33 má reziduum 1,81 směrodatné odchylky, takže její Cookova vzdálenost je 0,16. Osoba 124 má podobnou leverage, ale reziduum −3,28, a proto Cookovu vzdálenost 0,49. Vysoká leverage sama o sobě tedy problém neznamená: bod s neobvyklými hodnotami prediktorů, který leží blízko trendu ostatních, model posiluje. Problém nastává, když takový bod trendu neodpovídá.
+Nejvyšší leverage mají osoby 33 (0,20) a 124 (0,19), přibližně pětinásobek průměrné leverage 0,04. Osoba 33 má spokojenost 0,8, o více než čtyři směrodatné odchylky pod průměrem 4,98 (*SD* = 0,94); takto extrémní hodnota jediného prediktoru stačí k vysoké leverage. Ostatní prediktory má blízko průměru. Cookova vzdálenost kombinuje leverage s velikostí rezidua. Osoba 33 má reziduum 1,81 směrodatné odchylky, takže její Cookova vzdálenost je 0,16. Osoba 124 má podobnou leverage, ale podstatně extrémnější reziduum −3,28, a proto také vyšší Cookovu vzdálenost 0,49. Vysoká leverage sama o sobě tedy problém neznamená: bod s neobvyklými hodnotami prediktorů, který leží blízko trendu ostatních, směrnici nemění, naopak zpřesňuje její odhad (zužuje interval spolehlivosti). Problém nastává, když takový bod trendu neodpovídá.
 :::
 
 ## Jak přesně model předpovídá {#sec-regrese-presnost}
@@ -820,8 +820,12 @@ diagnostika |>
     zavazek <= 5 ~ "střední (4–5)",
     .default = "vysoký (nad 5)"
   )) |>
-  summarise(n = n(), prumerne_reziduum = mean(.resid),
-            prumerna_abs_chyba = mean(abs(.resid)), .by = skupina)
+  summarise(
+    n = n(),
+    prumerne_reziduum = mean(.resid),
+    prumerna_abs_chyba = mean(abs(.resid)),
+    .by = skupina
+  )
 ```
 
 **U kterých lidí se model mýlí nejvíc?** Největší chyby dělá u lidí s **nízkým závazkem**. Sedmnáct osob se závazkem do 4 bodů model v průměru **nadhodnocuje** o 1,22 bodu (průměrné reziduum −1,22). Naopak lidem s vysokým závazkem nad 5 bodů předpovídá v průměru o 0,38 bodu méně, než naměřili (průměrné reziduum 0,38).
@@ -832,7 +836,7 @@ diagnostika |>
 
 ## Bootstrap: ověření intervalů spolehlivosti {#sec-regrese-bootstrap}
 
-Diagnostika ukázala heteroskedasticitu a levostranně zešikmená rezidua. Klasické intervaly spolehlivosti z `tidy()` tyto odchylky nezohledňují. Ověříme je proto **bootstrapem**, který na tvaru rozdělení reziduí ani na shodě rozptylů nezávisí.
+Diagnostika ukázala heteroskedasticitu a levostranně zešikmená rezidua. Klasické intervaly spolehlivosti z `tidy()` nemusejí být vůči porušení homoskedasticity a normality reziduí robustní. Ověříme je proto **bootstrapem**, který na tvaru rozdělení reziduí ani na konstantním rozptylu reziduí nezávisí.
 
 **Princip.** Ze 120 osob náhodně vybereme 120 osob **s vracením**: některá osoba se v novém vzorku objeví vícekrát, jiná vůbec. Na tomto vzorku odhadneme model a uložíme koeficienty. Postup opakujeme 5000krát. Rozdělení 5000 odhadů ukazuje, jak moc by koeficienty kolísaly, kdybychom z populace podobné našemu vzorku vybírali opakovaně. **Percentilový 95% interval** tvoří 2,5. a 97,5. percentil těchto odhadů. Bootstrap stále předpokládá nezávislá pozorování a vzorek, který dobře reprezentuje populaci; s malým nebo zkresleným vzorkem nepomůže.
 
@@ -866,7 +870,7 @@ confint(model_3)
 : Klasické a bootstrapové (percentilové, 5000 opakování) intervaly spolehlivosti koeficientů modelu 3 {#tbl-regrese-bootstrap}
 :::
 
-**Mění se závěry?** Ne. Intervaly investic zahrnují nulu v obou případech; intervaly spokojenosti, alternativ a délky vztahu ji nezahrnují ani po bootstrapu. Bootstrapový interval spokojenosti je ale **výrazně širší** a jeho dolní mez (0,01) leží těsně nad nulou. Odhad vztahu spokojenosti a závazku je tedy nejistější, než ukazuje klasický interval. To odpovídá diagnostice: směrnice spokojenosti závisí na několika osobách s velmi nízkou spokojeností, a podle toho, zda se ve výběru objeví, se odhad mění.
+**Mění se závěry?** Ne. Intervaly investic zahrnují nulu v obou případech; intervaly spokojenosti, alternativ a délky vztahu ji nezahrnují ani po bootstrapu. Bootstrapový interval spokojenosti je ale **výrazně širší** a jeho dolní mez (0,01) leží těsně nad nulou. Odhad vztahu spokojenosti a závazku je tedy méně jistý, než ukazuje klasický interval. To odpovídá diagnostice, kde jsme viděli, že směrnice spokojenosti závisí na několika osobách s velmi nízkou spokojeností, a podle toho, zda se ve výběru objeví, se odhad mění.
 
 ### Cvičení 8: Jiný seed a méně opakování {.exercise}
 
@@ -880,12 +884,12 @@ bootstrap_1000 <- car::Boot(model_3, R = 1000)
 confint(bootstrap_1000, type = "perc")
 ```
 
-Meze se od intervalů s 5000 opakováními liší nejvýše o několik setin (například u spokojenosti \[0,01; 0,42\] v obou případech, u délky vztahu \[0,08; 0,25\]). Závěry se nemění. Bootstrap je náhodný postup: jiný seed vybere jiné vzorky, a meze proto mírně kolísají. Krajní percentily (2,5. a 97,5.) se odhadují jen z několika nejkrajnějších hodnot, při 1000 opakováních jde o 25 hodnot na každé straně. Více opakování toto kolísání zmenšuje. Proto se pro intervaly spolehlivosti doporučují tisíce opakování a seed se uvádí, aby šel výsledek zopakovat.
+Meze se od intervalů s 5000 opakováními liší nejvýše o několik setin (například u spokojenosti \[0,01; 0,42\] v obou případech, u délky vztahu \[0,08; 0,25\]). Závěry se nemění. Bootstrap je náhodný postup: jiný seed vybere jiné vzorky, a meze proto mírně kolísají. Krajní percentily (2,5. a 97,5.) se odhadují jen z několika nejkrajnějších hodnot, při 1000 opakováních jde o 25 hodnot na každé straně. Více opakování toto kolísání zmenšuje a vede ke stabilnějším odhadům. Proto se pro intervaly spolehlivosti doporučují tisíce opakování a seed se uvádí, aby šel výsledek reprodukovat.
 :::
 
 ## Analýza citlivosti {#sec-regrese-citlivost}
 
-Diagnostika ukázala několik vlivných pozorování. Nejde o chyby a vyřadit je jen proto, že nezapadají do modelu, by bylo nesprávné: výsledky by pak popisovaly jen lidi, kteří se chovají podle očekávání. Můžeme ale ověřit, **jak moc výsledky na těchto osobách závisejí**. Odhadneme model bez dvou osob s největší Cookovou vzdáleností a výsledky porovnáme. Osoby vybereme podle jejich `id`, nikoli podle čísla řádku: čísla řádků se změní, kdykoli data jinak seřadíme nebo filtrujeme.
+Diagnostika ukázala několik vlivných pozorování. Nejde o chyby a vyřadit je jen proto, že nezapadají do modelu, by bylo nesprávné: výsledky by pak popisovaly jen lidi, kteří se chovají podle očekávání. Můžeme ale ověřit, **jak moc výsledky na těchto osobách závisejí**. Účelem diagnostiky odlehlých a vlivných případů tedy není primárně tyto případy vyřadit, ale porozumět tomu, jaký dopad na model mají. Odhadneme proto model bez dvou osob s největší Cookovou vzdáleností a výsledky porovnáme. Osoby vybereme podle jejich `id`, nikoli podle čísla řádku: čísla řádků se změní, kdykoli data jinak seřadíme nebo filtrujeme.
 
 ```{r}
 #| label: l09-citlivost
@@ -906,7 +910,7 @@ glance(model_bez_vlivnych) |>
 
 Bez osob 124 a 21 (*n* = 118) zůstávají směry všech vztahů stejné, ale velikosti některých směrnic se mění. Směrnice spokojenosti klesla z 0,21 na 0,16 a směrnice alternativ z −0,18 na −0,12; horní mez jejího intervalu je nyní téměř nulová (−0,001). Směrnice investic se mírně zvýšila (0,12) a její interval už nulu nezahrnuje \[0,01; 0,24\]. Směrnice délky vztahu se téměř nezměnila (0,16). *R*^2^ kleslo na 0,27.
 
-**Co z toho plyne?** Hlavní závěr, že závazek souvisí se spokojeností a délkou vztahu kladně a s alternativami záporně, na dvou osobách nezávisí. Odhady **velikosti** vztahů spokojenosti a alternativ ale ano, a rozlišení mezi „investice jsou“ a „nejsou statisticky významné“ je křehké. Ve zprávě proto uvádíme výsledky celého vzorku a analýzu citlivosti jako doplněk. Pozorování bychom vyřadili jen s věcným důvodem, například když bychom ověřili, že dotazník nebyl vyplněn vážně.
+**Co z toho plyne?** Hlavní závěr, že závazek souvisí se spokojeností a délkou vztahu kladně a s alternativami záporně, na dvou osobách nezávisí. Odhady **velikosti** vztahů spokojenosti a alternativ ale ano, a rozlišení mezi „investice jsou“ a „nejsou statisticky významné“ je křehké. Ve zprávě proto uvádíme výsledky celého vzorku a analýzu citlivosti jako doplňující informaci. Pozorování bychom vyřadili jen s věcným důvodem, například kdybychom měli jasný důkaz, že osoba dotazník nevyplnila pozorně (například odpovídala náhodně).
 
 ## Intervaly spolehlivosti a predikční intervaly {#sec-regrese-intervaly}
 
@@ -924,11 +928,11 @@ nova_data <- tibble(
 )
 ```
 
-`seq()` s argumentem `length.out` vytvoří zadaný počet rovnoměrně rozmístěných hodnot mezi dvěma mezemi; jednočíselné průměry se v `tibble()` zopakují do všech sto řádků (recyklace, čtvrtá lekce, oddíl [-@sec-struktury-recyklace]).
+`seq()` s argumentem `length.out` vytvoří zadaný počet rovnoměrně rozmístěných hodnot mezi dvěma mezemi; jednočíselné průměry se v `tibble()` zopakují do všech sto řádků kvůli recyklaci prvků (viz čtvrtá lekce, oddíl [-@sec-struktury-recyklace]).
 
-Funkce `augment()` s argumentem `newdata` spočítá predikce pro nová data. Argument `interval` určuje, jaký interval připojí:
+Funkce `augment()` s argumentem `newdata` spočítá predikce pro nová data. Argument `interval` určuje, jaký interval k nim připojí:
 
-- **interval spolehlivosti** (`"confidence"`) vyjadřuje nejistotu **průměrného** závazku všech osob s danými hodnotami prediktorů;
+- **interval spolehlivosti** (`"confidence"`) vyjadřuje nejistotu odhadu **průměrného** závazku všech osob s danými hodnotami prediktorů;
 - **predikční interval** (`"prediction"`) vyjadřuje, kde bude s 95% pravděpodobností ležet závazek **jedné nové osoby**. Kromě nejistoty průměru zahrnuje i rozptyl jednotlivců kolem průměru, tedy reziduální rozptyl, a je proto vždy širší.
 
 ```{r}
@@ -991,7 +995,7 @@ intervaly |>
   labs(x = "Délka vztahu (roky)", y = "Závazek (očištěný)")
 ```
 
-`predict(model_3)` vrací predikce pro skutečné hodnoty prediktorů, `predict(model_3, newdata = analyza_ref)` pro tytéž osoby s průměrnými hodnotami spokojenosti, investic a alternativ. Jejich rozdíl je část predikce způsobená odchylkami těchto tří prediktorů a tu od naměřeného závazku odečteme. Očištěné body se rozptylují kolem přímky stejně jako rezidua modelu. Většina leží v predikčním pásu; několik osob s velkými zápornými rezidui leží pod ním. Některé očištěné hodnoty přesahují 6: nejde o naměřené hodnoty, ale o přepočet, který hranice škály nezná. Graf je ilustrací jedinečného vztahu délky vztahu a závazku; podobnou informaci nesou grafy přidané proměnné z oddílu [-@sec-regrese-car-rezidua].
+`predict(model_3)` vrací predikce pro skutečné hodnoty prediktorů, `predict(model_3, newdata = analyza_ref)` pro tytéž osoby s průměrnými hodnotami spokojenosti, investic a alternativ. Jejich rozdíl je část predikce způsobená odchylkami těchto tří prediktorů a tu od naměřeného závazku odečteme. Očištěné body se rozptylují kolem přímky stejně jako rezidua modelu. Většina leží v predikčním pásu; několik osob s velkými zápornými rezidui leží pod ním. Některé očištěné hodnoty přesahují 6: nejde o naměřené hodnoty, ale o přepočet, který nebere ohled na hranice škály. Graf je ilustrací jedinečného vztahu délky vztahu a závazku; podobnou informaci nesou grafy `car::avPlots()` (@fig-regrese-avplots).
 
 ## Nepovinně: vliv jednotlivých osob na koeficienty {#sec-regrese-dfbetas}
 
@@ -1009,7 +1013,7 @@ dfbetas_3 |>
   slice_max(abs(dfbetas), n = 2, by = koeficient)
 ```
 
-Funkce `dfbetas()` vrací matici se sloupcem pro každý koeficient; převedeme ji na tibble, připojíme `id` a převedeme do dlouhého formátu. Konstantu jsme vyřadili, takže `slice_max()` s argumentem `by` vybere dvě nejvlivnější osoby pro každou směrnici. Kladná hodnota znamená, že by směrnice po vynechání osoby klesla, záporná, že by vzrostla. Výrazně nejvíce ovlivňují směrnici spokojenosti osoby 124 (1,21) a 33 (−0,88), každá jiným směrem, jak ukázal graf přidané proměnné. Směrnici investic ovlivňují osoby 124 a 21, opět opačnými směry, a směrnici alternativ obě tyto osoby stejným směrem: obě ji činí zápornější. Směrnici délky vztahu žádné pozorování neovlivňuje výrazně, což odpovídá její stabilitě v analýze citlivosti.
+Funkce `dfbetas()` vrací matici se sloupcem pro každý koeficient; převedeme ji na tibble, připojíme `id` a převedeme do dlouhého formátu. Konstantu jsme vyřadili, takže `slice_max()` s argumentem `by` vybere dvě nejvlivnější osoby pro každou směrnici. Kladná hodnota znamená, že by směrnice po vynechání osoby klesla, záporná, že by vzrostla. Výrazně nejvíce ovlivňují směrnici spokojenosti osoby 124 (1,21) a 33 (−0,88), každá jiným směrem, jak ukázaly grafy `car::avPlots()` (@fig-regrese-avplots). Směrnici investic ovlivňují osoby 124 a 21, opět opačnými směry, a směrnici alternativ obě tyto osoby stejným směrem: obě ji činí zápornější. Směrnici délky vztahu žádné pozorování neovlivňuje výrazně, což odpovídá její stabilitě v analýze citlivosti.
 
 ## Zápis výsledků a závěr {#sec-regrese-zaver}
 
@@ -1017,17 +1021,17 @@ Ve zprávě uvádíme postup, počet osob, souhrn modelu a směrnice s nejistoto
 
 > **Analýza.** Z analýzy jsme vyřadili čtyři osoby se vztahem kratším než šest měsíců, protože počáteční fáze vztahu může mít odlišnou dynamiku. Žádné hodnoty nechyběly a všechny skóry ležely v rozsahu škály 0–6. Závazek jsme vysvětlovali lineárním regresním modelem se spokojeností, investicemi, alternativami a délkou vztahu v letech. Kvůli heteroskedasticitě a zešikmeným reziduím jsme klasické intervaly spolehlivosti ověřili percentilovým bootstrapem s 5000 opakováními.
 >
-> **Výsledky.** Model (*n* = 120) vysvětlil 29,6 % rozptylu závazku, *R*^2^ = 0,30, adjustované *R*^2^ = 0,27, *F*(4, 115) = 12,09, *p* \< 0,001. Silnější závazek uváděli lidé spokojenější ve vztahu (*b* = 0,21, 95% CI \[0,07; 0,36\], β = 0,24), lidé vnímající méně kvalitní alternativy (*b* = −0,18, 95% CI \[−0,31; −0,05\], β = −0,23) a lidé v delším vztahu (*b* = 0,16 na rok, 95% CI \[0,06; 0,26\], β = 0,26). Vztah investic k závazku byl po zohlednění ostatních prediktorů slabší a nejistý (*b* = 0,11, 95% CI \[−0,01; 0,23\], β = 0,15, *p* = 0,069), ačkoli samostatně investice se závazkem souvisely (*r* = 0,28). Bootstrapové intervaly vedly ke stejným závěrům, interval spokojenosti byl však širší (95% CI \[0,01; 0,42\]).
+> **Výsledky.** Model (*n* = 120) vysvětlil 29,6 % rozptylu závazku, *R*^2^ = 0,30, adjustované *R*^2^ = 0,27, *F*(4, 115) = 12,09, *p* \< 0,001. Silnější závazek uváděli lidé s vyšší spokojeností ve vztahu (*b* = 0,21, 95% CI \[0,07; 0,36\], β = 0,24), lidé vnímající méně kvalitní alternativy (*b* = −0,18, 95% CI \[−0,31; −0,05\], β = −0,23) a lidé v delším vztahu (*b* = 0,16 v přepočtu na 1 rok, 95% CI \[0,06; 0,26\], β = 0,26). Vztah investic k závazku byl po zohlednění ostatních prediktorů slabší a méně průkazný (*b* = 0,11, 95% CI \[−0,01; 0,23\], β = 0,15, *p* = 0,069), ačkoli samostatně investice se závazkem souvisely (*r* = 0,28). Bootstrapové intervaly vedly ke stejným závěrům, interval spokojenosti byl však širší (95% CI \[0,01; 0,42\]).
 
 **Závěr** odpovídá na výzkumnou otázku, uvádí velikost vztahů a omezení:
 
-> Výsledky jsou v souladu s investičním modelem: závazek ve vztahu byl silnější u lidí spokojenějších a u lidí s méně atraktivními alternativami, a to i při stejné délce vztahu. Tyto vztahy byly středně silné (β kolem ±0,24) a model se čtyřmi prediktory vysvětlil přibližně 30 % rozptylu závazku, výrazně méně než v metaanalýze investičního modelu. Investice měly po zohlednění ostatních složek jen slabý a nejistý jedinečný vztah k závazku. Velikost vztahů spokojenosti a alternativ závisela na několika vlivných osobách a model systematicky nadhodnocoval závazek lidí s nízkým závazkem, takže se nehodí k predikci u jednotlivců. Data jsou průřezová a vzorek mladých dospělých nebyl vybrán náhodně, proto nelze usuzovat na příčinný vliv spokojenosti či alternativ na závazek ani výsledky zobecnit na jiné věkové skupiny.
+> Výsledky jsou v souladu s investičním modelem: závazek ve vztahu byl silnější u lidí spokojenějších a u lidí s méně atraktivními alternativami, a to po zohlednění délky vztahu. Tyto souvislosti byly středně silné (β kolem ±0,24) a model se čtyřmi prediktory vysvětlil přibližně 30 % rozptylu závazku, výrazně méně, než bylo zjištěno v metaanalýze investičního modelu. Investice měly po zohlednění ostatních složek jen slabý a nejistý jedinečný vztah k závazku. Velikost vztahů spokojenosti a alternativ závisela na několika vlivných osobách a model systematicky nadhodnocoval závazek lidí s nízkým závazkem, takže se nehodí k predikci hodnot jednotlivců. Data jsou průřezová a vzorek mladých dospělých nebyl vybrán náhodně, proto nelze usuzovat na příčinný vliv spokojenosti či alternativ na závazek ani výsledky zobecnit na jiné věkové skupiny.
 
 Všimněte si, že závěr neopakuje celý výstup. Uvádí směr a velikost vztahů, odlišuje silné výsledky od nejistých a jmenuje omezení, která vyplývají z dat (vlivná pozorování, přesnost predikce) i z plánu výzkumu (průřezový design, výběr vzorku).
 
 ## Závěrečná úloha: model zvlášť pro muže a ženy {#sec-regrese-samostatne .exercise}
 
-V nové relaci R načtěte `data/clean/vztahy_zavazek.rds` a zjistěte, zda parametry modelu 3 vycházejí podobně pro **muže a ženy**. Vytvořte proměnnou délky vztahu v letech a pro každé pohlaví zvlášť vyberte osoby se vztahem trvajícím alespoň 6 měsíců. **Pozor:** výběr musí splňovat obě podmínky zároveň (délku vztahu i pohlaví). Odhadněte model se stejnými čtyřmi prediktory pro muže a pro ženy, zobrazte směrnice s 95% intervaly spolehlivosti a *R*^2^ a porovnejte je. Má smysl používat pro obě pohlaví jeden společný model? Odpověď shrňte několika větami.
+V nové relaci R načtěte `data/clean/vztahy_zavazek.rds` a zjistěte, zda odhady parametrů modelu 3 vycházejí podobně pro **muže a ženy**. Vytvořte proměnnou délky vztahu v letech a pro každé pohlaví zvlášť vyberte osoby se vztahem trvajícím alespoň 6 měsíců. **Pozor:** výběr musí splňovat obě podmínky zároveň (délku vztahu i pohlaví). Odhadněte model se stejnými čtyřmi prediktory pro muže a pro ženy, zobrazte směrnice s 95% intervaly spolehlivosti a *R*^2^ a porovnejte je. Má smysl používat pro obě pohlaví jeden společný model? Odpověď shrňte několika větami.
 
 ::: {.callout-note collapse="true" title="Ukázat řešení"}
 Následující řešení načítá balíčky i data samo a nepotřebuje objekty z předchozích oddílů.
@@ -1069,7 +1073,7 @@ bind_rows(
 
 Čárka mezi podmínkami ve `filter()` znamená „a zároveň“, stejně jako `&` (třetí lekce, oddíl [-@sec-upravy-filter]). `bind_rows()` spojí tabulky pod sebe; pojmenované argumenty spolu s `.id = "pohlavi"` vytvoří sloupec s označením, ze které tabulky řádek pochází.
 
-V každé skupině je 60 osob. Model vysvětluje u mužů 30 % a u žen 37 % rozptylu závazku. Směrnice se ale liší: **u mužů** souvisí se závazkem hlavně investice (*b* = 0,22, 95% CI \[0,06; 0,38\]) a délka vztahu (0,19 na rok \[0,05; 0,32\]), zatímco směrnice spokojenosti (0,08) a alternativ (−0,06) jsou blízko nuly. **U žen** je tomu naopak: nejsilněji souvisí spokojenost (0,38 \[0,12; 0,64\]) a alternativy (−0,20 \[−0,41; 0,01\]), zatímco investice (0,04) a délka vztahu (0,11) mají směrnice menší a s intervaly zahrnujícími nulu.
+V každé skupině je 60 osob. Model vysvětluje u mužů 30 % a u žen 37 % rozptylu závazku. Směrnice se ale liší: **u mužů** souvisí se závazkem hlavně investice (*b* = 0,22, 95% CI \[0,06; 0,38\]) a délka vztahu (0,19 na rok \[0,05; 0,32\]), zatímco směrnice spokojenosti (0,08) a alternativ (−0,06) jsou blízko nuly. **U žen** je tomu naopak: nejsilněji souvisí se závazkem spokojenost (0,38 \[0,12; 0,64\]) a alternativy (−0,20 \[−0,41; 0,01\]), zatímco investice (0,04) a délka vztahu (0,11) mají směrnice menší a s intervaly zahrnujícími nulu.
 
 **Pozor na interpretaci:** to, že je směrnice v jedné skupině statisticky významná a ve druhé ne, **neznamená**, že se skupiny v této směrnici statisticky významně liší. Intervaly spolehlivosti obou skupin se u všech směrnic překrývají a každý model stojí jen na 60 osobách, takže odhady jsou velmi nejisté. Zda se směrnice mezi pohlavími liší, by bylo nutné testovat přímo, například modelem s interakcí prediktorů a pohlaví (nepovinné rozšíření níže).
 
@@ -1094,7 +1098,7 @@ tidy(model_interakce) |>
   filter(str_detect(term, ":"))
 ```
 
-Test všech čtyř interakcí najednou, *F*(4, 110) = 2,27, *p* = 0,066, neprokazuje, že by se směrnice mezi pohlavími lišily. Největší rozdíl odhaduje model u spokojenosti (o 0,31 vyšší směrnice u žen, *p* = 0,052) a u investic (o 0,19 nižší u žen, *p* = 0,13). Data tedy s rozdílnými směrnicemi nejsou v rozporu, ale nedokládají je. Tento výsledek podporuje rozhodnutí ponechat jeden společný model.
+Test všech čtyř interakcí najednou, *F*(4, 110) = 2,27, *p* = 0,066, neprokazuje, že by se směrnice mezi pohlavími lišily. Největší rozdíl odhaduje model u spokojenosti (o 0,31 vyšší směrnice u žen, *p* = 0,052) a u investic (o 0,19 nižší u žen, *p* = 0,13). Data tedy se shodnými směrnicemi nejsou v rozporu, ale nedokládají je; je možné, že test interakcí neměl dostatečnou statistickou sílu. Tak jako tak nám tyto výsledky nedávají dostatečný důvod k zamítnutí společného modelu.
 :::
 
 ## Rozhodnutí a jejich důvody {#sec-regrese-rozhodnuti}
@@ -1136,7 +1140,7 @@ Test všech čtyř interakcí najednou, *F*(4, 110) = 2,27, *p* = 0,066, neproka
 
 ## Co si odnést {#sec-regrese-shrnuti}
 
-Lineární regrese popisuje, o kolik se v průměru liší závislá proměnná, když se prediktor liší o jednu jednotku. Regresní koeficienty tvoří konstanta (predikovaná hodnota při nulových prediktorech) a směrnice prediktorů. Ve vícenásobné regresi popisuje směrnice jedinečný vztah při stejných hodnotách ostatních prediktorů, a může se proto lišit od směrnice v jednoduché regresi, pokud prediktory spolu korelují. Model odhaduje `lm()`, výstup čtete pomocí `summary()` a do tabulek převádíte pomocí `tidy()`, `glance()` a `augment()`. Směrnice interpretujte v jednotkách proměnných a s intervalem spolehlivosti; jednotku prediktoru volte tak, aby byla směrnice srozumitelná, a konstantu interpretujte, jen když nulové hodnoty prediktorů dávají smysl (například po centrování). Standardizované β a semiparciální *R*^2^ pomáhají porovnat prediktory měřené v různých jednotkách. Přírůstek vysvětleného rozptylu testuje `anova()` pro vnořené modely. Předpoklady (linearita, nezávislost, homoskedasticita, normalita reziduí, absence silné multikolinearity a nadměrně vlivných pozorování) posuzujte hlavně z diagnostických grafů reziduí. Při jejich porušení ověřte intervaly bootstrapem a závislost na vlivných pozorováních analýzou citlivosti; pozorování nevyřazujte jen proto, že nezapadají. *R*^2^ a rezidua ukazují, jak přesně model předpovídá: model s mírným *R*^2^ může dobře popisovat průměrné vztahy, a přitom být nepoužitelný pro předpověď u jednotlivců. Rozdíl ve statistické významnosti směrnic mezi skupinami není testem rozdílu mezi nimi.
+Lineární regrese popisuje, o kolik se v průměru liší závislá proměnná, když se prediktor liší o jednu jednotku. Regresní koeficienty tvoří konstanta (predikovaná hodnota při nulových hodnotách prediktorů) a směrnice prediktorů. Ve vícenásobné regresi popisuje směrnice jedinečný vztah při stejných hodnotách ostatních prediktorů, a může se proto lišit od směrnice v jednoduché regresi, pokud spolu prediktory korelují. Model odhadujete pomocí `lm()`, výstup čtete pomocí `summary()` a do tabulek převádíte pomocí `tidy()`, `glance()` a `augment()`. Směrnice interpretujte v jednotkách proměnných a s intervalem spolehlivosti; jednotku prediktoru volte tak, aby byla směrnice snadno interpretovatelná; konstantu interpretujte, jen když nulové hodnoty prediktorů dávají smysl (například po centrování). Standardizované β a semiparciální *R*^2^ pomáhají porovnat prediktory měřené v různých jednotkách. Přírůstek vysvětleného rozptylu testuje `anova()` pro vnořené modely. Předpoklady (linearita, nezávislost, homoskedasticita, normalita reziduí, absence silné multikolinearity a nadměrně vlivných pozorování) posuzujte hlavně z diagnostických grafů reziduí. Při jejich porušení ověřte intervaly bootstrapem a závislost na vlivných pozorováních analýzou citlivosti; pozorování nevyřazujte jen proto, že se odlišují od zbytku. *R*^2^ a rezidua ukazují, jak přesně model předpovídá: model s nižším *R*^2^ může dobře popisovat průměrné vztahy, a přitom být příliš nepřesný pro predikci hodnot jednotlivců. Rozdíl ve statistické významnosti směrnic mezi skupinami není testem rozdílu mezi nimi.
 
 ## Zdroje a další procvičení {#sec-regrese-zdroje}
 

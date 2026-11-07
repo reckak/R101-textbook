@@ -1,5 +1,27 @@
 # Autorská dokumentace učebnice R101
 
+## Devátá kapitola: druhá redakce uživatele, 7. 11. 2026
+
+Redakční úpravy uživatele (po sloučení PR #40) zachovány; připomínky a opravy:
+
+- **Věcně:** doplněná definice parciálních reziduí v `crPlots()` byla chybná
+  („rezidua z modelu bez prediktoru“ je osa *y* v `avPlots()`); opraveno na
+  reziduum celého modelu + směrnice × prediktor. U `avPlots()` vypuštěno „opět
+  parciální rezidua“. Popis `id = list(n = 2, …)` opraven: car 3.1.3 má výchozí
+  `method = list(abs(residuals), "x")`, takže označuje 2 body podle rezidua a 2 podle
+  osy *x* (až 4 body; uživatel si všiml 3–4 popisků). Plná křivka v `crPlots()` je
+  `loessLine` → popsána jako loess s odkazem na šestou lekci. Posterior Predictive
+  Check: doplněn popis simulace (performance 0.15.2 volá `simulate(model, nsim = 50)`;
+  predikce + normální chyba se SD = 0,70). „Model posiluje“ → bod blízko trendu
+  směrnici nemění, ale zpřesňuje její odhad. „Graf přidané proměnné“ nezaváděn jako
+  pojem; odkazy nahrazeny `@fig-regrese-avplots`, popisek obrázku upraven.
+  „signifikantně“ → „statisticky významně“; „replikovat“ → „reprodukovat“ (stejná data
+  a kód); „nikdy primárně“ → „primárně“; „vyplněn validně“ → „nevyplnila pozorně“.
+- **Jazykově:** homoskedasticity, reziduí, konstantním, „a přináší velmi podobnou
+  informaci“, slovosled u VIF a u nápovědy `check_model()`, „výrazně méně, než bylo
+  zjištěno“, „hodnotách“, „dostatečný důvod“, gramatika vsuvky o souměrném rozdělení.
+- **Kód:** koncová mezera a uzavírací závorka v `summarise()` (`l09-presnost`).
+
 ## Devátá kapitola: redakce uživatele a leverage, 7. 11. 2026
 
 Redakční úpravy uživatele (po sloučení PR #39) zachovány, včetně nových bloků
