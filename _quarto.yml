@@ -48,9 +48,15 @@ format:
     fig-width: 7
     fig-height: 4.6
     fig-dpi: 120
+    lightbox: auto
 execute:
   echo: true
   warning: true
   message: false
   error: false
   cache: false
+knitr:
+  opts_chunk:
+    # Wide R output scrolls inside its block instead of wrapping into repeated column blocks.
+    R.options:
+      width: 100
