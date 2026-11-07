@@ -1,5 +1,39 @@
 # Autorská dokumentace učebnice R101
 
+## Devátá kapitola: redakce uživatele a leverage, 7. 11. 2026
+
+Redakční úpravy uživatele (po sloučení PR #39) zachovány, včetně nových bloků
+(`procento` v `l09-vzorek`, `as_tibble()` v `l09-sr2`). V nich opraveno:
+
+- **Věcně:** interval investic v modelu 2 [−0,01; 0,23] popsán jako slučitelný
+  s nulovým i mírným kladným vztahem (redakce uváděla jen „nulový nebo mírně negativní
+  dopad“; „dopad“ by navíc naznačoval kauzalitu); rozsah škály „(1–6)“ → „(0–6)“;
+  podmínka stejných osob u `anova()` oddělena od vnořenosti modelů (jinak `anova()`
+  skončí chybou); hvězdičky ve `summary()` popsány jako tradiční hranice *p*-hodnoty
+  (formulace podle uživatele); `after_stat(density)` převádí výšku sloupců, nikoli osu;
+  „rovnoměrně rozdělených“ → „rozmístěných“ (záměna s rovnoměrným rozdělením).
+- **Jazykově:** „modelem, které vysvětlující“ → „jehož“, „úrovni … prediktorech“,
+  „kdy byl jednotkou“, „dává vzniknout vysokým záporným reziduím“, „se pojí se“,
+  „obojí je“, „nejvyšší odchylky“, „z kterých“, „spokojenosti = 0“, „*t* hodnoty“.
+- **Kód:** `pct` → `procento` (české názvy sloupců jako `n_chybi`), mezery kolem
+  operátorů; text doplněn o procenta (50 %; 74,2 % a 25,8 %).
+- ***sr*² CI:** doplněno zdůvodnění výchozího jednostranného intervalu podle
+  `?effectsize::effectsize_CIs` (*sr*² je nezáporné, testuje se jednostranným
+  *F*-testem; jednostranný interval dává stejné rozhodnutí) a interpretace
+  oboustranných intervalů (dolní meze ≈ 0, horní 0,06–0,14). Ověřeno: jednostranná
+  dolní mez je nulová jen u investic (*p* = 0,069). Meze blízké nule
+  (0,0005 = *sr*²/100) jsou zjevně dolní limit výpočtu v effectsize, proto text
+  uvádí jen „prakticky u nuly“.
+- **Leverage:** „vliv“ pro *leverage* se pletl s „vlivným pozorováním“ (*influence*).
+  České regresní texty (UPOL Chemometrie, QC.Expert) ustálené jednoslovo nemají
+  (používají „diagonální prvky projekční matice H“, „extrémní body“). Na pokyn
+  uživatele ponechán anglický termín **leverage** s vysvětlením „doslova páka“, které
+  roste s extrémností hodnot v prediktorech; „vliv“ jen pro *influence*. Změněny
+  definice, popisek a alt text `fig-regrese-leverage`, text grafů, cvičení 7 a řešení.
+
+Ověření: `check-lesson-09.R`, render kapitoly 9 a `check-html.cjs` (kapitola 9:
+9 řešení, 72 kopírovaných bloků, 405 místních odkazů, mobil 390/390 px) prošly.
+
 ## Devátá kapitola: připomínky uživatele, 6. 11. 2026
 
 Na připomínky uživatele ke kapitole sloučené v PR #38 (samostatná větev
