@@ -300,6 +300,13 @@ U náhodných postupů nastav seed.
 - Instalaci balíčků odděl od běžného vykreslení dokumentu.
 - Tabulky a grafy opatři srozumitelnými českými popisky, jednotkami
 a věcnou interpretací.
+- Textové výstupy R se nemají zalamovat do opakovaných bloků sloupců.
+Šířku tisku určuje společné `R.options: width` v `_quarto.yml`; delší
+výstupy se posouvají vodorovně uvnitř bloku (`code-overflow: scroll`).
+V kapitole šířku neměň bez konkrétního důvodu a výstupy kvůli šířce
+nezkracuj na úkor čitelnosti.
+- Grafy se po kliknutí zvětší v lightboxu (`lightbox: auto` v `_quarto.yml`).
+Obrázky grafů nevkládej jako odkazy, které by lightbox obcházely.
 
 ## Odborná správnost
 - Rozlišuj mezi popisem dat, statistickou inferencí a kauzálními závěry.
@@ -332,7 +339,8 @@ v autorské dokumentaci i ve zprávě uživateli.
 celý obsah a tlačítko „Zkopírovat“ funguje u všech ukázek kódu včetně řešení.
 - Pokud ověření nelze provést, přesně uveď, co zůstalo neověřené a proč.
 - Ověř také načítání obrázků, čitelnost grafů a tabulek a mobilní zobrazení
-bez nechtěného vodorovného přetékání. Záměrné demonstrační chyby označ;
+bez nechtěného vodorovného přetékání. Široké výstupy R musí být jediný
+posuvný blok a kliknutí na graf jej otevře v lightboxu. Záměrné demonstrační chyby označ;
 ostatní chyby neopomíjej ani plošně nepotlačuj varování.
 - Při změně pouze instrukcí nebo autorské dokumentace zkontroluj jejich
 správnost a rozdíly; bez dopadu na výstup knihy není nutný nový render.

@@ -1,5 +1,23 @@
 # Autorská dokumentace učebnice R101
 
+## Široké výstupy R a lightbox pro grafy, 8. 11. 2026
+
+- **Problém:** R tiskne do výchozí šířky 80 znaků. Širší výstupy (například
+  `cor_mat()` v lekci 9) proto zalamoval do druhého bloku s opakovanými čísly
+  řádků, takže tabulka měla dvojnásobnou výšku. HTML samo už mělo
+  `code-overflow: scroll`; zalomení vznikalo v R.
+- **Změna:** `_quarto.yml` nastavuje všem blokům `knitr` `R.options: width: 100`.
+  Delší řádky se posouvají vodorovně uvnitř bloku a stránka (ani na mobilu)
+  nepřetéká. Šířka platí jen pro vykreslenou knihu; studentova konzole má vlastní
+  šířku, proto text lekcí (například výklad `print(width = Inf)` v lekci 9)
+  zůstává beze změny.
+- **Lightbox:** `lightbox: auto` (Quarto 1.9) otevře graf po kliknutí zvětšený.
+- **Kontrola:** `check-html.cjs` nově ověřuje, že každý graf je obalený odkazem
+  lightboxu, že se lightbox otevře a zavře a že výstupní `pre` bloky se posouvají,
+  místo aby se zalamovaly.
+- **Instrukce:** odpovídající pravidla doplněna do `AGENTS.md` (oddíly „R a Quarto“
+  a „Kontrola a pracovní postup“).
+
 ## Devátá kapitola: druhá redakce uživatele, 7. 11. 2026
 
 Redakční úpravy uživatele (po sloučení PR #40) zachovány; připomínky a opravy:

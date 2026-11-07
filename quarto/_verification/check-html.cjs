@@ -95,6 +95,22 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       }
       result.images = await page.locator('main img').evaluateAll(imgs => imgs.map(img => ({ alt: img.alt, loaded: img.complete && img.naturalWidth > 0 })));
       check(result.images.every(img => img.loaded && img.alt.length > 0), 'Broken image or missing alt text');
+      // R plots open enlarged on click; wide text output scrolls inside its block.
+      const plots = page.locator('main .cell-output-display img');
+      const plotCount = await plots.count();
+      check(await plots.evaluateAll(imgs => imgs.every(img => img.closest('a.lightbox'))),
+        'Every R plot must be wrapped in a lightbox link');
+      if (plotCount > 0) {
+        await plots.first().scrollIntoViewIfNeeded();
+        await plots.first().click();
+        await page.locator('.glightbox-container').waitFor({ state: 'visible' });
+        await page.keyboard.press('Escape');
+        await page.locator('.glightbox-container').waitFor({ state: 'detached' });
+      }
+      check(await page.locator('main .cell-output pre').evaluateAll(pres =>
+        pres.every(pre => ['auto', 'scroll'].includes(getComputedStyle(pre).overflowX) &&
+                          getComputedStyle(pre).whiteSpace.startsWith('pre')) ),
+        'R text output must scroll horizontally instead of wrapping');
       const links = await page.locator('main a[href], #TOC a[href], .nav-page a[href]').evaluateAll(links => links.map(a => a.href));
       const checkedLinks = new Set();
       for (const href of links) {
