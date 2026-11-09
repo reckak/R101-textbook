@@ -1,5 +1,29 @@
 # Autorská dokumentace učebnice R101
 
+## Devátá kapitola: robustní intervaly standardizovaných koeficientů, 9. 11. 2026
+
+- **Podnět uživatele:** zda v `betaDelta::BetaDelta()` nepoužít `type = "adf"`.
+  Výchozí `"mvn"` předpokládá vícerozměrné normální rozdělení (a tím normalitu a
+  homoskedasticitu reziduí); diagnostika v lekci ukazuje porušení obojího.
+- **Rozhodnutí (dohodnuto s uživatelem):** `BetaDelta()` v oddílu `sec-regrese-beta`
+  zůstává (výklad β před diagnostikou); jako dodatek po ověření předpokladů přidán
+  oddíl `sec-regrese-beta-hc` s `betaSandwich::BetaHC()` (HC3, betaSandwich 1.0.9)
+  a srovnávací tabulkou `tbl-regrese-beta-hc`. ADF nepoužito: dokumentace
+  betaSandwich jej doporučuje pro *n* > 250, pro běžné situace doporučuje HC3
+  (Pesigan, Sun & Cheung, 2023; Dudgeon, 2017).
+- **Ověřené výsledky (model 3 = model 2, β shodné):** normální teorie vs. HC3:
+  investice [−0,01; 0,31] vs. [−0,06; 0,36]; spokojenost [0,08; 0,40] vs.
+  [−0,03; 0,52] (SE 0,081 → 0,137, *p* = 0,078); alternativy [−0,39; −0,07] vs.
+  [−0,40; −0,06]; délka [0,11; 0,41] vs. [0,12; 0,41]. ADF (jen pro srovnání):
+  spokojenost [0,01; 0,48]. HC3 i pro nestandardizovanou směrnici spokojenosti
+  (`car::hccm`) zahrnuje nulu [−0,03; 0,46].
+- **Dopad na interpretaci:** kladný vztah spokojenosti není robustně prokázán
+  (bootstrap těsně nad nulou, HC3 nulu zahrnuje). Doplněno do dodatku a jednou větou
+  do vzorového zápisu výsledků; závěr již uváděl závislost na vlivných osobách.
+- **Další změny:** betaSandwich v instalačním bloku a popisu balíčků, odkaz
+  z `sec-regrese-beta` na dodatek, zdroj Pesigan et al. (2023) a odkaz na `BetaHC`.
+  `check-lesson-09.R` kontroluje meze MVN i HC3, shodu β a SE/p spokojenosti.
+
 ## Široké výstupy R a lightbox pro grafy, 8. 11. 2026
 
 - **Problém:** R tiskne do výchozí šířky 80 znaků. Širší výstupy (například

@@ -98,6 +98,9 @@ stopifnot(near(s2$r.squared - s1$r.squared, 0.218, 0.001), near(inc$F[2], 11.86)
 beta <- betaDelta::BetaDelta(model_2, alpha = 0.05)
 beta_est <- summary(beta)[, "est"]
 stopifnot(near(beta_est, c(0.15, 0.24, -0.23, 0.26), 0.006))
+beta_mvn_ci <- summary(beta)[, c("2.5%", "97.5%")]
+stopifnot(near(beta_mvn_ci[, 1], c(-0.01, 0.08, -0.39, 0.11), 0.006),
+          near(beta_mvn_ci[, 2], c(0.31, 0.40, -0.07, 0.41), 0.006))
 sr2 <- effectsize::r2_semipartial(model_2, alternative = "two.sided")
 stopifnot(near(sr2$r2_semipartial, c(0.02, 0.05, 0.05, 0.07), 0.01), near(sum(sr2$r2_semipartial), 0.19, 0.01))
 stopifnot(near(glance(model_delka)$r.squared, 0.104, 0.001), near(anova(model_delka, model_2)$F[2], 10.48))
@@ -151,6 +154,14 @@ again <- car::Boot(model_3, R = 5000)
 stopifnot(identical(bootstrap_3$t, again$t))
 ci_1000 <- confint(bootstrap_1000, type = "perc")
 stopifnot(max(abs(ci_1000 - ci_boot)) < 0.02, near(ci_1000["spokojenost", ], c(0.01, 0.42), 0.006))
+
+# Robust (HC3) standardized coefficients: same estimates, intervals quoted in the table.
+beta_hc <- summary(betaSandwich::BetaHC(model_3, alpha = 0.05))
+stopifnot(near(beta_hc[, "est"], beta_est, 1e-10),
+          near(beta_hc[, "2.5%"], c(-0.06, -0.03, -0.40, 0.12), 0.006),
+          near(beta_hc[, "97.5%"], c(0.36, 0.52, -0.06, 0.41), 0.006),
+          near(beta_hc["spokojenost", "se"], 0.137, 0.001), near(summary(beta)["spokojenost", "se"], 0.081, 0.001),
+          near(beta_hc["spokojenost", "p"], 0.078, 0.001))
 
 # Sensitivity analysis without the two most influential persons.
 stopifnot(identical(vlivne_id, c(124L, 21L)), nobs(model_bez_vlivnych) == 118L,

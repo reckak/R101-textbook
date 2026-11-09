@@ -40,12 +40,12 @@ Data pocházejí z bakalářské práce Lucie Mikulíkové, která zkoumala souv
 
 ### Balíčky a načtení dat {#sec-regrese-balicky}
 
-Nově použijeme několik balíčků pro regresní modely. **`broom`** převádí výsledky modelů na tabulky (tibble); instaluje se spolu s tidyverse, ale nenačítá se automaticky. **`car`** obsahuje diagnostické grafy a bootstrap regresního modelu, **`performance`** umožňuje souhrnnou kontrolu předpokladů a k vykreslení grafů potřebuje balíček **`see`**. **`betaDelta`** počítá standardizované koeficienty s intervaly spolehlivosti a **`effectsize`** semiparciální *R*^2^. Pokud balíčky ještě nemáte, nainstalujte je jednorázově v konzoli:
+Nově použijeme několik balíčků pro regresní modely. **`broom`** převádí výsledky modelů na tabulky (tibble); instaluje se spolu s tidyverse, ale nenačítá se automaticky. **`car`** obsahuje diagnostické grafy a bootstrap regresního modelu, **`performance`** umožňuje souhrnnou kontrolu předpokladů a k vykreslení grafů potřebuje balíček **`see`**. **`betaDelta`** a **`betaSandwich`** počítají standardizované koeficienty s intervaly spolehlivosti (druhý z nich robustními metodami) a **`effectsize`** semiparciální *R*^2^. Pokud balíčky ještě nemáte, nainstalujte je jednorázově v konzoli:
 
 ```{r}
 #| label: l09-instalace
 #| eval: false
-install.packages(c("broom", "car", "performance", "see", "betaDelta", "effectsize"))
+install.packages(c("broom", "car", "performance", "see", "betaDelta", "betaSandwich", "effectsize"))
 ```
 
 Balíček rstatix znáte ze sedmé lekce (oddíl [-@sec-testy-ttest]) a psych ze šesté (oddíl [-@sec-skory-alfa]). Ve skriptu načtěte jen balíčky, jejichž funkce budeme používat často. Funkce ostatních balíčků voláme s předponou `balicek::funkce()` (oddíl [-@sec-balicky]). Je tak hned vidět, odkud funkce pochází, a nevznikají zbytečná maskování: například balíček car obsahuje funkci `recode()`, která by po načtení zakryla stejnojmennou funkci z dplyr.
@@ -507,7 +507,7 @@ Nestandardizované směrnice *b* jsou v jednotkách proměnných: směrnice dél
 betaDelta::BetaDelta(model_2, alpha = 0.05)
 ```
 
-Sloupec `est` obsahuje bodový odhad β, sloupce `2.5%` a `97.5%` meze 95% intervalu spolehlivosti. Délka vztahu (β = 0,26), spokojenost (β = 0,24) a alternativy (β = −0,23) mají srovnatelně silný jedinečný vztah k závazku; investice slabší (β = 0,15) s intervalem zahrnujícím nulu. Rozdíly mezi prvními třemi β jsou malé ve srovnání s šířkou intervalů (přibližně ±0,16), pořadí prediktorů podle síly proto nelze z těchto dat spolehlivě určit.
+Sloupec `est` obsahuje bodový odhad β, sloupce `2.5%` a `97.5%` meze 95% intervalu spolehlivosti. Délka vztahu (β = 0,26), spokojenost (β = 0,24) a alternativy (β = −0,23) mají srovnatelně silný jedinečný vztah k závazku; investice slabší (β = 0,15) s intervalem zahrnujícím nulu. Rozdíly mezi prvními třemi β jsou malé ve srovnání s šířkou intervalů (přibližně ±0,16), pořadí prediktorů podle síly proto nelze z těchto dat spolehlivě určit. Tyto intervaly vycházejí z normální teorie; jak se změní, když její předpoklady neplatí, ukážeme po kontrole předpokladů v oddílu [-@sec-regrese-beta-hc].
 
 ### Semiparciální *R*^2^: jedinečný podíl každého prediktoru {#sec-regrese-sr2}
 
@@ -887,6 +887,30 @@ confint(bootstrap_1000, type = "perc")
 Meze se od intervalů s 5000 opakováními liší nejvýše o několik setin (například u spokojenosti \[0,01; 0,42\] v obou případech, u délky vztahu \[0,08; 0,25\]). Závěry se nemění. Bootstrap je náhodný postup: jiný seed vybere jiné vzorky, a meze proto mírně kolísají. Krajní percentily (2,5. a 97,5.) se odhadují jen z několika nejkrajnějších hodnot, při 1000 opakováních jde o 25 hodnot na každé straně. Více opakování toto kolísání zmenšuje a vede ke stabilnějším odhadům. Proto se pro intervaly spolehlivosti doporučují tisíce opakování a seed se uvádí, aby šel výsledek reprodukovat.
 :::
 
+### Robustní intervaly standardizovaných koeficientů {#sec-regrese-beta-hc}
+
+Bootstrap ověřil intervaly nestandardizovaných směrnic. Stejnou otázku si musíme položit i u standardizovaných koeficientů β z oddílu [-@sec-regrese-beta]. Funkce `BetaDelta()` počítá jejich standardní chyby ve výchozím nastavení podle **normální teorie**: předpokládá, že všechny proměnné modelu mají společně **vícerozměrné normální rozdělení**. Z toho plyne i normalita a shodný rozptyl reziduí. Diagnostika ale ukázala, že ani jedno neplatí: rezidua jsou zešikmená doleva a jejich rozptyl se s rostoucí predikcí zmenšuje. Chceme-li robustnější výsledky, má smysl použít funkci `BetaHC()` z balíčku **betaSandwich**, kterou jste nainstalovali na začátku lekce.
+
+V čem je rozdíl? Bodové odhady β jsou v obou funkcích stejné, liší se jen jejich **standardní chyby**, a tedy i intervaly a *p*-hodnoty. `BetaDelta()` odvozuje nejistotu z toho, jak by data vypadala při vícerozměrném normálním rozdělení. `BetaHC()` používá tzv. **sendvičový odhad** (*heteroskedasticity-consistent*, HC): nejistotu počítá z čtverců skutečných reziduí jednotlivých osob, takže nepředpokládá shodný rozptyl reziduí ani normalitu. Varianta **HC3** (výchozí nastavení) navíc zvětšuje váhu reziduí osob s vysokou leverage. Model se totiž k těmto bodům přibližuje, a jejich rezidua proto bývají menší, než odpovídá skutečné chybě. Podobný robustní přístup nabízí volba `type = "adf"` přímo v `BetaDelta()`, potřebuje ale velké vzorky (řádově stovky osob); pro vzorek o 120 osobách autoři balíčků doporučují HC3.
+
+```{r}
+#| label: l09-beta-hc
+betaSandwich::BetaHC(model_3, alpha = 0.05)
+```
+
+Výstup má stejnou podobu jako výstup `BetaDelta()`; záhlaví uvádí, že jde o standardní chyby HC3. Model 3 se od modelu 2 liší jen jednotkou délky vztahu, standardizované koeficienty jsou proto stejné jako v oddílu [-@sec-regrese-beta].
+
+| Prediktor    |     β | Normální teorie 95% CI | HC3 95% CI         |
+|:-------------|------:|:-----------------------|:-------------------|
+| Investice    |  0,15 | \[−0,01; 0,31\]        | \[−0,06; 0,36\]    |
+| Spokojenost  |  0,24 | \[0,08; 0,40\]         | \[−0,03; 0,52\]    |
+| Alternativy  | −0,23 | \[−0,39; −0,07\]       | \[−0,40; −0,06\]   |
+| Délka vztahu |  0,26 | \[0,11; 0,41\]         | \[0,12; 0,41\]     |
+
+: Intervaly spolehlivosti standardizovaných koeficientů modelu 3 podle normální teorie (`BetaDelta()`) a se sendvičovými standardními chybami HC3 (`BetaHC()`) {#tbl-regrese-beta-hc}
+
+U alternativ a délky vztahu se intervaly téměř nezměnily. U **spokojenosti** je ale standardní chyba HC3 (0,137) o 70 % větší než podle normální teorie (0,081) a interval \[−0,03; 0,52\] už zahrnuje nulu (*p* = 0,078). Důvod známe z diagnostiky: směrnice spokojenosti závisí na osobách 33 a 124, které mají vysokou leverage i velká rezidua, a HC3 jim dává větší váhu. Stejným směrem ukazuje bootstrap, jehož interval směrnice spokojenosti leží jen těsně nad nulou (\[0,01; 0,42\]). Že spokojenost souvisí se závazkem kladně, odpovídá teorii i bodovým odhadům, ale z těchto dat to nelze považovat za spolehlivě prokázané: robustní metody vedou k intervalům na hranici nuly nebo nulu zahrnujícím. Rozdíl mezi „významným“ a „nevýznamným“ výsledkem je tu dán spíše volbou metody než daty, a proto do zprávy uvádíme odhad s intervalem, nikoli jen hvězdičky.
+
 ## Analýza citlivosti {#sec-regrese-citlivost}
 
 Diagnostika ukázala několik vlivných pozorování. Nejde o chyby a vyřadit je jen proto, že nezapadají do modelu, by bylo nesprávné: výsledky by pak popisovaly jen lidi, kteří se chovají podle očekávání. Můžeme ale ověřit, **jak moc výsledky na těchto osobách závisejí**. Účelem diagnostiky odlehlých a vlivných případů tedy není primárně tyto případy vyřadit, ale porozumět tomu, jaký dopad na model mají. Odhadneme proto model bez dvou osob s největší Cookovou vzdáleností a výsledky porovnáme. Osoby vybereme podle jejich `id`, nikoli podle čísla řádku: čísla řádků se změní, kdykoli data jinak seřadíme nebo filtrujeme.
@@ -1021,7 +1045,7 @@ Ve zprávě uvádíme postup, počet osob, souhrn modelu a směrnice s nejistoto
 
 > **Analýza.** Z analýzy jsme vyřadili čtyři osoby se vztahem kratším než šest měsíců, protože počáteční fáze vztahu může mít odlišnou dynamiku. Žádné hodnoty nechyběly a všechny skóry ležely v rozsahu škály 0–6. Závazek jsme vysvětlovali lineárním regresním modelem se spokojeností, investicemi, alternativami a délkou vztahu v letech. Kvůli heteroskedasticitě a zešikmeným reziduím jsme klasické intervaly spolehlivosti ověřili percentilovým bootstrapem s 5000 opakováními.
 >
-> **Výsledky.** Model (*n* = 120) vysvětlil 29,6 % rozptylu závazku, *R*^2^ = 0,30, adjustované *R*^2^ = 0,27, *F*(4, 115) = 12,09, *p* \< 0,001. Silnější závazek uváděli lidé s vyšší spokojeností ve vztahu (*b* = 0,21, 95% CI \[0,07; 0,36\], β = 0,24), lidé vnímající méně kvalitní alternativy (*b* = −0,18, 95% CI \[−0,31; −0,05\], β = −0,23) a lidé v delším vztahu (*b* = 0,16 v přepočtu na 1 rok, 95% CI \[0,06; 0,26\], β = 0,26). Vztah investic k závazku byl po zohlednění ostatních prediktorů slabší a méně průkazný (*b* = 0,11, 95% CI \[−0,01; 0,23\], β = 0,15, *p* = 0,069), ačkoli samostatně investice se závazkem souvisely (*r* = 0,28). Bootstrapové intervaly vedly ke stejným závěrům, interval spokojenosti byl však širší (95% CI \[0,01; 0,42\]).
+> **Výsledky.** Model (*n* = 120) vysvětlil 29,6 % rozptylu závazku, *R*^2^ = 0,30, adjustované *R*^2^ = 0,27, *F*(4, 115) = 12,09, *p* \< 0,001. Silnější závazek uváděli lidé s vyšší spokojeností ve vztahu (*b* = 0,21, 95% CI \[0,07; 0,36\], β = 0,24), lidé vnímající méně kvalitní alternativy (*b* = −0,18, 95% CI \[−0,31; −0,05\], β = −0,23) a lidé v delším vztahu (*b* = 0,16 v přepočtu na 1 rok, 95% CI \[0,06; 0,26\], β = 0,26). Vztah investic k závazku byl po zohlednění ostatních prediktorů slabší a méně průkazný (*b* = 0,11, 95% CI \[−0,01; 0,23\], β = 0,15, *p* = 0,069), ačkoli samostatně investice se závazkem souvisely (*r* = 0,28). Bootstrapové intervaly vedly ke stejným závěrům, interval spokojenosti byl však širší (95% CI \[0,01; 0,42\]) a robustní interval jejího standardizovaného koeficientu (HC3) nulu zahrnoval (95% CI \[−0,03; 0,52\]).
 
 **Závěr** odpovídá na výzkumnou otázku, uvádí velikost vztahů a omezení:
 
@@ -1148,7 +1172,8 @@ Lineární regrese popisuje, o kolik se v průměru liší závislá proměnná,
 - Rusbult, C. E. (1980). Commitment and satisfaction in romantic associations: A test of the investment model. *Journal of Experimental Social Psychology, 16*(2), 172–186. <https://doi.org/10.1016/0022-1031(80)90007-4>
 - Rusbult, C. E., Martz, J. M., & Agnew, C. R. (1998). The Investment Model Scale: Measuring commitment level, satisfaction level, quality of alternatives, and investment size. *Personal Relationships, 5*(4), 357–387. <https://doi.org/10.1111/j.1475-6811.1998.tb00177.x>
 - Le, B., & Agnew, C. R. (2003). Commitment and its theorized determinants: A meta-analysis of the Investment Model. *Personal Relationships, 10*(1), 37–57. <https://doi.org/10.1111/1475-6811.00035>
+- Pesigan, I. J. A., Sun, R. W., & Cheung, S. F. (2023). betaDelta and betaSandwich: Confidence intervals for standardized regression coefficients in R. *Multivariate Behavioral Research, 58*(6), 1183–1186. <https://doi.org/10.1080/00273171.2023.2201277>
 - Fox, J., & Weisberg, S. (2019). *An R Companion to Applied Regression* (3. vydání). Sage. Kniha k balíčku car s podrobným výkladem regresní diagnostiky: <https://www.john-fox.ca/Companion/>
 - Dokumentace R: [lm](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/lm.html), [plot.lm](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/plot.lm.html) a [influence.measures](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/influence.measures.html) (Cookova vzdálenost, vliv, DFBETAS).
-- Dokumentace balíčků: broom [tidy.lm, glance.lm a augment.lm](https://broom.tidymodels.org/reference/tidy.lm.html), car [Boot](https://www.rdocumentation.org/packages/car/topics/Boot), [residualPlots](https://www.rdocumentation.org/packages/car/topics/residualPlots), [crPlots](https://www.rdocumentation.org/packages/car/topics/crPlots), [avPlots](https://www.rdocumentation.org/packages/car/topics/avPlots) a [vif](https://www.rdocumentation.org/packages/car/topics/vif), performance [check_model](https://easystats.github.io/performance/reference/check_model.html), betaDelta [BetaDelta](https://cran.r-project.org/package=betaDelta) a effectsize [r2_semipartial](https://easystats.github.io/effectsize/reference/r2_semipartial.html), rstatix [cor_mat](https://rpkgs.datanovia.com/rstatix/reference/cor_mat.html).
+- Dokumentace balíčků: broom [tidy.lm, glance.lm a augment.lm](https://broom.tidymodels.org/reference/tidy.lm.html), car [Boot](https://www.rdocumentation.org/packages/car/topics/Boot), [residualPlots](https://www.rdocumentation.org/packages/car/topics/residualPlots), [crPlots](https://www.rdocumentation.org/packages/car/topics/crPlots), [avPlots](https://www.rdocumentation.org/packages/car/topics/avPlots) a [vif](https://www.rdocumentation.org/packages/car/topics/vif), performance [check_model](https://easystats.github.io/performance/reference/check_model.html), betaDelta [BetaDelta](https://cran.r-project.org/package=betaDelta), betaSandwich [BetaHC](https://cran.r-project.org/package=betaSandwich) a effectsize [r2_semipartial](https://easystats.github.io/effectsize/reference/r2_semipartial.html), rstatix [cor_mat](https://rpkgs.datanovia.com/rstatix/reference/cor_mat.html).
 - Wickham, H., Çetinkaya-Rundel, M., & Grolemund, G. *R for Data Science* (2. vydání): [Pivoting](https://r4ds.hadley.nz/data-tidy.html#sec-pivoting) a [Facets](https://r4ds.hadley.nz/layers.html#facets). Kniha regresní modely neprobírá; všechna cvičení této lekce jsou vlastními úlohami.
