@@ -28,6 +28,7 @@ Výstup je v `_book/`, úvodní stránka v `_book/index.html`.
 - `scripts/` a `screenshots/`: podkladové skripty, instalace balíčků a snímky RStudia.
 - [data/README.md](data/README.md): původ dat a pravidla veřejných výukových výřezů.
 - `tests/`: otázky pro IS MUNI; technické kontroly jsou v `quarto/_verification/`.
+- `opakovani/`: samostatné opakování testů 1–7 s řešeními, mimo knihu (viz [provozní návod](docs/provoz.md)).
 - [AGENTS.md](AGENTS.md): pravidla tvorby a úprav; [quarto/README.md](quarto/README.md): autorská rozhodnutí a záznamy ověření.
 - [docs/provoz.md](docs/provoz.md): podrobná instalace, přehled souborů, kontroly a publikování.
 

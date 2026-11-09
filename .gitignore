@@ -28,3 +28,8 @@
 /data/raw/ZZ_ckrvliry.sav
 
 **/*.quarto_ipynb
+
+# Standalone quiz review (contains answer keys; rendered locally, not part of the book)
+/opakovani/*.html
+/opakovani/*_files/
+/opakovani/.quarto/

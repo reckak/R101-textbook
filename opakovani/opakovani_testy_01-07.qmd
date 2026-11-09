@@ -1,0 +1,2374 @@
+---
+title: "Opakování: testy k lekcím 1–7"
+subtitle: "Otázky z testů s vysvětlením, ukázkami v R a úlohami navíc"
+---
+
+## Jak s dokumentem pracovat {#sec-uvod}
+
+Dokument prochází všech sedm testů ke kurzu R101 v pořadí lekcí. U každé otázky si nejdříve sami zvolte odpověď. Teprve potom klikněte na **Ukázat řešení**. V řešení najdete správnou odpověď, vysvětlení, proč ostatní možnosti neplatí, a u otázek, které lze vyzkoušet v R, také kód a jeho skutečný výstup. Kód si můžete zkopírovat tlačítkem **Zkopírovat** a spustit ve vlastním projektu.
+
+Každý oddíl končí jednou nebo dvěma **úlohami navíc**. V testu nebyly a jsou obtížnější: kombinují více kroků, chtějí vlastní kód nebo zdůvodnění. Zkuste je nejprve vyřešit samostatně.
+
+Kód každého oddílu začíná vlastním blokem `library()`, takže jej lze spustit i bez předchozích oddílů. Potřebujete balíčky **tidyverse**, **palmerpenguins**, **nycflights13**, **readxl**, **haven**, **labelled**, **janitor**, **psych**, **qqplotr** a **rstatix**. Všechny jste instalovali během kurzu. Oddíly 5 a 7 používají tytéž soubory jako lekce 5 a 7 a hledají je v projektu ve složce `data/raw`:
+
+- `data/raw/help_seeking.xlsx` a `data/raw/four_countries_teaching.xlsx` (oddíl 5),
+- `data/raw/monitoring_teaching.sav` (oddíl 7).
+
+Soubory si můžete stáhnout z příslušné lekce v [učebnici](https://reckak.github.io/R101-textbook/). Malé tabulky, které v řešeních vytváříme přímo v kódu, jsou **smyšlené pro výuku**. Nejde o výsledky výzkumu.
+
+## Test 1: První kroky v R a RStudiu {#sec-test-1}
+
+Test k [lekci 1](https://reckak.github.io/R101-textbook/quarto/lekce_01.html) ověřuje rozdíl mezi R a RStudiem, práci v projektu, objekty, funkce, balíčky a první graf. Pro ukázky potřebujeme tidyverse a data tučňáků:
+
+```{r}
+#| label: t1-balicky
+#| warning: false
+library(tidyverse)
+library(palmerpenguins)
+```
+
+### 1.1 R a RStudio {#sec-t1-q1}
+
+Které tvrzení správně popisuje rozdíl mezi R a RStudiem?
+
+- **A** R je editor skriptů a RStudio je jazyk, který provádí statistické výpočty.
+- **B** R provádí výpočty a RStudio poskytuje prostředí pro psaní kódu, prohlížení výsledků a organizaci práce.
+- **C** R slouží k výpočtům a RStudio slouží pouze k instalaci balíčků.
+- **D** R a RStudio jsou dva názvy pro stejný program.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Výpočty provádí R, tedy programovací jazyk a výpočetní prostředí. RStudio je vývojové prostředí, které práci s R usnadňuje: má editor skriptů, konzoli a karty Environment, Plots nebo Help.
+
+- **A** zaměňuje role: editor je součástí RStudia, jazykem je R.
+- **C** je příliš úzké. V RStudiu píšeme a spouštíme skripty, prohlížíme grafy, soubory i nápovědu.
+- **D** neplatí, jde o dva odlišné programy. R lze používat i bez RStudia, například přímo v konzoli R. RStudio bez nainstalovaného R naopak nic nespočítá.
+:::
+
+### 1.2 Projekt a relativní cesta {#sec-t1-q2}
+
+Pracovním adresářem je hlavní složka vašeho projektu. Který zápis je relativní cestou k souboru `dotaznik.csv` ve složce `raw` uvnitř složky `data`?
+
+- **A** `C:/Users/Student/r101/data/raw/dotaznik.csv`
+- **B** `data/dotaznik.csv/raw`
+- **C** `dotaznik.csv`
+- **D** `data/raw/dotaznik.csv`
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Relativní cesta začíná v pracovním adresáři. Nejprve vstoupíme do složky `data`, potom do `raw` a nakonec uvedeme název souboru. Když projekt zkopírujete na jiný počítač a zachováte jeho strukturu, cesta bude stále platit.
+
+- **A** je absolutní cesta: začíná diskem a obsahuje konkrétní uživatelskou složku. Na jiném počítači nebo u spolužáka nebude fungovat.
+- **B** má složky a soubor v nesprávném pořadí. Název souboru je vždy poslední.
+- **C** by hledal soubor přímo v pracovním adresáři, kde ale neleží.
+
+Zda R soubor na dané cestě najde, ověříte funkcí `file.exists()`. Například `file.exists("data/raw/dotaznik.csv")` vrátí `TRUE`, pokud soubor ve vašem projektu existuje.
+:::
+
+### 1.3 Skript a reprodukovatelnost {#sec-t1-q3}
+
+Chcete ověřit, že vaše analýza nepotřebuje objekty vytvořené dříve pouze v konzoli. Který postup je nejvhodnější?
+
+- **A** Uložit skript, restartovat R bez obnovení uloženého workspace a spustit celý skript od začátku.
+- **B** Uložit skript a zkontrolovat, že zůstal otevřený v editoru.
+- **C** Ponechat objekty v Environment a znovu spustit pouze poslední řádek skriptu.
+- **D** Uložit obrázek grafu z karty Plots a zavřít RStudio.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.** Po restartu bez obnovení workspace začíná R s prázdným Environment. Pokud skript projde od prvního řádku do posledního, obsahuje všechny potřebné kroky ve správném pořadí. V RStudiu restartujete R volbou **Session → Restart R**. Obnovení workspace vypnete v **Tools → Global Options → General** (políčko *Restore .RData into workspace at startup* a volba *Save workspace on exit: Never*).
+
+- **B**: uložený a otevřený skript ještě nemusí být spustitelný.
+- **C**: poslední řádek může využívat objekty, které vznikly mimo skript. Takovou závislost tímto postupem neodhalíte.
+- **D**: obrázek uchová výsledek, ale neověří, že jej lze znovu vytvořit.
+:::
+
+### 1.4 Přiřazení, mocnina a komentář {#sec-t1-q4}
+
+Spustíte příkaz `vysledek <- 2^3 # výpočet mocniny`. Jaká hodnota bude poté uložená v objektu `vysledek`?
+
+- **A** Číslo 6.
+- **B** Text „výpočet mocniny“.
+- **C** Číslo 8.
+- **D** Číslo 9.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.** Znak `^` označuje umocňování, `2^3` je tedy dvě na třetí. Operátor `<-` uloží výsledek pod jméno `vysledek`. Text za `#` je komentář, který R neprovádí.
+
+```{r}
+#| label: t1-q4
+vysledek <- 2^3 # výpočet mocniny
+vysledek
+2 * 3 # takto by vzniklo 6 (možnost A)
+3^2   # takto by vzniklo 9 (možnost D)
+```
+
+Výpis `[1] 8` potvrzuje, že v objektu je číslo 8, nikoli text komentáře (možnost B). Další dva řádky ukazují, z jaké záměny vznikají chybné možnosti: 6 je součin, 9 je mocnina s prohozeným základem a exponentem.
+:::
+
+### 1.5 Vektor a průměr {#sec-t1-q5}
+
+Objekt `skory` obsahuje tři fiktivní dotazníkové skóry a byl vytvořen příkazem `skory <- c(10, 14, 18)`. Co vrátí `mean(skory)`?
+
+- **A** Číslo 3, tedy počet hodnot.
+- **B** Číslo 14, tedy aritmetický průměr hodnot.
+- **C** Číslo 42, tedy součet hodnot.
+- **D** Číslo 18, tedy nejvyšší hodnotu.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Funkce `c()` spojí hodnoty do vektoru a `mean()` vrátí jejich aritmetický průměr, tedy součet dělený počtem: (10 + 14 + 18) / 3 = 14. Ostatní možnosti vracejí jiné funkce:
+
+```{r}
+#| label: t1-q5
+skory <- c(10, 14, 18)
+mean(skory)
+length(skory) # počet hodnot (A)
+sum(skory)    # součet (C)
+max(skory)    # maximum (D)
+sum(skory) / length(skory)
+```
+
+Poslední řádek počítá průměr „ručně“ a dává stejný výsledek jako `mean()`.
+:::
+
+### 1.6 Argumenty funkce {#sec-t1-q6}
+
+Co vrátí příkaz `seq(from = 0, to = 6, by = 2)`?
+
+- **A** Posloupnost 0, 2, 4, 6.
+- **B** Posloupnost 0, 1, 2, 3, 4, 5, 6.
+- **C** Posloupnost 0, 6.
+- **D** Posloupnost 2, 4, 6.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.** `from` je začátek, `to` horní mez a `by` krok. Začínáme nulou a přičítáme 2, dokud nepřekročíme 6.
+
+```{r}
+#| label: t1-q6
+seq(from = 0, to = 6, by = 2)
+seq(from = 0, to = 6)              # bez by je krok 1 (B)
+seq(from = 0, to = 6, length.out = 2) # dvě hodnoty určuje length.out, ne by (C)
+```
+
+Druhý řádek ukazuje, že bez argumentu `by` se použije výchozí krok 1. Možnost C by vznikla, kdybychom chtěli jen dvě hodnoty; ty ale určuje argument `length.out`, nikoli `by`. Možnost D vynechává začátek `from = 0`.
+:::
+
+### 1.7 Instalace a připojení balíčku {#sec-t1-q7}
+
+Balíček tidyverse jste již nainstalovali do knihovny dostupné používané verzi R. Nyní jste restartovali R a chcete jeho funkce používat bez uvádění názvu balíčku. Který příkaz běžně patří na začátek skriptu?
+
+- **A** `install.packages("tidyverse")`
+- **B** `help(tidyverse)`
+- **C** `getwd()`
+- **D** `library(tidyverse)`
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Instalace uloží balíček na disk a stačí ji provést jednou. Připojení pomocí `library()` platí jen pro aktuální relaci, proto jej po každém restartu provedeme znovu. Patří tedy na začátek skriptu.
+
+- **A** by balíček znovu stahoval. Do skriptu, který spouštíte opakovaně, instalaci nepíšeme.
+- **B** otevírá nápovědu, balíček nepřipojí.
+- **C** vypíše pracovní adresář.
+
+Funkci lze použít i bez `library()`, pokud před ni napíšete název balíčku, například `dplyr::n_distinct(c(1, 2, 2))`. Otázka se ale ptá na používání funkcí bez uvádění názvu balíčku.
+:::
+
+### 1.8 Chybějící hodnoty {#sec-t1-q8}
+
+Ve sloupci `body_mass_g` v tabulce `penguins` je u jednoho tučňáka uvedeno `NA`. Co tato značka znamená?
+
+- **A** Hmotnost tohoto tučňáka je nulová.
+- **B** Hmotnost tohoto tučňáka je rovna průměru ostatních.
+- **C** Údaj o hmotnosti tohoto tučňáka chybí.
+- **D** Hmotnost tohoto tučňáka je záporná.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.** `NA` (*not available*) označuje chybějící hodnotu. R ji automaticky nenahrazuje nulou (A) ani průměrem (B) a nevyjadřuje žádnou velikost ani znaménko (D). Najděme tučňáky bez hmotnosti:
+
+```{r}
+#| label: t1-q8
+penguins |>
+  filter(is.na(body_mass_g)) |>
+  select(species, island, flipper_length_mm, body_mass_g)
+
+mean(penguins$body_mass_g)
+mean(penguins$body_mass_g, na.rm = TRUE)
+```
+
+Hmotnost chybí u dvou tučňáků a u obou chybí i délka ploutve. Neznamená to, že váží 0 g. První `mean()` proto vrací `NA`: když jedna hodnota chybí, nevíme, jaký by byl průměr všech. Až `na.rm = TRUE` chybějící hodnoty při výpočtu vynechá a průměr spočítá z dostupných 342 tučňáků. Žádnou hodnotu tím nedoplní.
+:::
+
+### 1.9 Mapování v grafu {#sec-t1-q9}
+
+V bodovém grafu z tabulky `penguins` používáte `aes(x = flipper_length_mm, y = body_mass_g, color = species)` a vrstvu `geom_point()`. Co určuje barvu jednotlivých bodů?
+
+- **A** Druh tučňáka uvedený ve sloupci `species`.
+- **B** Pořadí řádků v tabulce `penguins`.
+- **C** Hmotnost tučňáka uvedená ve sloupci `body_mass_g`.
+- **D** Barevný motiv editoru v RStudiu.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.** Zápis `color = species` uvnitř `aes()` je **mapování**: každé hodnotě proměnné `species` přiřadí ggplot2 jednu barvu a doplní legendu.
+
+```{r}
+#| label: t1-q9
+#| fig-alt: "Bodový graf délky ploutve a hmotnosti tučňáků, body jsou obarvené podle druhu: Adélie, Chinstrap a Gentoo."
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  geom_point() +
+  labs(x = "Délka ploutve (mm)", y = "Hmotnost (g)", color = "Druh")
+```
+
+Legenda ukazuje tři barvy pro tři druhy. Hmotnost (C) je mapovaná na svislou osu, ne na barvu. Pořadí řádků (B) ani motiv editoru (D) graf neovlivňují. Varování o dvou odstraněných řádcích se týká tučňáků z otázky 1.8, kterým chybí obě souřadnice.
+:::
+
+### 1.10 Interpretace souvislosti {#sec-t1-q10}
+
+V bodovém grafu mají tučňáci s delšími ploutvemi obecně vyšší hmotnost. Který závěr je na základě samotného grafu přiměřený?
+
+- **A** Delší ploutve způsobují vyšší hmotnost tučňáků.
+- **B** V zobrazených datech délka ploutve souvisí s hmotností; graf sám neprokazuje příčinný vztah.
+- **C** Každý tučňák s delší ploutví je těžší než kterýkoli tučňák s kratší ploutví.
+- **D** Pokud body obarvíme podle druhu, statisticky tím odstraníme vliv druhu na vztah.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Graf popisuje souvislost v pozorovaných datech. Pro příčinný závěr by bylo potřeba vědět víc, například jak data vznikla a co dalšího s oběma rozměry souvisí. Například druh a pohlaví ovlivňují délku ploutve i hmotnost současně.
+
+- **A** je kauzální tvrzení, které samotný bodový graf nedokládá.
+- **C**: trend není pravidlo bez výjimek. V grafu u otázky 1.9 najdete dvojice tučňáků, kde ten s delší ploutví váží méně.
+- **D**: barva pomáhá skupiny vizuálně rozlišit, ale nic statisticky nekontroluje.
+
+Výjimky z trendu najdeme i v datech. Porovnáme nejtěžšího tučňáka s ploutví nejvýše 190 mm a nejlehčího tučňáka s ploutví alespoň 210 mm:
+
+```{r}
+#| label: t1-q10
+penguins |>
+  filter(flipper_length_mm <= 190) |>
+  summarise(nejtezsi_s_kratkou_ploutvi = max(body_mass_g))
+
+penguins |>
+  filter(flipper_length_mm >= 210) |>
+  summarise(nejlehci_s_dlouhou_ploutvi = min(body_mass_g))
+```
+
+Nejtěžší tučňák s krátkou ploutví váží víc než nejlehčí tučňák s ploutví o nejméně 20 mm delší. Tvrzení C proto v datech neplatí.
+:::
+
+### Úloha navíc 1.A: Celkový trend a trend uvnitř skupin {#sec-t1-extra-a}
+
+Vytvořte bodový graf, který na osu x mapuje délku zobáku (`bill_length_mm`) a na osu y hloubku zobáku (`bill_depth_mm`). Nejprve přidejte jednu společnou trendovou přímku `geom_smooth(method = "lm")`. Potom vytvořte druhý graf, ve kterém v hlavním `aes()` mapujete na barvu druh. Jaký směr má vztah v prvním grafu a jaký uvnitř jednotlivých druhů? Co z toho plyne pro interpretaci první přímky?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: t1-extra-a1
+#| fig-alt: "Bodový graf délky a hloubky zobáku tučňáků s jednou společnou přímkou, která mírně klesá."
+ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm", formula = y ~ x, na.rm = TRUE) +
+  labs(x = "Délka zobáku (mm)", y = "Hloubka zobáku (mm)")
+```
+
+Společná přímka mírně **klesá**: tučňáci s delším zobákem mají v celém souboru spíše mělčí zobák.
+
+```{r}
+#| label: t1-extra-a2
+#| fig-alt: "Stejný bodový graf s body a přímkami obarvenými podle druhu; všechny tři přímky stoupají."
+ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm, color = species)) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm", formula = y ~ x, na.rm = TRUE) +
+  labs(x = "Délka zobáku (mm)", y = "Hloubka zobáku (mm)", color = "Druh")
+```
+
+Uvnitř každého druhu přímka naopak **stoupá**. Celkový klesající trend vzniká hlavně tím, že se druhy liší polohou: Gentoo mají dlouhé, ale mělké zobáky, Adélie krátké a hluboké. Celková přímka tedy popisuje spíše rozdíl mezi druhy než vztah mezi délkou a hloubkou zobáku u tučňáka určitého druhu. Tomuto obratu směru se říká **Simpsonův paradox**. V psychologii nastává podobně, když spojíme skupiny, které se liší průměry (například věkové kohorty nebo školy). Proto se před shrnutím vztahu vyplatí podívat, zda data neobsahují odlišné skupiny. Ani jeden z grafů přitom neříká nic o příčinách.
+:::
+
+### Úloha navíc 1.B: Skript, který po restartu nefunguje {#sec-t1-extra-b}
+
+Spolužák poslal skript níže. U něj „fungoval“, ale po restartu R skončí chybou. Najděte tři problémy a skript opravte tak, aby v nové relaci prošel celý a průměr nebyl `NA`. Kód nejprve jen čtěte, nespouštějte ho.
+
+```{r}
+#| label: t1-extra-b-zadani
+#| eval: false
+prumer <- mean(skory_kolegy)
+skory_kolegy <- c(12, 15, NA, 20)
+prumer
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(na.rm = TRUE)
+```
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+1. **Pořadí příkazů.** `mean(skory_kolegy)` je volaná dřív, než objekt vznikne. U spolužáka objekt nejspíš existoval z dřívější práce v konzoli, v nové relaci skončí chybou `object 'skory_kolegy' not found`.
+2. **Chybějící hodnota.** Vektor obsahuje `NA`, takže `mean()` bez `na.rm = TRUE` vrátí `NA`.
+3. **Chybí připojení balíčků.** `ggplot()` pochází z ggplot2 (součást tidyverse) a data `penguins` z balíčku palmerpenguins. Bez `library()` na začátku skriptu je R v nové relaci nenajde.
+
+Opravený skript:
+
+```{r}
+#| label: t1-extra-b-reseni
+library(tidyverse)
+library(palmerpenguins)
+
+skory_kolegy <- c(12, 15, NA, 20)
+prumer <- mean(skory_kolegy, na.rm = TRUE)
+prumer
+
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(na.rm = TRUE)
+```
+
+Průměr 15,67 vychází ze tří dostupných skórů. Ve zprávě bychom uvedli, že jeden skór chybí. `na.rm = TRUE` v `geom_point()` říká, že dva tučňáci bez měření mají být z grafu vynecháni bez varování; víme o nich z otázky 1.8. Skript ověříte způsobem z otázky 1.3: restartujte R a spusťte jej celý od začátku.
+:::
+
+## Test 2: Grafy v ggplot2 {#sec-test-2}
+
+Test k [lekci 2](https://reckak.github.io/R101-textbook/quarto/lekce_02.html) ověřuje mapování a pevné nastavení, vrstvy, volbu typu grafu, čtení histogramu, hustoty a boxplotu, panely a ukládání grafu.
+
+Dva tučňáci v datech nemají žádné měření (otázka 1.8). Abychom u každého grafu nedostávali stejné varování o vynechaných řádcích, píšeme do vrstev `na.rm = TRUE`. U přímek navíc uvádíme `formula = y ~ x`, takže ggplot2 nevypisuje hlášku o použitém vzorci. Obojí odpovídá postupu z lekce 2 a výsledný graf nemění.
+
+```{r}
+#| label: t2-balicky
+#| warning: false
+library(tidyverse)
+library(palmerpenguins)
+```
+
+### 2.1 Mapování a pevné nastavení {#sec-t2-q1}
+
+V bodovém grafu délky ploutve a hmotnosti tučňáků přidáte vrstvu `geom_point(aes(color = species), size = 3)`. Co tento zápis znamená?
+
+- **A** Barva i velikost bodů se mění podle druhu tučňáka.
+- **B** Barva bodů se řídí druhem tučňáka a velikost je pro všechny body nastavena na 3.
+- **C** V grafu se zobrazí pouze tři tučňáci každého druhu.
+- **D** Všechny body mají stejnou barvu a jejich velikost se řídí druhem tučňáka.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Uvnitř `aes()` **mapujeme** proměnnou na vlastnost grafu: barva se mění podle druhu. Mimo `aes()` vlastnost **nastavujeme** na pevnou hodnotu: všechny body mají velikost 3.
+
+```{r}
+#| label: t2-q1
+#| fig-alt: "Bodový graf délky ploutve a hmotnosti s většími body obarvenými podle druhu; legenda obsahuje jen barvy."
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color = species), size = 3, na.rm = TRUE) +
+  labs(x = "Délka ploutve (mm)", y = "Hmotnost (g)", color = "Druh")
+```
+
+Všimněte si legendy: obsahuje jen barvy druhů. Velikost v ní není, protože není mapovaná na žádnou proměnnou. Kdyby se velikost měnila podle druhu (A, D), objevila by se v legendě. `size` neurčuje počet zobrazených tučňáků (C), v grafu jsou všichni s dostupnými údaji.
+:::
+
+### 2.2 Trendové přímky podle skupin {#sec-t2-q2}
+
+V hlavním `aes()` funkce `ggplot()` mapujete délku ploutve na x, hmotnost na y a `species` na `color`. Přidáte `geom_point()` a `geom_smooth(method = "lm")`. Data obsahují dostatek úplných měření pro každý ze tří druhů. Jaké trendové přímky vzniknou?
+
+- **A** Jedna společná přímka pro všechny druhy, protože `method = "lm"` vždy vytvoří jedinou přímku.
+- **B** Žádná přímka, protože `geom_smooth()` lze použít pouze bez bodové vrstvy.
+- **C** Jedna samostatná přímka pro každého tučňáka.
+- **D** Tři přímky, jedna pro každý druh tučňáka.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Mapování v hlavním `aes()` platí pro všechny vrstvy. Vrstva `geom_smooth()` proto „dědí“ barvu podle druhu a odhadne přímku zvlášť pro každý druh.
+
+```{r}
+#| label: t2-q2
+#| fig-alt: "Bodový graf délky ploutve a hmotnosti se třemi barevnými regresními přímkami, jednou pro každý druh."
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm", formula = y ~ x, na.rm = TRUE) +
+  labs(x = "Délka ploutve (mm)", y = "Hmotnost (g)", color = "Druh")
+```
+
+Vznikly tři přímky v barvách druhů. `method = "lm"` určuje typ trendu (přímku), nikoli počet skupin (A). Body a trend lze kombinovat znakem `+` (B). Přímka shrnuje vztah ve skupině, nikoli jednoho tučňáka (C). Jak získat jednu společnou přímku při barevných bodech, ukazuje úloha 2.A.
+:::
+
+### 2.3 Předání dat a přidání vrstvy {#sec-t2-q3}
+
+Co dělají operátory v příkazu `penguins |> ggplot(aes(x = flipper_length_mm, y = body_mass_g)) + geom_point()`?
+
+- **A** Operátor `|>` předá tabulku do `ggplot()` a znak `+` přidá bodovou vrstvu.
+- **B** Operátor `|>` sečte hodnoty tabulky a znak `+` uloží graf do souboru.
+- **C** Oba operátory zde slouží k přidání nové grafické vrstvy.
+- **D** Operátor `|>` vybere jen úplné řádky a znak `+` přidá novou proměnnou do tabulky.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.** Pipe operátor `|>` vezme objekt vlevo a předá ho jako první argument funkci vpravo. Zápis je tedy totéž jako `ggplot(penguins, aes(...))`. Znak `+` pak ke grafu připojí vrstvu `geom_point()`.
+
+```{r}
+#| label: t2-q3
+#| fig-alt: "Bodový graf délky ploutve a hmotnosti tučňáků bez barevného rozlišení."
+penguins |>
+  ggplot(aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(na.rm = TRUE)
+```
+
+Častou začátečnickou chybou je napsat mezi vrstvami `|>` místo `+`. ggplot2 pak skončí chybou, protože vrstvy se k grafu přidávají jedině znakem `+`. Pipe nic nesčítá (B), nevybírá řádky ani nemění tabulku (D). Ukládání grafu do souboru řeší `ggsave()` (otázka 2.10).
+:::
+
+### 2.4 Sloupcový graf četností {#sec-t2-q4}
+
+Tabulka `penguins` obsahuje jeden řádek pro každého tučňáka a sloupec `species` označuje jeho druh. Co ukazují výšky sloupců v grafu `ggplot(penguins, aes(x = species)) + geom_bar()`?
+
+- **A** Průměrnou hmotnost tučňáků každého druhu.
+- **B** Podíl každého druhu v celé světové populaci tučňáků.
+- **C** Počet řádků v tabulce připadajících na každý druh.
+- **D** Předem vypočtené hodnoty, které `geom_bar()` automaticky hledá ve sloupci `n`.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.** Výchozí `geom_bar()` sám spočítá řádky v každé kategorii na ose x. Osu y proto nezadáváme.
+
+```{r}
+#| label: t2-q4
+#| fig-alt: "Sloupcový graf počtu tučňáků podle druhu: Adélie 152, Chinstrap 68, Gentoo 124."
+ggplot(penguins, aes(x = species)) +
+  geom_bar() +
+  labs(x = "Druh", y = "Počet tučňáků")
+
+penguins |> count(species)
+```
+
+Výšky sloupců odpovídají tabulce z `count()`: 152 Adélií, 68 Chinstrapů a 124 Gentoo. Graf neukazuje hmotnost (A) ani podíl ve světové populaci (B). Popisuje jen tento soubor. Pokud už četnosti máme spočítané v tabulce, použijeme `geom_col()` a výšku mapujeme výslovně: `ggplot(cetnosti, aes(x = species, y = n)) + geom_col()`. Samotný `geom_bar()` sloupec `n` nehledá (D).
+:::
+
+### 2.5 Šířka intervalů histogramu {#sec-t2-q5}
+
+V histogramu tělesné hmotnosti v gramech použijete `geom_histogram(binwidth = 200)`. Co určuje hodnota 200?
+
+- **A** Přesný počet sloupců histogramu.
+- **B** Šířku každého intervalu na ose hmotnosti, tedy 200 gramů.
+- **C** Počet tučňáků, kteří musejí být v každém intervalu.
+- **D** Nejvyšší hmotnost, kterou lze v grafu zobrazit.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** `binwidth` je šířka intervalu v jednotkách proměnné na ose x, zde v gramech. Výška sloupce pak říká, kolik tučňáků do daného intervalu padlo.
+
+```{r}
+#| label: t2-q5
+#| fig-alt: "Histogram hmotnosti tučňáků s intervaly širokými 200 gramů, hodnoty od zhruba 2700 do 6300 gramů."
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 200, na.rm = TRUE) +
+  labs(x = "Hmotnost (g)", y = "Počet tučňáků")
+```
+
+Každý sloupec pokrývá 200 g. Počet sloupců (A) vyplývá z rozsahu dat a šířky intervalu. Přibližný počet bychom mohli místo šířky zadat argumentem `bins`. Výšky sloupců se liší, takže `binwidth` neurčuje počet tučňáků v intervalu (C), ani neomezuje zobrazený rozsah (D). Vyzkoušejte `binwidth = 50` a `binwidth = 1000`: příliš úzké intervaly vytvoří „zubatý“ obraz a příliš široké skryjí tvar rozdělení.
+:::
+
+### 2.6 Křivky hustoty a velikost skupin {#sec-t2-q6}
+
+Pomocí `geom_density()` zobrazíte samostatnou křivku hustoty hmotnosti pro každý druh tučňáka. Jeden druh má vyšší vrchol křivky než ostatní. Znamená to, že má v tabulce nejvíce záznamů?
+
+- **A** Ano, výška vrcholu přímo udává počet záznamů daného druhu.
+- **B** Ano, protože plocha pod každou křivkou odpovídá počtu tučňáků daného druhu.
+- **C** Ne, vyšší vrchol naopak vždy znamená méně záznamů.
+- **D** Ne, každá skupinová hustota má plochu jedna a výška vrcholu sama velikost skupiny neurčuje.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Každá křivka hustoty má pod sebou plochu 1 bez ohledu na to, kolik pozorování skupina má. Výška vrcholu proto závisí na **tvaru** rozdělení: úzké rozdělení má vysoký vrchol, široké nízký.
+
+```{r}
+#| label: t2-q6
+#| fig-alt: "Tři překrývající se křivky hustoty hmotnosti podle druhu; nejvyšší a nejužší vrchol má Chinstrap."
+ggplot(penguins, aes(x = body_mass_g, fill = species)) +
+  geom_density(alpha = 0.4, na.rm = TRUE) +
+  labs(x = "Hmotnost (g)", y = "Hustota", fill = "Druh")
+
+penguins |>
+  summarise(pocet = n(), sd_hmotnosti = sd(body_mass_g, na.rm = TRUE), .by = species)
+```
+
+Nejvyšší vrchol má Chinstrap, tedy druh s **nejmenším** počtem záznamů (68) a zároveň nejmenší směrodatnou odchylkou hmotnosti. Protipříklad vyvrací A i B. Vyvrací ale i C: vztah „vyšší vrchol = méně záznamů“ zde náhodou platí, obecně však ne. Kdybychom Chinstrapů měli 500 se stejnou variabilitou, křivka by vypadala stejně. Pro porovnání počtů slouží sloupcový graf z otázky 2.4.
+:::
+
+### 2.7 Čtení boxplotu {#sec-t2-q7}
+
+Ve výukovém scénáři porovnáváte pomocí boxplotů rozdělení skóru úzkosti v intervenční a kontrolní skupině. Co představuje čára uvnitř každého boxu?
+
+- **A** Medián skóru v dané skupině.
+- **B** Aritmetický průměr skóru v dané skupině.
+- **C** Nejvyšší skór v dané skupině.
+- **D** Hranici statistické významnosti rozdílu mezi skupinami.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.** Čára uvnitř boxu je medián. Dolní a horní hrana boxu jsou první a třetí kvartil, box tedy obsahuje prostředních zhruba 50 % hodnot. Ověříme to na smyšlených skórech úzkosti, které mají v kontrolní skupině několik vysokých hodnot:
+
+```{r}
+#| label: t2-q7
+#| fig-alt: "Dva boxploty skóru úzkosti; červený bod průměru leží v kontrolní skupině výše než čára mediánu."
+set.seed(2026)
+uzkost <- tibble(
+  skupina = rep(c("intervenční", "kontrolní"), each = 40),
+  skore = c(round(rnorm(40, mean = 20, sd = 4)),
+            round(rnorm(36, mean = 22, sd = 4)), c(38, 40, 41, 45))
+)
+
+uzkost |>
+  summarise(median = median(skore), prumer = mean(skore), maximum = max(skore), .by = skupina)
+
+ggplot(uzkost, aes(x = skupina, y = skore)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", color = "red", size = 3) +
+  labs(x = "Skupina", y = "Skór úzkosti (smyšlená data)")
+```
+
+V kontrolní skupině leží červený bod průměru výše než čára mediánu, protože průměr táhnou nahoru čtyři vysoké skóry. Čára v boxu tedy odpovídá mediánu z tabulky, ne průměru (B). Maximum (C) je nejvyšší samostatný bod nad vousem. Takové body boxplot jen zobrazuje, za chyby je automaticky neoznačuje. Boxplot nic netestuje (D). O rozdílu mezi skupinami rozhoduje až vhodný test (lekce 7).
+:::
+
+### 2.8 Počty a podíly {#sec-t2-q8}
+
+Ve výukovém scénáři máte dvě nestejně velké skupiny účastníků a jejich odpovědi „ano“ či „ne“. Použijete `geom_bar(position = "fill")`, na osu x mapujete skupinu a na `fill` odpověď. Co vyjadřují barevné části každého sloupce?
+
+- **A** Absolutní počty odpovědí v dané skupině.
+- **B** Podíly odpovědí z celého souboru obou skupin dohromady.
+- **C** Podíly odpovědí uvnitř dané skupiny.
+- **D** Průměrné hodnoty číselného skóru v dané skupině.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.** `position = "fill"` roztáhne každý sloupec na výšku 1 (100 %). Barevné části proto ukazují složení odpovědí uvnitř skupiny. Ukázka na smyšlených datech se 30 a 10 účastníky:
+
+```{r}
+#| label: t2-q8
+#| fig-alt: "Dva stejně vysoké sloupce rozdělené na podíly odpovědí ano a ne; ve skupině A je ano 67 %, ve skupině B 50 %."
+odpovedi <- tibble(
+  skupina = rep(c("A", "B"), times = c(30, 10)),
+  odpoved = c(rep(c("ano", "ne"), times = c(20, 10)),
+              rep(c("ano", "ne"), times = c(5, 5)))
+)
+
+ggplot(odpovedi, aes(x = skupina, fill = odpoved)) +
+  geom_bar(position = "fill") +
+  labs(x = "Skupina", y = "Podíl odpovědí", fill = "Odpověď")
+
+odpovedi |>
+  count(skupina, odpoved) |>
+  mutate(podil = n / sum(n), .by = skupina)
+```
+
+Oba sloupce mají stejnou výšku, přestože skupina A je třikrát větší. Z grafu tedy nevyčteme absolutní počty (A). Podíly se počítají uvnitř skupiny (2/3 a 1/2), ne z celého souboru (B). V tabulce to zajišťuje `.by = skupina`. Žádný číselný skór se zde neprůměruje (D).
+:::
+
+### 2.9 Rozdělení grafu do panelů {#sec-t2-q9}
+
+K bodovému grafu tučňáků přidáte `facet_wrap(facets = vars(island), ncol = 2)`. Sloupec `island` obsahuje tři ostrovy. Jak se graf rozdělí?
+
+- **A** Vzniknou dva panely, do kterých se tučňáci náhodně rozdělí.
+- **B** Vznikne panel pro každý ostrov, uspořádaný nejvýše do dvou sloupců.
+- **C** Všechny body zůstanou v jednom panelu a ostrovy se rozliší pouze barvou.
+- **D** Vznikne jeden panel pro každého tučňáka, uspořádaný do dvou řádků.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** `facet_wrap()` vytvoří jeden panel pro každou hodnotu proměnné `island`. `ncol = 2` jen určuje, že panely budou rozložené nejvýše do dvou sloupců.
+
+```{r}
+#| label: t2-q9
+#| fig-alt: "Tři panely bodového grafu pro ostrovy Biscoe, Dream a Torgersen ve dvou sloupcích; třetí panel je v druhém řádku."
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(na.rm = TRUE) +
+  facet_wrap(facets = vars(island), ncol = 2) +
+  labs(x = "Délka ploutve (mm)", y = "Hmotnost (g)")
+```
+
+Vznikly tři panely (Biscoe, Dream, Torgersen). Dva jsou v prvním řádku, třetí ve druhém. Panely mají společné osy, takže lze přímo porovnat, že na ostrově Biscoe žijí i nejtěžší tučňáci. Barvu by bylo nutné mapovat zvlášť (C). Panel odpovídá ostrovu, ne jednotlivému tučňákovi (D), a rozdělení není náhodné (A).
+:::
+
+### 2.10 Uložení konkrétního grafu {#sec-t2-q10}
+
+V R máte vytvořený grafický objekt `graf_tucnaci`. Chcete jej uložit do souboru `tucnaci.png` v pracovním adresáři bez ohledu na to, který graf jste zobrazili naposledy. Který příkaz to provede?
+
+- **A** `ggsave(filename = "tucnaci.png", plot = graf_tucnaci)`
+- **B** `print(graf_tucnaci)`
+- **C** `graf_tucnaci + labs(title = "tucnaci.png")`
+- **D** `ggsave(filename = "tucnaci.png")`
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.** Argument `plot` výslovně určuje, který graf se uloží. Bez něj (D) uloží `ggsave()` naposledy zobrazený graf, a to nemusí být `graf_tucnaci`. `print()` (B) graf jen zobrazí a `labs()` (C) změní titulek.
+
+V ukázce ukládáme do dočasné složky R (`tempdir()`), abychom ve vašem projektu nevytvářeli soubory. Ve vlastním skriptu napíšete přímo `"tucnaci.png"` nebo například `"output/figures/tucnaci.png"`.
+
+```{r}
+#| label: t2-q10
+graf_tucnaci <- ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(na.rm = TRUE)
+
+soubor <- file.path(tempdir(), "tucnaci.png")
+ggsave(filename = soubor, plot = graf_tucnaci, width = 16, height = 10, units = "cm", dpi = 300)
+file.exists(soubor)
+```
+
+`file.exists()` vrací `TRUE`, soubor tedy vznikl. Argumenty `width`, `height`, `units` a `dpi` určují rozměry a rozlišení obrázku. Bez nich se použije velikost aktuálního grafického okna, takže by obrázek na jiném počítači mohl vyjít jinak velký.
+:::
+
+### Úloha navíc 2.A: Barevné body, ale jedna přímka {#sec-t2-extra-a}
+
+Upravte graf z otázky 2.2 tak, aby body zůstaly obarvené podle druhu, ale trendová přímka byla jen jedna, společná pro všechny tučňáky, a černá. Vysvětlete, proč na tom, kam zapíšete `color = species`, záleží.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Mapování barvy přesuneme z hlavního `aes()` do `aes()` bodové vrstvy. Mapování v `ggplot()` dědí všechny vrstvy, mapování uvnitř `geom_point()` platí jen pro body. Vrstva `geom_smooth()` pak žádné skupiny nezná a odhadne jedinou přímku. Barvu přímky **nastavíme** mimo `aes()`:
+
+```{r}
+#| label: t2-extra-a
+#| fig-alt: "Bodový graf s body obarvenými podle druhu a jednou černou regresní přímkou přes všechny tučňáky."
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color = species), na.rm = TRUE) +
+  geom_smooth(method = "lm", formula = y ~ x, color = "black", na.rm = TRUE) +
+  labs(x = "Délka ploutve (mm)", y = "Hmotnost (g)", color = "Druh")
+```
+
+Kdybychom napsali `geom_smooth(aes(color = "black"))`, ggplot2 by text `"black"` chápal jako hodnotu proměnné. Přímka by dostala barvu z palety a v legendě by se objevila položka „black“. Pevné nastavení proto patří mimo `aes()`.
+:::
+
+### Úloha navíc 2.B: Sloupce pro předem spočítané průměry {#sec-t2-extra-b}
+
+Spolužák si spočítal průměrnou hmotnost druhů:
+
+```{r}
+#| label: t2-extra-b-zadani
+prumery <- penguins |>
+  summarise(prumer = mean(body_mass_g, na.rm = TRUE), .by = species)
+prumery
+```
+
+Potom napsal `ggplot(prumery, aes(x = species)) + geom_bar()` a divil se, že mají všechny sloupce výšku 1. Vysvětlete proč a graf opravte. Navrhněte také zobrazení, které by místo samotných průměrů ukázalo rozdělení hmotnosti v každém druhu.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+`geom_bar()` počítá **řádky** v každé kategorii. Tabulka `prumery` má pro každý druh jediný řádek, proto mají všechny sloupce výšku 1. Hodnoty, které už v tabulce máme, zobrazí `geom_col()` s výslovně mapovanou osou y:
+
+```{r}
+#| label: t2-extra-b1
+#| fig-alt: "Sloupcový graf průměrné hmotnosti: Adélie a Chinstrap kolem 3700 gramů, Gentoo kolem 5100 gramů."
+ggplot(prumery, aes(x = species, y = prumer)) +
+  geom_col() +
+  labs(x = "Druh", y = "Průměrná hmotnost (g)")
+```
+
+Sloupec průměru ale skrývá, jak moc se tučňáci uvnitř druhu liší. Boxplot z původních dat ukáže medián, kvartily i odlehlé hodnoty:
+
+```{r}
+#| label: t2-extra-b2
+#| fig-alt: "Boxploty hmotnosti podle druhu; Gentoo mají celé rozdělení výše než Adélie a Chinstrap, které se výrazně překrývají."
+ggplot(penguins, aes(x = species, y = body_mass_g)) +
+  geom_boxplot(na.rm = TRUE) +
+  labs(x = "Druh", y = "Hmotnost (g)")
+```
+
+Boxplot ukazuje, že se hmotnosti Adélií a Chinstrapů téměř úplně překrývají a Gentoo jsou výrazně těžší. Ze sloupců průměrů bychom poznali jen rozdíl středů. Pozor: boxplot vychází z tabulky `penguins`, ne z tabulky `prumery`. Ze tří průměrů rozdělení zrekonstruovat nelze.
+:::
+
+## Test 3: Úpravy dat v dplyr {#sec-test-3}
+
+Test k [lekci 3](https://reckak.github.io/R101-textbook/quarto/lekce_03.html) ověřuje výběr a řazení řádků, chování `NA` v podmínkách, výběr sloupců, nové proměnné a souhrny podle skupin. Používáme záznamy letů z balíčku nycflights13 a malé smyšlené tabulky.
+
+```{r}
+#| label: t3-balicky
+#| warning: false
+library(tidyverse)
+library(nycflights13)
+```
+
+### 3.1 Výběr řádků podle podmínek {#sec-t3-q1}
+
+V tabulce `flights` označuje `month` měsíc a `dep_delay` zpoždění odletu v minutách. Které záznamy vybere příkaz `flights |> filter(month %in% c(1, 2), dep_delay >= 60)`?
+
+- **A** Všechny lety z ledna a navíc lety z února se zpožděním alespoň 60 minut.
+- **B** Lety z ledna nebo února, které mají známé zpoždění odletu alespoň 60 minut.
+- **C** Lety z kteréhokoli měsíce, pokud mají zpoždění odletu alespoň 60 minut.
+- **D** Lety z ledna nebo února, které mají zpoždění odletu přesně 60 minut.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Podmínky oddělené čárkou musí platit **obě současně**. `%in%` testuje, zda je měsíc mezi hodnotami 1 a 2, a `>=` znamená „alespoň“. Řádky s chybějícím zpožděním `filter()` vyřadí, protože u nich podmínka nevrací `TRUE`.
+
+```{r}
+#| label: t3-q1
+lety_zima <- flights |>
+  filter(month %in% c(1, 2), dep_delay >= 60)
+
+lety_zima |> count(month)
+lety_zima |>
+  summarise(nejmensi = min(dep_delay), nejvetsi = max(dep_delay),
+            chybi = sum(is.na(dep_delay)))
+```
+
+Výsledek obsahuje jen lednové a únorové lety, takže C neplatí. Nejmenší zpoždění je 60 minut a hodnoty jdou mnohem výš, nejde tedy o „přesně 60“ (D). Hranice platí pro oba měsíce: kdyby platila možnost A, v lednu by zůstaly i lety bez zpoždění a nejmenší hodnota by byla záporná. Žádné zpoždění nechybí.
+:::
+
+### 3.2 Chybějící hodnoty ve filtru {#sec-t3-q2}
+
+Pomocná výuková tabulka `ukazka` má jediný sloupec `zpozdeni` s hodnotami -5, 130 a `NA`. Které hodnoty zůstanou po příkazu `ukazka |> filter(zpozdeni > 120)`?
+
+- **A** Hodnoty 130 a `NA`.
+- **B** Hodnoty -5 a 130.
+- **C** Všechny tři hodnoty, protože `filter()` řádky pouze seřadí.
+- **D** Pouze hodnota 130.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Podívejme se, co podmínka vrací pro každý řádek:
+
+```{r}
+#| label: t3-q2
+ukazka <- tibble(zpozdeni = c(-5, 130, NA))
+ukazka$zpozdeni > 120
+ukazka |> filter(zpozdeni > 120)
+ukazka |> filter(zpozdeni > 120 | is.na(zpozdeni))
+```
+
+Porovnání vrací `FALSE`, `TRUE` a `NA`. Pro chybějící hodnotu nevíme, zda je větší než 120. `filter()` ponechá jen řádky s `TRUE`, proto zůstane 130 a `NA` vypadne (A). Pokud chceme chybějící záznamy výslovně zachovat, přidáme podmínku `| is.na(zpozdeni)` jako na posledním řádku. Hodnota -5 podmínku nesplňuje (B) a `filter()` neřadí, ale vybírá (C).
+:::
+
+### 3.3 Řazení tabulky {#sec-t3-q3}
+
+Co provede příkaz `flights |> arrange(desc(dep_delay))`, kde `dep_delay` označuje zpoždění odletu?
+
+- **A** Seřadí řádky od největšího známého zpoždění k nejmenšímu; počet řádků se nezmění.
+- **B** Ponechá pouze jediný řádek s největším zpožděním.
+- **C** Seřadí řádky od nejmenšího známého zpoždění k největšímu.
+- **D** Odstraní všechny řádky, ve kterých zpoždění odletu chybí.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.** `arrange()` mění pořadí řádků a `desc()` určuje sestupný směr. Žádný řádek se neodstraní; chybějící hodnoty skončí na konci.
+
+```{r}
+#| label: t3-q3
+serazene <- flights |> arrange(desc(dep_delay))
+c(puvodne = nrow(flights), po_serazeni = nrow(serazene))
+serazene |> select(month, day, carrier, dep_delay) |> slice_head(n = 3)
+serazene |> select(month, day, carrier, dep_delay) |> slice_tail(n = 3)
+```
+
+Počet řádků je před i po seřazení stejný, takže B ani D neplatí. Nahoře je největší zpoždění, nikoli nejmenší (C), a na konci tabulky leží lety s `NA`. Protože výsledek přiřazujeme do nového objektu `serazene`, původní `flights` zůstává beze změny.
+:::
+
+### 3.4 Různé kombinace a jejich četnosti {#sec-t3-q4}
+
+V tabulce `flights` znamená `origin` letiště odletu a `dest` cílové letiště. Jaký je hlavní rozdíl mezi `flights |> distinct(origin, dest)` a `flights |> count(origin, dest)`?
+
+- **A** Distinct() počítá průměrné zpoždění tras, zatímco `count()` řadí lety podle času.
+- **B** Oba příkazy vrátí stejnou tabulku včetně počtu záznamů každé trasy.
+- **C** Distinct() vrátí různé kombinace letišť; `count()` navíc uvede počet záznamů každé kombinace ve sloupci `n`.
+- **D** Distinct() ponechá jen trasy s jediným letem, zatímco `count()` ponechá pouze opakované trasy.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.**
+
+```{r}
+#| label: t3-q4
+trasy <- flights |> distinct(origin, dest)
+cetnosti_tras <- flights |> count(origin, dest)
+c(distinct = nrow(trasy), count = nrow(cetnosti_tras))
+cetnosti_tras |> slice_head(n = 4)
+cetnosti_tras |> filter(n == 1)
+```
+
+Obě tabulky mají 224 řádků: jeden řádek je jedna trasa, nikoli jeden let. `count()` přidá sloupec `n` s počtem letů, `distinct()` ne (B). Poslední výpis ukazuje pět tras, na kterých se uskutečnil jediný let. Jsou v obou výsledcích a stejně tak trasy s tisíci lety, takže D neplatí. Zpoždění ani čas tu nehrají roli (A).
+:::
+
+### 3.5 Výběr a přejmenování sloupců {#sec-t3-q5}
+
+Tabulka `flights` obsahuje mimo jiné sloupce `origin`, `dest` a `air_time`. Co vrátí příkaz `flights |> select(origin, dest, air_time_min = air_time)`?
+
+- **A** Všechny původní sloupce a navíc nový sloupec `air_time_min`.
+- **B** Pouze tři vybrané sloupce, přičemž `air_time` bude přejmenován na `air_time_min`.
+- **C** Pouze řádky, ve kterých je doba letu alespoň jedna minuta.
+- **D** Tři vybrané sloupce, přičemž hodnoty `air_time` budou automaticky přepočteny na jinou časovou jednotku.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** `select()` ponechá jen vyjmenované sloupce. Zápis `nový název = původní název` sloupec zároveň přejmenuje.
+
+```{r}
+#| label: t3-q5
+vyber <- flights |> select(origin, dest, air_time_min = air_time)
+vyber |> slice_head(n = 3)
+c(sloupcu_puvodne = ncol(flights), sloupcu_vyber = ncol(vyber),
+  radku_puvodne = nrow(flights), radku_vyber = nrow(vyber))
+identical(vyber$air_time_min, flights$air_time)
+```
+
+Ze 19 sloupců zůstaly 3 a počet řádků se nezměnil, takže A ani C neplatí. `identical()` vrací `TRUE`: hodnoty jsou stejné jako v původním `air_time`, přejmenování nic nepřepočítává (D). Pokud bychom chtěli přejmenovat a zachovat všechny sloupce, použijeme `rename(air_time_min = air_time)`.
+:::
+
+### 3.6 Nová proměnná a změna skóru {#sec-t3-q6}
+
+Ve fiktivní tabulce `ucastnici` vytvoříte `mutate(zmena = skore_po - skore_pred)`. Vyšší skór znamená více obtíží. Jeden účastník má `skore_pred = 20` a `skore_po = 16`. Jaká bude jeho změna a co znamená?
+
+- **A** Změna bude 4 body a znamená snížení skóru obtíží.
+- **B** Změna bude -4 body a znamená zvýšení skóru obtíží.
+- **C** Změna bude 18 bodů a znamená průměrný skór účastníka.
+- **D** Změna bude -4 body a znamená snížení skóru obtíží.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.**
+
+```{r}
+#| label: t3-q6
+ucastnici <- tibble(
+  id = c("U1", "U2", "U3"),
+  skore_pred = c(20, 15, 18),
+  skore_po = c(16, 17, 18)
+)
+ucastnici |> mutate(zmena = skore_po - skore_pred)
+```
+
+U účastníka U1 je změna 16 − 20 = −4. Při tomto pořadí odečítání znamená záporné číslo, že skór po je nižší, tedy obtíží ubylo. Možnost A má správnou interpretaci, ale opačné znaménko. B má správné číslo, ale opačný význam. 18 (C) je průměr obou skórů. Pozor: pokles skóru ještě neprokazuje, že jej způsobila intervence. Bez kontrolní skupiny nevíme, jak by se skóry změnily i bez ní.
+:::
+
+### 3.7 Průměr a počet dostupných hodnot {#sec-t3-q7}
+
+Fiktivní neseskupená tabulka `mereni` má tři řádky a sloupec `skore` s hodnotami 10, 20 a `NA`. Co vrátí `mereni |> summarise(prumer = mean(skore, na.rm = TRUE), pocet = n())`?
+
+- **A** Jeden řádek s hodnotami `prumer = 15` a `pocet = 3`.
+- **B** Jeden řádek s hodnotami `prumer = 15` a `pocet = 2`.
+- **C** Jeden řádek s hodnotami `prumer = 10` a `pocet = 3`.
+- **D** Jeden řádek s hodnotami `prumer = NA` a `pocet = 3`.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.**
+
+```{r}
+#| label: t3-q7
+mereni <- tibble(skore = c(10, 20, NA))
+mereni |>
+  summarise(
+    prumer = mean(skore, na.rm = TRUE),
+    pocet = n(),
+    dostupnych = sum(!is.na(skore))
+  )
+```
+
+`na.rm = TRUE` vynechá `NA` jen uvnitř `mean()`, průměr je tedy (10 + 20) / 2 = 15. `n()` počítá **řádky** a o `na.rm` neví, proto vrací 3 (B neplatí). Počet dostupných hodnot dá `sum(!is.na(skore))`. Ve zprávě je dobré uvádět právě tento počet. Průměr 10 (C) by vznikl, kdybychom `NA` nahradili nulou. `NA` (D) bychom dostali bez `na.rm = TRUE`.
+:::
+
+### 3.8 Souhrn podle skupin {#sec-t3-q8}
+
+Fiktivní tabulka `mereni` obsahuje pět účastníků, každý na jednom řádku. Tři patří do skupiny A a dva do skupiny B; všichni mají dostupný skór. Co bude představovat jeden řádek výsledku `mereni |> group_by(skupina) |> summarise(prumer = mean(skore), .groups = "drop")`?
+
+- **A** Jednoho účastníka s doplněným průměrem jeho skupiny; výsledek bude mít pět řádků.
+- **B** Celý soubor bez rozlišení skupin; výsledek bude mít jeden řádek.
+- **C** Jednu skupinu s jejím průměrem; výsledek bude mít dva řádky.
+- **D** Jednu skupinu bez sloupce `skupina`, protože `.groups = "drop"` tento sloupec odstraní.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.**
+
+```{r}
+#| label: t3-q8
+mereni <- tibble(
+  id = 1:5,
+  skupina = c("A", "A", "A", "B", "B"),
+  skore = c(10, 12, 14, 20, 24)
+)
+
+mereni |>
+  group_by(skupina) |>
+  summarise(prumer = mean(skore), .groups = "drop")
+
+mereni |>
+  group_by(skupina) |>
+  mutate(prumer = mean(skore)) |>
+  ungroup()
+```
+
+`summarise()` vytvoří jeden řádek za skupinu: dva řádky se sloupcem `skupina` i průměrem. `.groups = "drop"` odstraní jen **seskupení** pro další kroky, sloupec zůstává (D neplatí). Druhý výpis ukazuje možnost A: po seskupení `mutate()` doplní průměr skupiny ke každému účastníkovi a ponechá pět řádků. Jeden společný průměr (B) bychom dostali bez `group_by()`.
+:::
+
+### 3.9 Výběr nejvyšší hodnoty a shody {#sec-t3-q9}
+
+Fiktivní neseskupená tabulka `vysledky` obsahuje tři účastníky se skóry 10, 15 a 15. Kolik řádků vrátí `vysledky |> slice_max(skore, n = 1)` při výchozím nastavení ostatních argumentů?
+
+- **A** Jeden řádek, protože `n = 1` vždy zaručuje právě jeden výsledek.
+- **B** Dva řádky, protože nejvyšší skór mají dva účastníci.
+- **C** Tři řádky, protože `slice_max()` pouze řadí celou tabulku.
+- **D** Žádný řádek, protože shodná maxima vyvolají chybu.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.**
+
+```{r}
+#| label: t3-q9
+vysledky <- tibble(id = c("V1", "V2", "V3"), skore = c(10, 15, 15))
+vysledky |> slice_max(skore, n = 1)
+vysledky |> slice_max(skore, n = 1, with_ties = FALSE)
+```
+
+Výchozí `with_ties = TRUE` zachová všechny řádky, které se dělí o nejvyšší hodnotu, proto dostaneme oba účastníky se skórem 15. `n = 1` tedy jeden řádek nezaručuje (A). Teprve `with_ties = FALSE` vrátí právě jeden řádek, a to první ze shodných v aktuálním pořadí. Účastník se skórem 10 do výběru nepatří (C) a shoda není chybou (D).
+:::
+
+### 3.10 Od souhrnné tabulky ke grafu {#sec-t3-q10}
+
+Z tabulky letů nejprve vypočítáte průměrné zpoždění odletu s `na.rm = TRUE` za každou plánovanou hodinu odletu. Do grafu pak předáte tuto souhrnnou tabulku, na x mapujete hodinu a na y vypočtený průměr. Co představuje jeden bod vytvořený pomocí `geom_point()`?
+
+- **A** Zpoždění jednoho konkrétního letu.
+- **B** Počet všech letů naplánovaných na danou hodinu.
+- **C** Průměrné zpoždění všech letů v jednom konkrétním kalendářním dni.
+- **D** Průměr z dostupných zpoždění letů naplánovaných na danou hodinu napříč dny v souboru.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Význam bodu určuje tabulka, kterou graf dostane. Po `summarise()` je jeden řádek jedna plánovaná hodina odletu se souhrnem přes všechny dny roku.
+
+```{r}
+#| label: t3-q10
+#| fig-alt: "Body a čára průměrného zpoždění odletu podle plánované hodiny; zpoždění roste od rána k večeru."
+zpozdeni_hodiny <- flights |>
+  summarise(
+    prumer = mean(dep_delay, na.rm = TRUE),
+    dostupnych = sum(!is.na(dep_delay)),
+    .by = hour
+  ) |>
+  arrange(hour)
+
+zpozdeni_hodiny
+
+ggplot(zpozdeni_hodiny, aes(x = hour, y = prumer)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Plánovaná hodina odletu", y = "Průměrné zpoždění odletu (min)")
+```
+
+Tabulka má jeden řádek na hodinu, nikoli na let (A) nebo kalendářní den (C). Na ose y je průměr, ne počet (B). Počet dostupných zpoždění jsme si ale do tabulky přidali: u hodiny 1 je 0 dostupných hodnot (jediný naplánovaný let neodletěl), proto je její průměr `NaN` („není číslo“) a bod chybí. ggplot2 o vynechání tohoto řádku varuje. Průměrné zpoždění od rána roste, nejvyšší je kolem 19.–21. hodiny a v posledních dvou hodinách, kdy letí už jen málo letů, opět klesá. Graf to ale jen popisuje, nevysvětluje příčinu. Čára mezi body je pomůcka pro čtení trendu, nikoli model.
+:::
+
+### Úloha navíc 3.A: Nejhorší měsíc na každém letišti {#sec-t3-extra-a}
+
+Pro každé letiště odletu (`origin`) najděte měsíc s nejvyšším průměrným zpožděním odletu. Ve výsledku uveďte také, z kolika letů se známým zpožděním průměr vznikl. Výsledek má mít jeden řádek na letiště.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Úlohu rozdělíme na dva kroky. Nejprve spočítáme souhrn za každou kombinaci letiště a měsíce. Potom v rámci každého letiště vybereme řádek s nejvyšším průměrem.
+
+```{r}
+#| label: t3-extra-a
+souhrn <- flights |>
+  summarise(
+    prumer = mean(dep_delay, na.rm = TRUE),
+    dostupnych = sum(!is.na(dep_delay)),
+    .by = c(origin, month)
+  )
+
+souhrn |>
+  group_by(origin) |>
+  slice_max(prumer, n = 1) |>
+  ungroup()
+```
+
+`souhrn` má 36 řádků (3 letiště × 12 měsíců). Po `group_by(origin)` pracuje `slice_max()` zvlášť uvnitř každého letiště, takže zbudou tři řádky. Bez seskupení bychom dostali jediný měsíc za všechna letiště. Na letištích EWR a LGA je nejhorší červen, na JFK červenec, průměrné zpoždění je kolem 20 minut. Každý průměr vychází z 8 až 10 tisíc letů, nejde tedy o náhodný výkyv několika hodnot. `ungroup()` na konci zruší seskupení, aby neovlivnilo případné další kroky.
+:::
+
+### Úloha navíc 3.B: Odchylka od průměru skupiny {#sec-t3-extra-b}
+
+U otázky 3.8 byla možnost A chybná, protože `summarise()` vrací jeden řádek za skupinu. Kombinace `group_by()` a `mutate()` ale bývá užitečná. Pro tabulku `mereni` z otázky 3.8 spočítejte u každého účastníka, o kolik se jeho skór liší od průměru **jeho** skupiny. Zdůvodněte, proč nelze stejný výpočet provést po `summarise()`.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: t3-extra-b
+mereni |>
+  mutate(
+    prumer_skupiny = mean(skore),
+    odchylka = skore - prumer_skupiny,
+    .by = skupina
+  )
+```
+
+`mutate()` s `.by = skupina` spočítá průměr zvlášť pro A (12) a B (22) a doplní jej ke každému řádku dané skupiny. Odchylky se uvnitř každé skupiny sčítají na nulu, což je dobrá kontrola výpočtu. Po `summarise()` by v tabulce zůstaly jen dva řádky s průměry a jednotlivé skóry by chyběly. Neměli bychom od čeho odečítat. Stejný postup se používá například při **centrování** skórů uvnitř tříd nebo škol.
+:::
+
+## Test 4: Vektory, faktory, seznamy a datové tabulky {#sec-test-4}
+
+Test k [lekci 4](https://reckak.github.io/R101-textbook/quarto/lekce_04.html) ověřuje typy vektorů a jejich převody, práci s čísly, výběr prvků, faktory, seznamy a výběr z tabulek.
+
+```{r}
+#| label: t4-balicky
+#| warning: false
+library(tidyverse)
+```
+
+### 4.1 Společný typ vektoru {#sec-t4-q1}
+
+Vytvoříte objekt `hodnoty` příkazem `hodnoty <- c(12, 18, "neuvedeno")`. Jaký typ bude mít tento atomický vektor?
+
+- **A** První dva prvky zůstanou číselné a třetí bude textový.
+- **B** Všechny prvky budou textové, tedy typu character.
+- **C** Všechny prvky budou číselné a text se automaticky nahradí nulou.
+- **D** Vektor nevznikne, protože funkce `c()` neumí spojit číslo s textem.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.**
+
+```{r}
+#| label: t4-q1
+hodnoty <- c(12, 18, "neuvedeno")
+hodnoty
+typeof(hodnoty)
+```
+
+Uvozovky ve výpisu ukazují, že i čísla jsou teď text, `"12"` a `"18"`. Atomický vektor má jediný společný typ (A neplatí). R volí typ, který dokáže uchovat všechny hodnoty, a to je zde text. Číslo se dá zapsat jako text, ale „neuvedeno“ jako číslo ne (C). Vektor vznikl bez chyby (D). Různé typy vedle sebe uchová seznam (otázka 4.8).
+:::
+
+### 4.2 Převod textu na čísla {#sec-t4-q2}
+
+Vektor `skore_text` obsahuje fiktivní skóry zapsané jako `c("12", "neuvedeno", "18")`. Co vrátí `as.numeric(skore_text)`?
+
+- **A** Číselné hodnoty 12, 0 a 18 bez varování.
+- **B** Pouze číselné hodnoty 12 a 18; prostřední prvek se odstraní.
+- **C** Původní textové hodnoty beze změny typu.
+- **D** Číselné hodnoty 12, `NA` a 18 a varování o vzniku chybějící hodnoty.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Následující blok **záměrně vyvolá varování**:
+
+```{r}
+#| label: t4-q2
+skore_text <- c("12", "neuvedeno", "18")
+skore_cisla <- as.numeric(skore_text)
+skore_cisla
+skore_text[is.na(skore_cisla)]
+```
+
+Výsledek má stále tři prvky ve stejném pořadí (B neplatí). Na místě nepřevoditelného textu je `NA`, nikoli nula (A). Varování „NAs introduced by coercion“ je důležité: upozorňuje, že se některé hodnoty převést nepodařilo. Poslední řádek ukazuje, jak je najít a zkontrolovat. Původní `skore_text` zůstal textový, výsledek je nový číselný vektor (C).
+:::
+
+### 4.3 Porovnávání vypočtených čísel {#sec-t4-q3}
+
+Dvě vypočtené hodnoty typu double vypadají v běžném výpisu stejně, ale porovnání pomocí `==` vrací `FALSE`. Proč může být vhodné použít funkci `near()` z dplyr?
+
+- **A** Porovnává čísla s tolerancí, a může tak zohlednit drobné odchylky způsobené omezenou přesností výpočtu.
+- **B** Převede obě čísla na text a porovná jen jejich vytištěnou podobu.
+- **C** Zaokrouhlí obě čísla na celá čísla a přepíše původní objekty.
+- **D** Nahradí případné chybějící hodnoty nulami před přesným porovnáním.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.**
+
+```{r}
+#| label: t4-q3
+x <- sqrt(2)^2
+x
+x == 2
+x - 2
+near(x, 2)
+near(2.4, 2)
+```
+
+Výpis ukazuje `2`, ale `==` vrací `FALSE`. Rozdíl od dvojky je řádově 10⁻¹⁶: počítač ukládá čísla s konečnou přesností. `near()` vrací `TRUE`, protože rozdíl je menší než malá tolerance. Číslo 2,4 ale jako „blízké“ dvojce neoznačí, nic tedy nezaokrouhluje na celá čísla (C). Nepracuje s textem (B) a chybějící hodnoty nenahrazuje (D).
+:::
+
+### 4.4 Výpočet po prvcích a recyklace {#sec-t4-q4}
+
+Fiktivní reakční časy v sekundách jsou uložené jako `casy_s <- c(0.4, 0.5, 0.6)`. Co vrátí příkaz `casy_s * 1000`?
+
+- **A** Jediné číslo 1500, tedy součet všech časů v milisekundách.
+- **B** Vektor se 1000 kopiemi každého původního času.
+- **C** Vektor 400, 500 a 600, tedy jednotlivé časy v milisekundách.
+- **D** Chybu, protože vektor délky 3 nelze násobit jediným číslem.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.**
+
+```{r}
+#| label: t4-q4
+casy_s <- c(0.4, 0.5, 0.6)
+casy_ms <- casy_s * 1000
+casy_ms
+length(casy_ms)
+sum(casy_ms)
+```
+
+Číslo 1000 se použije pro každý prvek (recyklace vektoru délky 1). Výsledek má stále tři prvky (B neplatí) a vznikl bez chyby (D). Součet 1500 (A) bychom museli spočítat zvlášť pomocí `sum()`. Recyklace delších vektorů může překvapit, viz úloha 4.B.
+:::
+
+### 4.5 Výběr podle pozice {#sec-t4-q5}
+
+Máte fiktivní skóry `skore <- c(12, 18, 9, 25)`. Co vrátí `skore[c(3, 1)]`?
+
+- **A** Hodnoty 12 a 9 v původním pořadí vektoru.
+- **B** Hodnoty 9 a 12 v pořadí zadaných indexů.
+- **C** Hodnoty 18 a 25, protože uvedené pozice se vynechají.
+- **D** Hodnoty 12, 18 a 9, tedy všechny prvky od první do třetí pozice.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.**
+
+```{r}
+#| label: t4-q5
+skore <- c(12, 18, 9, 25)
+skore[c(3, 1)]
+skore[-c(3, 1)]
+skore[1:3]
+```
+
+Pozice v R začínají jedničkou. Třetí prvek je 9 a první 12 a výsledek zachová pořadí, v jakém jsme indexy zapsali (A neplatí). Druhý řádek ukazuje možnost C: záporné indexy pozice vynechávají. Třetí řádek ukazuje D: souvislý rozsah se zapisuje `1:3`.
+:::
+
+### 4.6 Logické hodnoty a podíl dokončení {#sec-t4-q6}
+
+Ve fiktivním souboru pěti účastníků je `dokonceno <- c(TRUE, TRUE, FALSE, NA, TRUE)`. Jak interpretujete `mean(dokonceno, na.rm = TRUE)`?
+
+- **A** Výsledek 0.6 znamená, že úkol dokončilo 60 % všech pěti osob, a chybějící stav byl zahrnut jako `FALSE`.
+- **B** Výsledek 3 znamená, že úkol dokončily tři osoby.
+- **C** Výsledek `NA` znamená, že kvůli jedné chybějící hodnotě nelze spočítat ani podíl mezi osobami se známým stavem.
+- **D** Výsledek 0.75 znamená, že úkol dokončilo 75 % ze čtyř osob se známým stavem.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Při výpočtu se `TRUE` počítá jako 1 a `FALSE` jako 0. Průměr logického vektoru je tedy podíl hodnot `TRUE`.
+
+```{r}
+#| label: t4-q6
+dokonceno <- c(TRUE, TRUE, FALSE, NA, TRUE)
+mean(dokonceno, na.rm = TRUE)
+sum(dokonceno, na.rm = TRUE)
+sum(!is.na(dokonceno))
+mean(dokonceno)
+```
+
+Tři dokončení ze čtyř známých stavů dávají 0,75. Jmenovatelem jsou čtyři osoby, ne pět (A): `na.rm = TRUE` chybějící stav vynechá, nepočítá jej jako `FALSE`. Počet tří dokončení vrací `sum()` (B). `NA` (C) dostaneme jen bez `na.rm = TRUE`, viz poslední řádek. O páté osobě výsledek nic neříká.
+:::
+
+### 4.7 Faktor a pořadí úrovní {#sec-t4-q7}
+
+Z fiktivních odpovědí `c("vysoká", "nízká", "střední")` vytvoříte faktor s `levels = c("nízká", "střední", "vysoká")`. Co nastavení `levels` udělá?
+
+- **A** Nastaví přípustné kategorie a jejich pořadí, ale pořadí odpovědí jednotlivých osob zachová.
+- **B** Přesune první osobu na konec, aby odpovědi byly seřazené od nízké po vysokou.
+- **C** Převede odpovědi na naměřené hodnoty 1, 2 a 3 se stejnými vzdálenostmi mezi kategoriemi.
+- **D** Automaticky vytvoří uspořádaný faktor třídy `ordered`.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.**
+
+```{r}
+#| label: t4-q7
+uroven <- factor(c("vysoká", "nízká", "střední"),
+                 levels = c("nízká", "střední", "vysoká"))
+uroven
+levels(uroven)
+as.integer(uroven)
+is.ordered(uroven)
+```
+
+První odpověď zůstala „vysoká“. Pořadí osob se nezměnilo (B), změnilo se jen pořadí **úrovní**, které se projeví například na ose grafu nebo v tabulce četností. Celá čísla 3, 1, 2 jsou interní kódy, které odkazují na úrovně. Nejsou to naměřené hodnoty se stejnými vzdálenostmi (C). `is.ordered()` vrací `FALSE`: uspořádaný faktor vznikne až s `ordered = TRUE` (D).
+:::
+
+### 4.8 Seznam a obsah položky {#sec-t4-q8}
+
+Fiktivní záznam je `zaznam <- list(id = "P01", skore = c(10, 14, 12))`. Jaký je rozdíl mezi `zaznam["skore"]` a `zaznam[["skore"]]`?
+
+- **A** Oba zápisy vracejí jednopoložkový seznam.
+- **B** První zápis vrací číslo 10 a druhý číslo 14.
+- **C** První zápis vrací jednopoložkový seznam, druhý číselný vektor 10, 14, 12.
+- **D** První zápis položku vybere, zatímco druhý ji ze `zaznam` trvale odstraní.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.**
+
+```{r}
+#| label: t4-q8
+zaznam <- list(id = "P01", skore = c(10, 14, 12))
+str(zaznam["skore"])
+str(zaznam[["skore"]])
+mean(zaznam[["skore"]])
+length(zaznam)
+```
+
+`str()` ukazuje rozdíl: jednoduché závorky vracejí `List of 1`, tedy seznam s jednou položkou (obal zůstává). Dvojité závorky vracejí přímo číselný vektor, a proto z něj jde spočítat průměr 12. Oba zápisy vybírají celou položku `skore`, ne jednotlivá čísla (B). Druhé číslo bychom získali `zaznam$skore[2]`. `length(zaznam)` je stále 2: výběr seznam nemění (D).
+:::
+
+### 4.9 Řádky a sloupce datové tabulky {#sec-t4-q9}
+
+Objekt `ucastnici` je běžný `data.frame` se šesti řádky osob a třemi sloupci `id`, `vek` a `skore`. Co vybere `ucastnici[1:2, c("id", "skore")]`?
+
+- **A** Všechny osoby a první dva sloupce `id` a `vek`.
+- **B** První dvě osoby a pouze sloupce `id` a `skore`.
+- **C** První a druhou hodnotu z každého ze tří sloupců jako jediný číselný vektor.
+- **D** Všechny osoby, jejichž skór je 1 nebo 2.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Před čárkou vybíráme řádky, za čárkou sloupce.
+
+```{r}
+#| label: t4-q9
+ucastnici <- data.frame(
+  id = c("P1", "P2", "P3", "P4", "P5", "P6"),
+  vek = c(21, 23, 22, 25, 20, 24),
+  skore = c(1, 14, 2, 18, 9, 11)
+)
+ucastnici[1:2, c("id", "skore")]
+nrow(ucastnici)
+length(ucastnici)
+```
+
+Výsledkem je tabulka 2 × 2. `1:2` vybírá řádky, ne sloupce (A), a jde o pozice řádků, ne podmínku na hodnotu skóru (D). Proto se nevybrala osoba P3 se skórem 2. Výsledek zůstal tabulkou, ve které má každý sloupec svůj typ (C). Poslední dva řádky připomínají: `nrow()` počítá řádky a `length()` u tabulky počítá sloupce.
+:::
+
+### 4.10 Výběr sloupce z tibble {#sec-t4-q10}
+
+Objekt `mereni_tbl` je tibble se třemi řádky a číselným sloupcem `skore`. Co při běžném výchozím nastavení vrátí `mereni_tbl[, "skore"]`?
+
+- **A** Samotný číselný vektor skórů.
+- **B** Jediné číslo, průměr tří skórů.
+- **C** Chybu, protože tibble neumožňuje výběr hranatými závorkami.
+- **D** Tibble se třemi řádky a jediným sloupcem `skore`.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.**
+
+```{r}
+#| label: t4-q10
+mereni_tbl <- tibble(skore = c(10, 14, 12))
+mereni_tbl[, "skore"]
+mereni_tbl[["skore"]]
+
+mereni_df <- as.data.frame(mereni_tbl)
+mereni_df[, "skore"]
+mereni_df[, "skore", drop = FALSE]
+```
+
+Tibble při výběru `[ , ]` vždy zachová tabulku, i pro jediný sloupec. Samotný vektor (A) vrací `[[ ]]` nebo `$`. Hranaté závorky u tibble fungují (C) a nic se nepočítá (B). Běžný `data.frame` se při stejném zápisu zjednoduší na vektor, jak ukazuje třetí výpis. Zabrání tomu `drop = FALSE`. Tento rozdíl je častým zdrojem chyb při přechodu mezi základním R a tidyverse.
+:::
+
+### Úloha navíc 4.A: Faktor s čísly v popiscích {#sec-t4-extra-a}
+
+V dotazníku je počet absolvovaných terapeutických sezení uložený jako faktor:
+
+```{r}
+#| label: t4-extra-a-zadani
+sezeni <- factor(c("10", "5", "20", "5"))
+```
+
+Spolužák chtěl spočítat průměrný počet sezení, napsal `mean(as.numeric(sezeni))` a dostal 2,25. Co R ve skutečnosti spočítalo? Jak získat správná čísla 10, 5, 20 a 5 a jejich průměr?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: t4-extra-a-reseni
+levels(sezeni)
+as.numeric(sezeni)
+as.numeric(as.character(sezeni))
+mean(as.numeric(as.character(sezeni)))
+```
+
+Úrovně faktoru jsou seřazené jako text: `"10"`, `"20"`, `"5"`. Textově je „1…“ před „2…“ a ta před „5“. `as.numeric()` u faktoru nevrací popisky, ale **interní kódy** úrovní. Hodnota „10“ je první úroveň, proto dostane 1, „5“ je třetí, proto dostane 3. Průměr 2,25 je tedy průměr kódů (1 + 3 + 2 + 3) / 4 a nemá žádný věcný význam. R přitom nevypíše žádné varování.
+
+Správně nejprve převedeme faktor na text (popisky) a teprve potom na čísla. Průměr je 10. Nejlepší je ale této situaci předejít: číselnou proměnnou při importu nenačítat jako faktor a vždy zkontrolovat typy sloupců.
+:::
+
+### Úloha navíc 4.B: Recyklace, která neskončí chybou {#sec-t4-extra-b}
+
+Bez spuštění odhadněte výsledek obou příkazů. Potom je spusťte a vysvětlete, proč je první z nich nebezpečnější než druhý.
+
+```{r}
+#| label: t4-extra-b-zadani
+#| eval: false
+c(1, 2, 3, 4) * c(10, 100)
+c(1, 2, 3) * c(10, 100)
+```
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Druhý příkaz **záměrně vyvolá varování**:
+
+```{r}
+#| label: t4-extra-b-reseni
+c(1, 2, 3, 4) * c(10, 100)
+c(1, 2, 3) * c(10, 100)
+```
+
+Kratší vektor `c(10, 100)` se recykluje: opakuje se, dokud nemá stejnou délku jako delší vektor. V prvním případě vznikne 1·10, 2·100, 3·10, 4·100. Délka 4 je násobkem 2, a proto R nic nehlásí. Ve druhém případě délka 3 násobkem 2 není: R výpočet provede, ale vypíše varování.
+
+První případ je nebezpečnější, protože proběhne **tiše**. Pokud jste chtěli například převést každý čas jiným koeficientem, ale omylem zadali jen dva koeficienty, výsledek vypadá věrohodně a varování nepřijde. Recyklaci proto bezpečně používáme hlavně s vektorem délky 1 (otázka 4.4). Jinak kontrolujeme, že mají vektory stejnou délku.
+:::
+
+## Test 5: Import dat a jejich základní příprava {#sec-test-5}
+
+Test k [lekci 5](https://reckak.github.io/R101-textbook/quarto/lekce_05.html) ověřuje volbu importní funkce, typy sloupců, kódy chybějících hodnot, kódování znaků, datový slovník, popisky z SPSS, `across()`, víceřádkovou hlavičku Excelu a ukládání připravených dat.
+
+Krátké textové soubory zapisujeme přímo do kódu a předáváme je importním funkcím obalené funkcí `I()`. Ta říká, že jde o samotný obsah souboru, nikoli o cestu k němu. Excelové ukázky používají soubory z lekce 5.
+
+```{r}
+#| label: t5-balicky
+#| warning: false
+library(tidyverse)
+library(readxl)
+library(haven)
+library(labelled)
+library(janitor)
+```
+
+### 5.1 Oddělovač a desetinná čárka {#sec-t5-q1}
+
+Textový soubor obsahuje sloupce oddělené středníkem a desetinná čísla zapsaná s čárkou, například 0,45. Která funkce z balíčku readr je pro tento formát vhodná bez dalšího nastavování oddělovačů?
+
+- **A** `read_csv()`
+- **B** `read_csv2()`
+- **C** `read_tsv()`
+- **D** `read_excel()`
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** `read_csv2()` očekává právě středník mezi sloupci a desetinnou čárku, tedy formát běžný v českém nastavení Excelu.
+
+```{r}
+#| label: t5-q1
+text_strednik <- "id;cas_s\n1;0,45\n2;1,20\n"
+read_csv(I(text_strednik))
+read_csv2(I(text_strednik))
+```
+
+`read_csv()` hledá čárky. Celý řádek proto skončí v jediném sloupci se zvláštním názvem `id;cas_s` a readr navíc varuje o problémech při čtení, protože čárku v 0,45 považuje za další oddělovač. Import „proběhl“, ale tabulka je nepoužitelná. Proto po každém importu kontrolujeme počet sloupců, jejich typy a případná varování. `read_csv2()` vytvoří dva číselné sloupce a čas převede na čísla 0,45 a 1,2. `read_tsv()` (C) čeká tabulátory a `read_excel()` (D) načítá sešity Excelu, ne textové soubory.
+:::
+
+### 5.2 Identifikátor s počátečními nulami {#sec-t5-q2}
+
+V textovém souboru mají účastníci identifikátory "001", "002" a "003". Chceme při importu pomocí `read_csv()` zachovat i počáteční nuly. Jaký typ máme pro sloupec `id` zadat v argumentu `col_types`?
+
+- **A** `col_double()`
+- **B** `col_integer()`
+- **C** `col_logical()`
+- **D** `col_character()`
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.**
+
+```{r}
+#| label: t5-q2
+text_id <- "id,skore\n001,12\n002,15\n003,9\n"
+read_csv(I(text_id))
+read_csv(I(text_id), col_types = cols(id = col_character()))
+```
+
+Bez nastavení readr odhadne, že `id` jsou čísla, a uloží je jako 1, 2 a 3. Nuly zmizí a identifikátor „010“ by se nedal odlišit od „10“. Totéž by se stalo s `col_double()` (A) i `col_integer()` (B). Identifikátor je **označení**, ne množství, a proto ho ukládáme jako text. `col_logical()` (C) je pro hodnoty `TRUE` a `FALSE`.
+:::
+
+### 5.3 Dokumentované chybějící hodnoty {#sec-t5-q3}
+
+Datový slovník uvádí, že hodnota -99 znamená nevyplněnou odpověď. Co při načítání sešitu pomocí `read_excel()` zajistí argument `na = c("", "-99")`?
+
+- **A** Prázdné buňky a hodnoty zapsané jako -99 se načtou jako `NA`; samotné řádky zůstanou zachovány.
+- **B** Odstraní se všichni účastníci, kteří mají alespoň jednu nevyplněnou odpověď.
+- **C** Hodnoty -99 se nahradí nulou, aby šlo spočítat průměr.
+- **D** Hodnoty -99 zůstanou v datech a pouze dostanou popisek „Chybí“.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.** Vyzkoušíme to na souboru `help_seeking.xlsx` z lekce 5, kde datový slovník kóduje chybějící odpovědi jako −99:
+
+```{r}
+#| label: t5-q3
+hs_bez_na <- read_excel("data/raw/help_seeking.xlsx", sheet = "data")
+hs_s_na <- read_excel("data/raw/help_seeking.xlsx", sheet = "data", na = c("", "-99"))
+
+c(radku_bez_na = nrow(hs_bez_na), radku_s_na = nrow(hs_s_na))
+hs_bez_na |> count(help_01)
+hs_s_na |> count(help_01)
+mean(hs_bez_na$help_01)
+mean(hs_s_na$help_01, na.rm = TRUE)
+```
+
+Obě tabulky mají stejný počet řádků, nikdo tedy nebyl odstraněn (B). Bez argumentu `na` je −99 obyčejné číslo. Sedm takových „odpovědí“ stáhne průměr škály 1–4 hluboko pod jedničku. S argumentem `na` se z nich stane `NA` a průměr vychází z platných odpovědí. Nula (C) by průměr také zkreslila, protože by se počítala jako odpověď. Popisek (D) hodnotu nemění, viz otázka 5.8.
+:::
+
+### 5.4 Kódování češtiny {#sec-t5-q4}
+
+Po načtení CSV souboru pomocí `read_csv()` souhlasí počet řádků i sloupců, ale česká slova obsahují poškozené znaky. Víme, že soubor používá kódování Windows-1250. Jaký postup je vhodný?
+
+- **A** Nastavit všechny sloupce na číselný typ pomocí `col_double()`.
+- **B** Přejmenovat soubor z přípony .csv na .xlsx.
+- **C** Načíst soubor znovu s argumentem `locale = locale(encoding = "Windows-1250")`.
+- **D** Považovat import za správný, protože rozměry tabulky souhlasí.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.** Kódování určuje, jakými bajty jsou znaky v souboru uložené. Pokud R čte soubor v jiném kódování, než ve kterém byl uložen, rozpadnou se právě znaky s diakritikou. Vytvoříme dočasný soubor v kódování Windows-1250 a načteme ho oběma způsoby:
+
+```{r}
+#| label: t5-q4
+soubor_1250 <- tempfile(fileext = ".csv")
+obsah <- "id,odpoved\n1,příliš žluťoučký kůň\n2,úpěl ďábelské ódy\n"
+writeBin(iconv(obsah, from = "UTF-8", to = "CP1250", toRaw = TRUE)[[1]], soubor_1250)
+
+spatne <- read_csv(soubor_1250)
+dim(spatne)
+spatne$odpoved
+
+dobre <- read_csv(soubor_1250, locale = locale(encoding = "Windows-1250"))
+dobre$odpoved
+```
+
+V obou případech má tabulka 2 řádky a 2 sloupce, rozměry tedy problém neodhalí (D). Bez nastavení `locale` jsou ale místo českých písmen nečitelné znaky. Se správným kódováním jsou slova v pořádku. Typ sloupců (A) ani přípona souboru (B) s kódováním nesouvisejí. Po opraveném importu vždy zkontrolujeme konkrétní česká slova.
+:::
+
+### 5.5 Názvy proměnných v datovém slovníku {#sec-t5-q5}
+
+V tabulce dat jsme opravili překlep v názvu sloupce z `finantial_situation` na `financial_situation`. Datový slovník má tento název uvedený ve sloupci `name`. Co je potřeba udělat, pokud chceme podle názvů přiřazovat popisky z datového slovníku?
+
+- **A** Opravit pouze pořadí řádků v datovém slovníku; názvy se shodovat nemusí.
+- **B** Opravit název také v datovém slovníku a zkontrolovat shodu názvů mezi slovníkem a daty.
+- **C** Převést odpovědi v přejmenovaném sloupci na text, aby popisky fungovaly.
+- **D** Odstranit datový slovník, protože po přejmenování sloupce už nemůže být užitečný.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Popisky se přiřazují podle **názvu**, takže se musí shodovat v datech i ve slovníku. Kontrolu provedeme funkcí `setdiff()` v obou směrech:
+
+```{r}
+#| label: t5-q5
+nazvy_dat <- c("id", "age", "financial_situation")
+nazvy_slovniku <- c("id", "age", "finantial_situation")
+
+setdiff(nazvy_dat, nazvy_slovniku)
+setdiff(nazvy_slovniku, nazvy_dat)
+
+nazvy_slovniku[nazvy_slovniku == "finantial_situation"] <- "financial_situation"
+setdiff(nazvy_dat, nazvy_slovniku)
+setdiff(nazvy_slovniku, nazvy_dat)
+```
+
+`setdiff(a, b)` vrací prvky `a`, které v `b` chybějí. První dva výpisy odhalí nesoulad: opravený název chybí ve slovníku a starý název chybí v datech. Po opravě vracejí oba výpisy `character(0)`, tedy prázdný výsledek. Pořadí řádků (A) ani typ odpovědí (C) na shodu názvů vliv nemají. Slovník dál dokumentuje význam a kódování proměnných (D). Pozor: shoda názvů neověří, že jsou popisky věcně správné.
+:::
+
+### 5.6 Popisky v datech ze SPSS {#sec-t5-q6}
+
+Po načtení souboru pomocí `read_sav()` má sloupec `gender` popisek proměnné „Pohlaví“ a číselné hodnoty 1 a 2 mají popisky „Muž“ a „Žena“. Které tvrzení správně rozlišuje oba druhy popisků?
+
+- **A** Popisek proměnné „Pohlaví“ je novým názvem sloupce, takže `gender` už v tabulce neexistuje.
+- **B** Popisky „Muž“ a „Žena“ znamenají, že sloupec je po importu vždy faktorem.
+- **C** Popisek proměnné a popisky hodnot mají stejnou funkci; oba pouze určují pořadí řádků.
+- **D** Popisek proměnné popisuje význam celého sloupce, zatímco popisky hodnot vysvětlují jednotlivé kódy.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Situaci po importu napodobíme na krátkém vektoru:
+
+```{r}
+#| label: t5-q6
+gender <- c(1, 2, 2, 1)
+var_label(gender) <- "Pohlaví"
+val_labels(gender) <- c("Muž" = 1, "Žena" = 2)
+
+var_label(gender)
+val_labels(gender)
+class(gender)
+gender
+to_factor(gender)
+```
+
+`var_label()` vrací jediný popisek celého sloupce, `val_labels()` dvojice kód–popisek. Třída je `haven_labelled`, nikoli `factor` (B). Výpis ukazuje, že ve vektoru jsou stále uložená čísla 1 a 2 a popisky jsou jen přidaná informace. Faktor vytvoří až `to_factor()`. V tabulce se sloupec dál jmenuje `gender` (A) a popisky neurčují pořadí řádků (C).
+:::
+
+### 5.7 Stejná úprava více sloupců {#sec-t5-q7}
+
+Sloupce `partner`, `college_title` a `college_student` mají shodné kódování 1 = Ne a 2 = Ano. Co uvnitř `mutate()` provede zápis `across(c(partner, college_title, college_student), ~ factor(.x, levels = c(1, 2), labels = c("Ne", "Ano")))`?
+
+- **A** Převede každý ze tří vybraných sloupců na faktor s popisky Ne a Ano.
+- **B** Spojí tři sloupce do jediného sloupce obsahujícího jejich součet.
+- **C** Vybere pouze účastníky, kteří mají ve všech třech sloupcích hodnotu Ano.
+- **D** Změní všechny sloupce tabulky na faktory bez ohledu na jejich kódování.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.**
+
+```{r}
+#| label: t5-q7
+dotaznik <- tibble(
+  id = 1:4,
+  partner = c(1, 2, 2, 1),
+  college_title = c(2, 2, 1, 1),
+  college_student = c(1, 1, 2, 1),
+  vek = c(22, 25, 31, 19)
+)
+
+dotaznik |>
+  mutate(across(
+    c(partner, college_title, college_student),
+    ~ factor(.x, levels = c(1, 2), labels = c("Ne", "Ano"))
+  ))
+```
+
+Tři vybrané sloupce mají nyní typ `<fct>` a hodnoty Ne a Ano. `id` a `vek` zůstaly číselné (D). Počet řádků i sloupců se nezměnil, takže se nic nesčítá (B) ani nefiltruje (C). `.x` v zápisu `~ factor(.x, ...)` označuje právě zpracovávaný sloupec. `across()` tak jednu úpravu zopakuje pro každý sloupec zvlášť.
+:::
+
+### 5.8 Popisek není změna hodnoty {#sec-t5-q8}
+
+Číselnému vektoru `odpoved` obsahujícímu `c(1, 2, 9)` přiřadíme pomocí `val_labels()` popisky, včetně popisku „Bez odpovědi“ pro hodnotu 9. Neprovedeme žádnou další úpravu. Co se stane s uloženou hodnotou 9?
+
+- **A** Automaticky se změní na `NA`, protože popisek obsahuje slovo „Bez“.
+- **B** Z vektoru se odstraní, takže zůstanou jen dva prvky.
+- **C** Zůstane číselnou hodnotou 9; samotný popisek z ní chybějící hodnotu neudělá.
+- **D** Změní se na číslo 0, které R používá pro všechny nevyplněné odpovědi.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.**
+
+```{r}
+#| label: t5-q8
+odpoved <- c(1, 2, 9)
+val_labels(odpoved) <- c("Ne" = 1, "Ano" = 2, "Bez odpovědi" = 9)
+length(odpoved)
+mean(odpoved)
+
+na_values(odpoved) <- 9
+odpoved_na <- user_na_to_na(odpoved)
+odpoved_na
+mean(odpoved_na, na.rm = TRUE)
+```
+
+Vektor má stále tři prvky (B neplatí) a průměr 4 ukazuje, že se devítka počítá jako odpověď. R význam slov v popisku nevyhodnocuje (A) a nulu za chybění nedosazuje (D). Postup z lekce 5: `na_values()` označí 9 jako kód chybění a `user_na_to_na()` jej převede na skutečné `NA`. Teprve potom vychází průměr 1,5 z odpovědí 1 a 2.
+:::
+
+### 5.9 Excel s víceřádkovou hlavičkou {#sec-t5-q9}
+
+První řádek listu Excelu obsahuje názvy sloupců, druhý jejich popisky a třetí technické informace. Vlastní data začínají na čtvrtém řádku. Správné názvy již máme uložené ve vektoru `four_names`. Které nastavení `read_excel()` načte pouze datové řádky a přiřadí jim tyto názvy?
+
+- **A** `skip = 2, col_names = four_names`
+- **B** `skip = 3, col_names = four_names`
+- **C** `skip = 3, col_names = TRUE`
+- **D** `skip = 0, col_names = FALSE`
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Vyzkoušíme to na souboru `four_countries_teaching.xlsx` z lekce 5, který má přesně takovou hlavičku. Názvy získáme stejně jako v lekci:
+
+```{r}
+#| label: t5-q9
+four_names <- read_excel("data/raw/four_countries_teaching.xlsx", n_max = 0) |>
+  clean_names() |>
+  names()
+
+four_spravne <- read_excel("data/raw/four_countries_teaching.xlsx",
+                           skip = 3, col_names = four_names)
+four_skip2 <- read_excel("data/raw/four_countries_teaching.xlsx",
+                         skip = 2, col_names = four_names)
+
+c(spravne = nrow(four_spravne), skip_2 = nrow(four_skip2))
+class(four_spravne$q1_prop_1)
+class(four_skip2$q1_prop_1)
+four_skip2 |> select(1:3) |> slice_head(n = 2)
+```
+
+`skip` je **počet** přeskočených řádků. Při `skip = 2` (A) přibude jeden řádek navíc: technická informace ze třetího řádku se načte jako odpověď a první položka se kvůli ní stane textem (`character`). Se `skip = 3` jsou položky číselné. Při `col_names = TRUE` (C) by se jako názvy použil první skutečný řádek dat. Při `skip = 0, col_names = FALSE` (D) by se celá hlavička načetla mezi data.
+:::
+
+### 5.10 Uložení připravené tabulky {#sec-t5-q10}
+
+Připravená tabulka obsahuje faktory i popisky proměnných a hodnot. Chceme ji později v R načíst se zachovanými typy a popisky. Která dvojice funkcí je pro uložení a opětovné načtení tohoto jednoho objektu vhodná?
+
+- **A** `write_csv()` a `read_csv()`, protože CSV zachovává všechny atributy objektů R.
+- **B** `write_csv()` a `read_excel()`, protože Excel automaticky obnoví původní popisky.
+- **C** `print()` a `read_csv()`, protože výpis tabulky uchovává všechny její vlastnosti.
+- **D** `write_rds()` a `read_rds()`, protože formát RDS uchovává i třídy a atributy objektu.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Porovnáme oba formáty. Soubory ukládáme do dočasné složky, ve vlastním projektu byste použili například `data/clean/`.
+
+```{r}
+#| label: t5-q10
+pripravena <- tibble(
+  id = c("001", "002", "003"),
+  pohlavi = factor(c("žena", "muž", "žena")),
+  skore = c(3.5, 2.75, 4)
+)
+var_label(pripravena$skore) <- "Průměrný skór škály"
+
+soubor_rds <- tempfile(fileext = ".rds")
+write_rds(pripravena, soubor_rds)
+nactena_rds <- read_rds(soubor_rds)
+identical(pripravena, nactena_rds)
+
+soubor_csv <- tempfile(fileext = ".csv")
+write_csv(pripravena, soubor_csv)
+nactena_csv <- read_csv(soubor_csv)
+identical(pripravena, nactena_csv)
+nactena_csv
+var_label(nactena_csv$skore)
+```
+
+Z RDS se vrátil přesně tentýž objekt (`identical()` vrací `TRUE`). Z CSV ne (A): `id` ztratilo počáteční nuly, `pohlavi` je text místo faktoru a popisek proměnné zmizel (`NULL`). CSV uchovává jen hodnoty, je ale vhodné pro předání dat jiným programům, nejlépe se samostatným datovým slovníkem. `read_excel()` CSV nenačítá (B) a `print()` nic neukládá (C).
+:::
+
+### Úloha navíc 5.A: Jeden import, čtyři problémy {#sec-t5-extra-a}
+
+Následující smyšlený export obsahuje středníky mezi sloupci, desetinné čárky, identifikátory s počátečními nulami a kód −99 pro chybějící hodnotu (ve sloupci skóru i času):
+
+```{r}
+#| label: t5-extra-a-zadani
+export <- "id;skupina;skore;cas_s\n001;A;12;0,45\n002;B;-99;0,61\n010;A;15;-99\n"
+```
+
+Napište **jediné** volání importní funkce, které vytvoří tabulku se čtyřmi sloupci, textovým `id` včetně nul, číselným skórem a časem a s `NA` místo −99. Potom výsledek zkontrolujte: vypište typy sloupců a počet chybějících hodnot v každém sloupci.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Středníky a desetinné čárky vyřeší `read_csv2()` (otázka 5.1), −99 argument `na` (5.3) a nuly v `id` nastavení `col_types` (5.2):
+
+```{r}
+#| label: t5-extra-a-reseni
+pokus <- read_csv2(
+  I(export),
+  na = c("", "-99"),
+  col_types = cols(id = col_character())
+)
+glimpse(pokus)
+pokus |> summarise(across(everything(), ~ sum(is.na(.x))))
+```
+
+`glimpse()` ukazuje `id` jako `<chr>` s hodnotami „001“, „002“, „010“ a skóre i čas jako `<dbl>`. Čas 0,45 se správně načetl jako desetinné číslo. Kontrola chybění najde po jednom `NA` ve sloupcích `skore` a `cas_s`, tedy přesně tam, kde byl kód −99. Kdyby argument `na` chyběl, −99 by se v obou sloupcích počítalo jako platné číslo. Kontrolu `summarise(across(...))` lze použít po každém importu. Rychle ukáže, zda počty chybějících hodnot odpovídají dokumentaci.
+:::
+
+### Úloha navíc 5.B: Předání dat kolegyni, která používá SPSS {#sec-t5-extra-b}
+
+Kolegyně potřebuje tabulku `pripravena` z otázky 5.10 v SPSS, a to i s popiskem proměnné a kategoriemi pohlaví. Proč jí nestačí poslat CSV ani RDS? Navrhněte řešení a ověřte, že popisky export přežijí.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+CSV popisky ani faktory neuchová (otázka 5.10). RDS je formát R a SPSS ho neotevře. Balíček haven umí soubor SPSS nejen číst, ale i zapsat funkcí `write_sav()`:
+
+```{r}
+#| label: t5-extra-b
+soubor_sav <- tempfile(fileext = ".sav")
+write_sav(pripravena, soubor_sav)
+
+nactena_sav <- read_sav(soubor_sav)
+nactena_sav
+var_label(nactena_sav$skore)
+val_labels(nactena_sav$pohlavi)
+```
+
+Po zpětném načtení zůstal popisek skóru zachován. Faktor `pohlavi` se při zápisu převedl na čísla 1 a 2 s popisky hodnot „muž“ a „žena“, tedy do podoby, kterou SPSS používá. `id` zůstalo textem včetně nul. Pro práci v R po zpětném načtení bychom pohlaví znovu převedli na faktor, například pomocí `to_factor()`.
+:::
+
+## Test 6: Práce se skóry dotazníkových škál {#sec-test-6}
+
+Test k [lekci 6](https://reckak.github.io/R101-textbook/quarto/lekce_06.html) ověřuje obracení reverzních položek, Cronbachovo alfa, výpočet skóru po řádcích, pravidlo pro chybějící odpovědi, bodový graf s trendem, z-skóry a Q-Q graf. Funkci pro alfa voláme jako `psych::alpha()`, protože stejnojmennou funkci má i ggplot2. Balíček psych tedy nemusíme připojovat, stačí ho mít nainstalovaný.
+
+```{r}
+#| label: t6-balicky
+#| warning: false
+library(tidyverse)
+library(palmerpenguins)
+library(qqplotr)
+```
+
+### 6.1 Obrácení reverzní položky {#sec-t6-q1}
+
+Podle datového slovníku je položka reverzní a její možné odpovědi jsou 1 až 6. Kterým výpočtem správně obrátíme původní odpověď `x`, aby vyšší skóry všech položek vyjadřovaly stejný směr měřené vlastnosti?
+
+- **A** `6 - x`
+- **B** `7 - x`
+- **C** `5 - x`
+- **D** `x / 6`
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Od odpovědi odečítáme součet nejnižší a nejvyšší možné hodnoty, tedy 1 + 6 = 7.
+
+```{r}
+#| label: t6-q1
+x <- c(1, 2, 3, 4, 5, 6, NA)
+tibble(puvodni = x, obraceno_7 = 7 - x, obraceno_6 = 6 - x, deleno_6 = round(x / 6, 2))
+```
+
+Se `7 - x` se 1 změní na 6, 2 na 5 atd. Výsledek zůstává na škále 1–6 a `NA` zůstává `NA`. Při `6 - x` (A) by vznikly hodnoty 0 až 5, tedy i 0, která na škále neexistuje. `5 - x` (C) je vzorec pro škálu 1–4. Dělení (D) mění jednotky, ale pořadí neobrací: vyšší odpověď má pořád vyšší hodnotu.
+:::
+
+### 6.2 Co říká Cronbachovo alfa {#sec-t6-q2}
+
+Po správném obrácení reverzních položek vyšlo u dotazníkové škály poměrně vysoké Cronbachovo alfa. Který závěr je přiměřený?
+
+- **A** Je prokázáno, že škála měří právě jednu vlastnost.
+- **B** Je prokázáno, že škála měří právě tu vlastnost, kterou chceme měřit.
+- **C** Každou položku, jejíž odstranění alfa zvýší, musíme ze škály vyřadit.
+- **D** Výsledek vypovídá o vnitřní konzistenci škály; sám nedokazuje její jednorozměrnost ani validitu.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Že vysoké alfa nedokazuje jednorozměrnost (A), ukážeme na simulovaných datech. Vytvoříme osm položek. Čtyři měří jednu vlastnost a čtyři jinou, s ní jen mírně související vlastnost (korelace obou vlastností je 0,3):
+
+```{r}
+#| label: t6-q2
+set.seed(2026)
+n <- 300
+vlastnost_1 <- rnorm(n)
+vlastnost_2 <- 0.3 * vlastnost_1 + sqrt(1 - 0.3^2) * rnorm(n)
+
+polozky <- tibble(
+  a1 = vlastnost_1 + rnorm(n, sd = 0.6), a2 = vlastnost_1 + rnorm(n, sd = 0.6),
+  a3 = vlastnost_1 + rnorm(n, sd = 0.6), a4 = vlastnost_1 + rnorm(n, sd = 0.6),
+  b1 = vlastnost_2 + rnorm(n, sd = 0.6), b2 = vlastnost_2 + rnorm(n, sd = 0.6),
+  b3 = vlastnost_2 + rnorm(n, sd = 0.6), b4 = vlastnost_2 + rnorm(n, sd = 0.6)
+)
+
+psych::alpha(polozky)$total$raw_alpha
+round(cor(polozky), 2)
+```
+
+Alfa celé osmipoložkové „škály“ je vysoké, přestože korelační matice ukazuje dva bloky. Položky a1–a4 spolu korelují kolem 0,7 a b1–b4 kolem 0,8, ale mezi bloky jsou korelace jen kolem 0,3. Alfa roste s počtem položek a s průměrnou korelací, o struktuře škály ale nic neříká. K posouzení rozměrnosti slouží jiné metody, například faktorová analýza. Vysoké alfa nedokazuje ani validitu (B): položky mohou spolu souviset a přitom měřit něco jiného, než chceme. O vyřazení položky (C) nerozhoduje jen to, že by se alfa ve vzorku zvýšila, ale i obsah položky a teorie (úloha 6.B).
+:::
+
+### 6.3 Průměr pro každou osobu {#sec-t6-q3}
+
+Ve fiktivní tabulce `dotaznik` představuje každý řádek jednu osobu a `p1`, `p2` a `p3` jsou již správně orientované číselné položky. Co zajistí příkaz `dotaznik |> rowwise() |> mutate(skor = mean(c_across(c(p1, p2, p3)), na.rm = TRUE)) |> ungroup()`?
+
+- **A** Spočítá pro každou osobu průměr jejích dostupných odpovědí a poté zruší zpracování po řádcích.
+- **B** Spočítá zvlášť průměr každé položky přes všechny osoby a vrátí tři řádky.
+- **C** Spočítá jediný průměr všech odpovědí a zapíše jej všem osobám.
+- **D** Ponechá pouze osoby, které mají vyplněné všechny tři položky.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.**
+
+```{r}
+#| label: t6-q3
+dotaznik <- tibble(
+  id = c("O1", "O2", "O3"),
+  p1 = c(4, 2, 5),
+  p2 = c(5, NA, 4),
+  p3 = c(3, 1, NA)
+)
+
+dotaznik |>
+  rowwise() |>
+  mutate(skor = mean(c_across(c(p1, p2, p3)), na.rm = TRUE)) |>
+  ungroup()
+
+dotaznik |>
+  mutate(skor = mean(c_across(c(p1, p2, p3)), na.rm = TRUE))
+```
+
+V prvním výsledku má každá osoba vlastní průměr: O1 (4 + 5 + 3) / 3 = 4, O2 z dostupných odpovědí (2 + 1) / 2 = 1,5. Osoby s chybějící odpovědí zůstaly (D neplatí). Výsledek má tři řádky za tři osoby, ne za tři položky (B). Druhý výpis ukazuje, co se stane bez `rowwise()`: `c_across()` vezme hodnoty ze všech řádků najednou a každá osoba dostane stejný průměr všech sedmi odpovědí, tedy možnost C. `ungroup()` na konci zruší zpracování po řádcích, aby další `summarise()` nepočítal pro každou osobu zvlášť.
+:::
+
+### 6.4 Pravidlo pro chybějící odpovědi {#sec-t6-q4}
+
+Škála má 10 položek. Předem jsme stanovili, že skór bude průměrem dostupných odpovědí pouze tehdy, pokud chybí nejvýše dvě odpovědi. Osoba A vyplnila 8 položek a osoba B vyplnila 7 položek. Jak postupujeme?
+
+- **A** Oběma osobám vypočítáme průměr, protože `na.rm = TRUE` nahrazuje pravidlo pro počet odpovědí.
+- **B** Oběma osobám nastavíme skór na `NA`, protože neodpověděly na všech 10 položek.
+- **C** Osobě A ponecháme průměr z 8 odpovědí a osobě B nastavíme skór na `NA`.
+- **D** Osobě A ponecháme průměr a osobě B nahradíme tři chybějící odpovědi nulami.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.** Osobě A chybějí dvě odpovědi, což pravidlo dovoluje. Osobě B chybějí tři.
+
+```{r}
+#| label: t6-q4
+osoby <- tibble(
+  osoba = c("A", "B"),
+  p01 = c(4, 2), p02 = c(5, NA), p03 = c(NA, 3), p04 = c(3, NA), p05 = c(4, 2),
+  p06 = c(NA, 3), p07 = c(5, NA), p08 = c(4, 2), p09 = c(3, 3), p10 = c(4, 2)
+)
+
+osoby |>
+  rowwise() |>
+  mutate(
+    prumer_dostupnych = mean(c_across(p01:p10), na.rm = TRUE),
+    n_miss = sum(is.na(c_across(p01:p10)))
+  ) |>
+  ungroup() |>
+  mutate(skor = if_else(n_miss > 2, NA_real_, prumer_dostupnych)) |>
+  select(osoba, n_miss, prumer_dostupnych, skor)
+```
+
+`na.rm = TRUE` spočítá průměr oběma osobám (sloupec `prumer_dostupnych`). Pravidlo o počtu odpovědí tedy samo nehlídá (A). To zajistí až podmínka `n_miss > 2`, která osobě B nastaví `NA`. Požadavek všech deseti odpovědí (B) by zbytečně vyřadil osobu A. Nuly (D) by z neodpovězených položek udělaly nejnižší možné odpovědi a skór uměle snížily.
+:::
+
+### 6.5 Výběr osob pro bodový graf {#sec-t6-q5}
+
+V tabulce `hs_skory` chceme zobrazit vztah číselných skórů `tot_emo` a `tot_help`. Některým osobám chybí věk, ale oba skóry mají. Který příkaz ponechá všechny osoby s oběma skóry bez ohledu na chybějící věk?
+
+- **A** `hs_skory |> drop_na()`
+- **B** `hs_skory |> drop_na(tot_emo, tot_help)`
+- **C** `hs_skory |> drop_na(age)`
+- **D** `hs_skory |> filter(is.na(tot_emo), is.na(tot_help))`
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Na malé smyšlené tabulce s různými kombinacemi chybění:
+
+```{r}
+#| label: t6-q5
+hs_skory <- tibble(
+  id = 1:5,
+  age = c(21, NA, 24, NA, 30),
+  tot_emo = c(3.2, 2.8, NA, 3.9, 4.1),
+  tot_help = c(2.5, 3.1, 2.9, NA, 3.6)
+)
+
+hs_skory |> drop_na() |> pull(id)
+hs_skory |> drop_na(tot_emo, tot_help) |> pull(id)
+hs_skory |> drop_na(age) |> pull(id)
+hs_skory |> filter(is.na(tot_emo), is.na(tot_help)) |> pull(id)
+```
+
+Oba skóry mají osoby 1, 2 a 5. Právě ty vrátí jen možnost B. Osoba 2 nemá uvedený věk, a přesto zůstala. `drop_na()` bez sloupců (A) ji vyřadí kvůli věku. `drop_na(age)` (C) ponechá osobu 3, které chybí skór, a vyřadí osobu 2. Filtr s `is.na()` (D) hledá osoby, kterým chybějí **oba** skóry. Takové v tabulce nejsou, výsledek je proto prázdný.
+:::
+
+### 6.6 Překrývající se body {#sec-t6-q6}
+
+Do bodové vrstvy grafu přidáme `position_jitter(width = 0.05, height = 0.05, seed = 123)`. Regresní přímku přidává samostatná vrstva `geom_smooth()`. K čemu zde jitter slouží?
+
+- **A** Nahrazuje chybějící skóry malými náhodnými čísly.
+- **B** Mění uložené skóry, aby se při dalším výpočtu zvýšila jejich variabilita.
+- **C** Přepočítává regresní přímku z náhodně posunutých bodů.
+- **D** Mírně posouvá zobrazené body, aby byly lépe patrné ty, které se překrývají.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Překrývání je nejvýraznější u celočíselných odpovědí. Smyšlená data obsahují 200 osob, ale jen 25 možných kombinací odpovědí 1–5. Protože jsou hodnoty od sebe vzdálené o 1, použijeme větší posun 0,15:
+
+```{r}
+#| label: t6-q6-data
+set.seed(123)
+likert <- tibble(spokojenost = sample(1:5, 200, replace = TRUE)) |>
+  mutate(zapojeni = pmin(pmax(spokojenost + sample(-1:1, 200, replace = TRUE), 1), 5))
+likert |> count(spokojenost, zapojeni) |> arrange(desc(n)) |> slice_head(n = 3)
+```
+
+```{r}
+#| label: t6-q6-bez
+#| fig-alt: "Bodový graf dvou celočíselných odpovědí bez jitteru: jen několik bodů v mřížce, překrývající se pozorování nejsou vidět."
+ggplot(likert, aes(x = spokojenost, y = zapojeni)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  labs(x = "Spokojenost (1–5)", y = "Zapojení (1–5)", title = "Bez jitteru")
+```
+
+```{r}
+#| label: t6-q6-jitter
+#| fig-alt: "Stejný graf s jitterem: body tvoří shluky kolem každé kombinace, je vidět, kde je osob nejvíc; přímka je stejná."
+ggplot(likert, aes(x = spokojenost, y = zapojeni)) +
+  geom_point(position = position_jitter(width = 0.15, height = 0.15, seed = 123)) +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  labs(x = "Spokojenost (1–5)", y = "Zapojení (1–5)", title = "S jitterem")
+```
+
+Bez jitteru vidíme jen mřížku bodů a nepoznáme, že na některé kombinaci leží přes 20 osob. S jitterem tvoří body shluky a velikost shluku ukazuje četnost. Přímka je v obou grafech **stejná**, protože `geom_smooth()` počítá z původních hodnot (C). Data v tabulce `likert` se nezměnila (B) a jitter nic nedoplňuje (A). `seed` zajistí, že posun bude při každém vykreslení stejný.
+:::
+
+### 6.7 Pás kolem trendové čáry {#sec-t6-q7}
+
+Bodový graf obsahuje regresní přímku a její 95% pás spolehlivosti vytvořený pomocí `geom_smooth(method = "lm")`. Co tento pás vyjadřuje?
+
+- **A** Nejistotu odhadu průměrné hodnoty y při dané hodnotě x.
+- **B** Rozmezí, ve kterém musí ležet přesně 95 % jednotlivých osob.
+- **C** Hranice, mimo které jsou všechny naměřené hodnoty chybné.
+- **D** Důkaz, že změna proměnné x způsobuje změnu proměnné y.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.** Pás ukazuje, jak přesně známe **průměrnou** hmotnost tučňáků s danou délkou ploutve, ne kde leží jednotliví tučňáci.
+
+```{r}
+#| label: t6-q7
+#| fig-alt: "Bodový graf délky ploutve a hmotnosti s regresní přímkou a úzkým šedým pásem; většina bodů leží mimo pás."
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm", formula = y ~ x, na.rm = TRUE) +
+  labs(x = "Délka ploutve (mm)", y = "Hmotnost (g)")
+```
+
+Pás je úzký a většina bodů leží mimo něj, takže nejde o rozmezí pro 95 % jedinců (B). Kolik bodů leží mimo pás, spočítáme pomocí `lm()`. Je to tatáž přímka, kterou kreslí `geom_smooth(method = "lm")`. Podrobně ji probírá lekce 9.
+
+```{r}
+#| label: t6-q7-podil
+model <- lm(body_mass_g ~ flipper_length_mm, data = penguins)
+pas <- predict(model, interval = "confidence")
+hmotnost <- model$model$body_mass_g
+mean(hmotnost < pas[, "lwr"] | hmotnost > pas[, "upr"])
+```
+
+Mimo pás leží zhruba devět z deseti tučňáků, a přesto na nich není nic chybného (C). S rostoucím počtem pozorování se pás zužuje, protože průměr odhadujeme přesněji. Rozptyl jednotlivých tučňáků kolem přímky se ale nezmenšuje. Graf ukazuje souvislost, ne příčinu (D).
+:::
+
+### 6.8 Přiblížení grafu bez změny výpočtu {#sec-t6-q8}
+
+Chceme zobrazit jen část bodového grafu pro hodnoty x od 2,5 do 3,5, ale zachovat regresní přímku vypočtenou ze všech původních pozorování. Který doplněk grafu použijeme?
+
+- **A** `scale_x_continuous(limits = c(2.5, 3.5))`
+- **B** Před vykreslením vybereme jen řádky s x mezi 2,5 a 3,5.
+- **C** `coord_cartesian(xlim = c(2.5, 3.5))`
+- **D** `geom_smooth(method = "loess")`
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.** Rozdíl ukážeme na tučňácích, přiblížíme délky ploutví 190–200 mm. Nejprve si spočítáme sklon přímky ze všech dat a jen z výřezu:
+
+```{r}
+#| label: t6-q8-sklon
+coef(lm(body_mass_g ~ flipper_length_mm, data = penguins))
+coef(lm(body_mass_g ~ flipper_length_mm,
+        data = filter(penguins, flipper_length_mm >= 190, flipper_length_mm <= 200)))
+```
+
+Ze všech tučňáků přibývá s každým milimetrem ploutve v průměru asi 50 g. Ve výřezu je sklon jen asi 30 g na milimetr, protože tam zbyla jen část tučňáků, převážně druhů Adélie a Chinstrap.
+
+```{r}
+#| label: t6-q8-grafy
+#| layout-ncol: 2
+#| fig-alt:
+#|   - "Graf přiblížený pomocí limits: přímka ve výřezu 190 až 200 mm má jiný sklon, protože vychází jen z bodů ve výřezu."
+#|   - "Graf přiblížený pomocí coord_cartesian: přímka ve výřezu je pokračováním přímky odhadnuté ze všech tučňáků."
+zaklad <- ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm", formula = y ~ x, na.rm = TRUE) +
+  labs(x = "Délka ploutve (mm)", y = "Hmotnost (g)")
+
+zaklad + scale_x_continuous(limits = c(190, 200)) + labs(title = "limits")
+zaklad + coord_cartesian(xlim = c(190, 200)) + labs(title = "coord_cartesian")
+```
+
+S `limits` (A) ggplot2 hodnoty mimo rozsah zahodí ještě před výpočtem přímky, a ta má pak sklon z výřezu. Stejně dopadne ruční výběr řádků (B). `coord_cartesian()` jen přiblíží hotový graf jako lupa a přímka je stejná jako v celém grafu. Bez `na.rm = TRUE` by ggplot2 u `limits` navíc varoval o odstraněných řádcích. `method = "loess"` (D) mění typ trendu, ne výřez.
+:::
+
+### 6.9 Význam z-skóru {#sec-t6-q9}
+
+Po převodu skóru pomocí vzorce `z = (skor - prumer) / smerodatna_odchylka` má jedna osoba z-skór 1,5. Jak tuto hodnotu správně interpretujeme?
+
+- **A** Její původní skór je přesně 1,5 bodu nad průměrem, nezávisle na směrodatné odchylce.
+- **B** Její skór leží 1,5 směrodatné odchylky nad průměrem použitým při standardizaci.
+- **C** Její skór je o 1,5 % vyšší než průměr použitý při standardizaci.
+- **D** Převod na z-skóry zaručil normální rozdělení všech skórů.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** z-skór měří vzdálenost od průměru v **jednotkách směrodatné odchylky**.
+
+```{r}
+#| label: t6-q9
+skory <- c(35, 45, 50, 55, 60, 85)
+z <- (skory - mean(skory)) / sd(skory)
+tibble(skor = skory, rozdil_od_prumeru = skory - mean(skory), z = round(z, 2))
+c(prumer = mean(skory), sd = sd(skory))
+round(c(prumer_z = mean(z), sd_z = sd(z)), 10)
+```
+
+Průměr je 55 a směrodatná odchylka 17,0. Skór 85 je o 30 bodů nad průměrem, tedy 30 / 17,0 ≈ 1,76 SD (z = 1,76). Rozdíl v bodech a z-skór se liší, takže A neplatí. O procenta nejde (C). z-skóry mají průměr 0 a SD 1. Tvar rozdělení se ale nemění (D): skóry jsou zešikmené kvůli hodnotě 85 a z-skóry stejně. Standardizace jen posune střed a změní jednotku.
+:::
+
+### 6.10 Interpretace Q-Q grafu {#sec-t6-q10}
+
+V normálním Q-Q grafu leží body blízko referenční přímky a všechny uvnitř zvoleného simultánního 95% pásu. Který závěr je přiměřený?
+
+- **A** Je dokázáno, že rozdělení v populaci je přesně normální.
+- **B** Každá osoba uvnitř pásu má s pravděpodobností 95 % správně vypočtený skór.
+- **C** Protože žádný bod neleží mimo pás, můžeme bez dalších kontrol použít libovolnou statistickou metodu.
+- **D** Pozorované rozdělení je slučitelné s normálním rozdělením; přesnou normalitu tím nedokazujeme.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.** Že body uvnitř pásu normalitu nedokazují, ukážeme na malém vzorku 20 hodnot, který jsme vytvořili ze **zešikmeného** (exponenciálního) rozdělení, tedy rozhodně ne normálního:
+
+```{r}
+#| label: t6-q10
+#| fig-alt: "Q-Q graf 20 hodnot ze zešikmeného rozdělení se simultánním pásem; body se mírně ohýbají, ale leží uvnitř pásu."
+set.seed(8)
+maly_vzorek <- tibble(hodnota = 40 + rexp(20, rate = 1 / 10))
+
+set.seed(123)
+ggplot(maly_vzorek, aes(sample = hodnota)) +
+  stat_qq_band(bandType = "ts") +
+  stat_qq_line() +
+  stat_qq_point() +
+  labs(x = "Teoretické kvantily normálního rozdělení", y = "Pozorované hodnoty")
+```
+
+Body se ohýbají, ale leží v pásu, i když data z normálního rozdělení nepocházejí. Vzorek jsme pro ukázku vybrali tak, aby v pásu ležel. Nejde ale o vzácnost: při 20 hodnotách z tohoto rozdělení se to v našem vyzkoušení stalo zhruba u třetiny vzorků. U malého vzorku je pás široký a odchylky snadno skryje. Graf proto ukazuje jen to, že data jsou s normalitou **slučitelná**, ne že je rozdělení normální (A). Pás se týká polohy bodů Q-Q grafu, ne správnosti výpočtu skórů (B). Každá metoda má vlastní předpoklady (C). U lineární regrese se například normalita týká reziduí, nikoli samotných proměnných.
+:::
+
+### Úloha navíc 6.A: Skór se dvěma reverzními položkami {#sec-t6-extra-a}
+
+Smyšlená škála má čtyři položky s odpověďmi 1–5. Položky `q2` a `q4` jsou reverzní. Skór je průměr položek, pokud chybí nejvýše jedna odpověď, jinak `NA`. Spočítejte skór pro tabulku níže a výsledek pro osobu O1 ověřte ručně.
+
+```{r}
+#| label: t6-extra-a-zadani
+skala <- tibble(
+  osoba = c("O1", "O2", "O3", "O4"),
+  q1 = c(5, 2, 4, NA),
+  q2 = c(1, 4, NA, NA),
+  q3 = c(4, 2, 5, 3),
+  q4 = c(2, 5, 1, 4)
+)
+```
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Na škále 1–5 obracíme položku jako `6 - x` (otázka 6.1). Obrácené hodnoty uložíme do nových sloupců, aby původní odpovědi zůstaly zachované pro kontrolu:
+
+```{r}
+#| label: t6-extra-a-reseni
+skala_skor <- skala |>
+  mutate(q2_r = 6 - q2, q4_r = 6 - q4) |>
+  rowwise() |>
+  mutate(
+    prumer_dostupnych = mean(c_across(c(q1, q2_r, q3, q4_r)), na.rm = TRUE),
+    n_miss = sum(is.na(c_across(c(q1, q2_r, q3, q4_r))))
+  ) |>
+  ungroup() |>
+  mutate(skor = if_else(n_miss > 1, NA_real_, prumer_dostupnych))
+
+skala_skor |> select(osoba, q1, q2_r, q3, q4_r, n_miss, skor)
+```
+
+Ruční kontrola pro O1: obrácené odpovědi jsou 6 − 1 = 5 a 6 − 2 = 4, skór je tedy (5 + 5 + 4 + 4) / 4 = 4,5. To odpovídá výpočtu. O2 má po obrácení samé nízké hodnoty. Původní odpovědi 4 a 5 na reverzních položkách tedy znamenají nízkou úroveň vlastnosti, ve shodě s ostatními položkami. O3 chybí jedna odpověď, skór se proto počítá ze tří položek. O4 chybějí dvě odpovědi, a skór je proto `NA`. Pozor na pořadí kroků: kdybychom průměrovali před obrácením, byl by skór nesmyslný. Do výpočtu musí vstupovat obrácené sloupce.
+:::
+
+### Úloha navíc 6.B: Vyřadit položku kvůli alfa? {#sec-t6-extra-b}
+
+U desetipoložkové škály vyšlo Cronbachovo alfa 0,78. Výstup `psych::alpha()` ukazuje, že po vyřazení položky 7 by alfa stouplo na 0,80. Kolega navrhuje položku ze skóru odstranit. Uveďte alespoň tři úvahy, které byste před takovým rozhodnutím zvážili.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Možná řešení (stačí tři dobře zdůvodněné body):
+
+1. **Obsah položky.** Pokrývá položka 7 důležitou část měřené vlastnosti? Jejím vyřazením se může zúžit, *co* škála měří. Vyšší konzistence pak může jít na úkor obsahové validity.
+2. **Velikost změny a nejistota.** Rozdíl 0,02 je malý a v jiném vzorku se může obrátit. Rozhodnutí podle jednoho vzorku hrozí tím, že se škála „přizpůsobí“ náhodným výkyvům.
+3. **Správné obrácení.** Pokud je položka reverzní a nebyla obrácena, má zápornou korelaci se zbytkem škály a alfa snižuje. To je chyba ve výpočtu, ne důvod položku vyřadit. Nejprve tedy zkontrolujeme slovník a korelaci položky se zbytkem škály.
+4. **Srovnatelnost.** U standardizovaného dotazníku by skór bez jedné položky nebyl srovnatelný s normami ani s jinými studiemi. Změnu bychom museli ve zprávě výslovně uvést a zdůvodnit.
+5. **Předem stanovený postup.** Rozhodnutí o úpravě škály je lepší stanovit předem v plánu analýzy než podle výsledku.
+
+Vyšší alfa navíc neznamená lepší škálu (otázka 6.2): velmi vysoké alfa může vznikat i tím, že položky říkají téměř totéž jinými slovy.
+:::
+
+## Test 7: Základní statistické testy {#sec-test-7}
+
+Test k [lekci 7](https://reckak.github.io/R101-textbook/quarto/lekce_07.html) ověřuje přípravu kategoriálních proměnných a skóru, testy normality a shody rozptylů, t-test, interval spolehlivosti, Cohenovo *d*, korelaci a χ² test. Řešení používají data o rodičovském monitoringu z lekce 7. Nejprve je připravíme stejně jako v závěrečné úloze lekce: opravíme chybnou kohortu 66 na 6, převedeme pohlaví a kohortu na faktory a spočítáme skór `monit` s pravidlem „nejvýše jedna chybějící odpověď“.
+
+```{r}
+#| label: t7-balicky
+#| warning: false
+library(tidyverse)
+library(haven)
+library(rstatix)
+```
+
+```{r}
+#| label: t7-data
+adolescenti <- read_sav("data/raw/monitoring_teaching.sav")
+
+mon <- adolescenti |>
+  mutate(
+    kohorta = if_else(kohorta == 66, true = 6, false = kohorta),
+    pohlavi = factor(pohlavi, levels = c(1, 2), labels = c("chlapci", "dívky")),
+    kohorta = factor(kohorta, levels = c(6, 10), labels = c("mladší", "starší"))
+  ) |>
+  rowwise() |>
+  mutate(
+    monit = mean(c_across(c01_99:c09_99), na.rm = TRUE),
+    n_miss_monit = sum(is.na(c_across(c01_99:c09_99)))
+  ) |>
+  ungroup() |>
+  mutate(monit = if_else(n_miss_monit > 1, NA_real_, monit))
+
+mon_pohlavi <- mon |> drop_na(pohlavi, monit)
+mon_pohlavi |> count(pohlavi)
+```
+
+Pro srovnání chlapců a dívek máme 313 chlapců a 442 dívek s platným skórem. Skór je průměr devíti položek na škále 1–4.
+
+### 7.1 Převod kódů na faktor {#sec-t7-q1}
+
+Proměnná `kohorta` obsahuje kódy 6 a 10 a navíc jednou chybně zapsaný kód 66. Co se stane s hodnotou 66, pokud ji předem neopravíme a spustíme `mutate(kohorta = factor(kohorta, levels = c(6, 10), labels = c("mladší", "starší")))`?
+
+- **A** R skončí chybou, protože hodnota 66 není uvedena v `levels`.
+- **B** Hodnota 66 se bez varování změní na `NA`.
+- **C** Hodnota 66 se zařadí do kategorie „starší“, protože je větší než 10.
+- **D** Vznikne třetí kategorie s názvem „66“.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.**
+
+```{r}
+#| label: t7-q1
+adolescenti |> count(kohorta)
+
+kody <- c(6, 10, 66, 6)
+kohorta_f <- factor(kody, levels = c(6, 10), labels = c("mladší", "starší"))
+kohorta_f
+sum(is.na(kohorta_f))
+```
+
+V původních datech je kód 66 jednou. V ukázce se z něj stalo `NA`, bez chyby (A) i bez varování. Nevznikla kategorie „66“ (D) a `factor()` nezařazuje podle velikosti (C). Právě proto, že převod proběhne tiše, kontrolujeme četnosti pomocí `count()` **před** převodem a počet `NA` **po** něm. V přípravě dat výše jsme 66 nejprve opravili na 6, protože věk osoby jednoznačně odpovídá mladší kohortě.
+:::
+
+### 7.2 Skór sečtením položek {#sec-t7-q2}
+
+Osoba odpověděla na osm z devíti položek rodičovského monitoringu a u položky `c03_99` má `NA`. Jaký skór dostane ze vzorce `(c01_99 + c02_99 + c03_99 + c04_99 + c05_99 + c06_99 + c07_99 + c08_99 + c09_99) / 9`?
+
+- **A** Průměr z osmi dostupných odpovědí.
+- **B** Součet osmi odpovědí vydělený devíti, protože `NA` se počítá jako 0.
+- **C** R skončí chybou, protože nelze sčítat chybějící hodnotu.
+- **D** `NA`, protože součet s jedinou chybějící hodnotou je také `NA`.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.**
+
+```{r}
+#| label: t7-q2
+osoba <- tibble(
+  c01_99 = 3, c02_99 = 4, c03_99 = NA, c04_99 = 3, c05_99 = 2,
+  c06_99 = 4, c07_99 = 3, c08_99 = 3, c09_99 = 4
+)
+
+osoba |>
+  mutate(rucne = (c01_99 + c02_99 + c03_99 + c04_99 + c05_99 +
+                    c06_99 + c07_99 + c08_99 + c09_99) / 9) |>
+  pull(rucne)
+
+osoba |>
+  rowwise() |>
+  mutate(prumer = mean(c_across(c01_99:c09_99), na.rm = TRUE)) |>
+  ungroup() |>
+  pull(prumer)
+```
+
+Ruční vzorec vrací `NA` bez chyby (C): jediná chybějící položka udělá `NA` z celého součtu. R ji nepočítá jako nulu (B). Průměr z osmi dostupných odpovědí (A), zde 26 / 8 = 3,25, dává až postup s `rowwise()` a `mean(..., na.rm = TRUE)`. Ruční vzorec tedy nevědomky uplatňuje přísné pravidlo „ani jedna chybějící odpověď“. Zvolené pravidlo „nejvýše jedna chybějící“ musíme naprogramovat výslovně, jako v přípravě dat.
+:::
+
+### 7.3 Shapirův–Wilkův test u velké skupiny {#sec-t7-q3}
+
+U 442 dívek vyšel Shapirův–Wilkův test W = 0,983 a p < 0,001. Histogram a Q-Q graf přitom ukazují přibližně souměrné, jen mírně plošší rozdělení bez odlehlých hodnot. Co z toho plyne pro použití t-testu?
+
+- **A** Odchylka je statisticky významná, ale u tak velké skupiny pro t-test nepodstatná.
+- **B** T-test nelze použít, protože test normalitu zamítl.
+- **C** Pravděpodobnost, že skóry mají normální rozdělení, je menší než 0,1 %.
+- **D** Výsledek testu ukazuje, že rozdělení výběrového průměru není normální.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.**
+
+```{r}
+#| label: t7-q3
+#| fig-alt: "Histogramy skóru monitoringu pro chlapce a dívky; obě rozdělení jsou přibližně souměrná se středem kolem 2,8 a bez odlehlých hodnot."
+mon_pohlavi |>
+  group_by(pohlavi) |>
+  shapiro_test(monit)
+
+ggplot(mon_pohlavi, aes(x = monit)) +
+  geom_histogram(binwidth = 0.25, boundary = 1) +
+  facet_wrap(vars(pohlavi)) +
+  labs(x = "Rodičovský monitoring (1–4)", y = "Počet osob")
+```
+
+U dívek je W = 0,983 a p < 0,001, histogram ale ukazuje zhruba souměrné rozdělení bez extrémů. Shapirův–Wilkův test má u stovek osob velkou sílu, takže odhalí i malou, prakticky nevýznamnou odchylku. T-test potřebuje přibližně normální rozdělení **výběrového průměru**. U 442 osob to při takto mírné odchylce zajišťuje centrální limitní věta, proto B neplatí. Test posuzuje rozdělení jednotlivých skórů, ne výběrového průměru (D). p-hodnota navíc není pravděpodobnost, že platí nulová hypotéza (C). Udává, jak neobvyklá by taková data byla, kdyby skóry normální rozdělení měly.
+:::
+
+### 7.4 Levenův test a volba t-testu {#sec-t7-q4}
+
+Levenův test shody rozptylů monitoringu mezi chlapci a dívkami vyšel F = 0,29 a p = 0,59. Jaký další postup lekce doporučuje?
+
+- **A** Použít Studentův t-test, protože Levenův test prokázal shodu rozptylů.
+- **B** Použít Welchův t-test jen tehdy, kdyby Levenův test vyšel významně; jinak Studentův.
+- **C** Použít Welchův t-test; Levenův test slouží jen jako popis.
+- **D** Levenův test zopakovat s průměrem místo mediánu a podle něj se rozhodnout.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.**
+
+```{r}
+#| label: t7-q4
+mon_pohlavi |> levene_test(monit ~ pohlavi)
+
+bind_rows(
+  Welch = t_test(mon_pohlavi, monit ~ pohlavi),
+  Student = t_test(mon_pohlavi, monit ~ pohlavi, var.equal = TRUE),
+  .id = "test"
+) |>
+  select(test, statistic, df, p)
+```
+
+Levenův test dává F = 0,29 a p = 0,59. Nevýznamný výsledek ale shodu rozptylů **neprokazuje** (A), data jsou s ní jen slučitelná. Druhá tabulka ukazuje, proč na volbě skoro nezáleží: když jsou rozptyly podobné, dávají Welchův a Studentův test téměř stejné *t* i *p* a liší se hlavně stupni volnosti. Welchův test shodu rozptylů nepředpokládá, proto ho používáme vždy. Postup „nejdřív Levene, pak podle výsledku zvolit t-test“ (B, D) chybu I. druhu nekontroluje lépe, simulace ukazují, že ji spíše zhoršuje. Kdy se oba testy liší, ukazuje úloha 7.B.
+:::
+
+### 7.5 Znaménko rozdílu v `t_test()` {#sec-t7-q5}
+
+Funkce `t_test(monit ~ pohlavi, detailed = TRUE)` vrátila `estimate = −0,139`, `group1 = chlapci` a `group2 = dívky`. Co znamená hodnota `estimate`?
+
+- **A** Chlapci mají průměrný skór o 0,139 bodu vyšší než dívky.
+- **B** Rozdíl je nevýznamný, protože je záporný.
+- **C** Skupiny se liší o 0,139 směrodatné odchylky.
+- **D** Dívky mají průměrný skór o 0,139 bodu vyšší než chlapci.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.**
+
+```{r}
+#| label: t7-q5
+mon_pohlavi |>
+  t_test(monit ~ pohlavi, detailed = TRUE) |>
+  select(group1, group2, estimate1, estimate2, estimate, p)
+
+mon_pohlavi |>
+  mutate(pohlavi = fct_relevel(pohlavi, "dívky")) |>
+  t_test(monit ~ pohlavi, detailed = TRUE) |>
+  select(group1, group2, estimate1, estimate2, estimate, p)
+```
+
+`estimate1` je průměr chlapců (2,72), `estimate2` průměr dívek (2,86) a `estimate` jejich rozdíl `estimate1 − estimate2` = −0,139. Záporné znaménko tedy znamená, že vyšší průměr mají dívky, A neplatí. Po přeřazení úrovní faktoru pomocí `fct_relevel()` se změní jen znaménko, *p* zůstane stejné. Znaménko tedy o významnosti nic neříká (B). Rozdíl je v bodech škály 1–4, ne ve směrodatných odchylkách (C). Ten vyjadřuje Cohenovo *d* (otázka 7.7).
+:::
+
+### 7.6 Interval spolehlivosti rozdílu průměrů {#sec-t7-q6}
+
+Welchův t-test ukázal, že dívky mají průměrný monitoring o 0,14 bodu vyšší než chlapci, 95% CI [0,06; 0,22]. Která interpretace intervalu je správná?
+
+- **A** Přibližně 95 % dívek má skór o 0,06 až 0,22 bodu vyšší než chlapci.
+- **B** S daty jsou slučitelné populační rozdíly průměrů od 0,06 do 0,22 bodu.
+- **C** Skutečný rozdíl v populaci je přesně 0,14 bodu a interval udává chybu měření skóru.
+- **D** V intervalu od 0,06 do 0,22 leží 95 % skórů celého vzorku.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.**
+
+```{r}
+#| label: t7-q6
+mon_pohlavi |>
+  mutate(pohlavi = fct_relevel(pohlavi, "dívky")) |>
+  t_test(monit ~ pohlavi, detailed = TRUE) |>
+  select(estimate, conf.low, conf.high)
+
+mon_pohlavi |>
+  summarise(min = min(monit), q25 = quantile(monit, 0.25), median = median(monit),
+            q75 = quantile(monit, 0.75), max = max(monit), .by = pohlavi)
+```
+
+S dívkami jako první skupinou vychází rozdíl 0,14 a interval [0,06; 0,22]. Interval popisuje nejistotu odhadu **rozdílu průměrů** v populaci. Druhá tabulka ukazuje, proč se netýká jednotlivých osob (A) ani rozsahu skórů (D): skóry leží mezi 1,25 a 4 a prostřední polovina obou skupin se z velké části překrývá. 0,14 je výběrový odhad, ne přesná populační hodnota, a interval nevyjadřuje chybu měření skóru (C). Interval neobsahuje nulu, což odpovídá *p* < 0,05 v oboustranném testu.
+:::
+
+### 7.7 Velikost účinku {#sec-t7-q7}
+
+Rozdíl monitoringu mezi dívkami a chlapci vyšel p < 0,001 a Cohenovo d = 0,24, 95% CI [0,09; 0,38]. Které tvrzení je správné?
+
+- **A** Rozdíl je statisticky významný, ale malý.
+- **B** Jde o velký účinek, protože p-hodnota je menší než 0,001.
+- **C** Přibližně 24 % dívek má vyšší skór než chlapci.
+- **D** Cohenovo d je test, který potvrzuje, že rozdíl nevznikl náhodou.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: A.** Interval spolehlivosti pro *d* počítá `cohens_d()` bootstrapem (opakovaným náhodným převzorkováním), proto nastavujeme `set.seed()`:
+
+```{r}
+#| label: t7-q7
+set.seed(123)
+mon_pohlavi |>
+  cohens_d(monit ~ pohlavi, var.equal = TRUE, ci = TRUE)
+
+mon_pohlavi |> summarise(M = mean(monit), SD = sd(monit), n = n(), .by = pohlavi)
+```
+
+Stejně jako u `t_test()` je pořadí skupin chlapci − dívky, proto je *d* záporné: −0,24 s intervalem [−0,38; −0,09]. Pro rozdíl dívky − chlapci tedy platí *d* = 0,24, 95% CI [0,09; 0,38], jak uvádí otázka. Průměry se liší asi o čtvrtinu směrodatné odchylky (0,14 bodu při SD kolem 0,57). Funkce sama označuje velikost jako `small`. Podle Cohenových hrubých hranic (0,2 malý, 0,5 střední, 0,8 velký účinek) jde o malý účinek. Interval sahá od zanedbatelného po malý účinek. Bootstrapový interval se při jiném `set.seed()` nebo jiném pořadí skupin může lišit v druhém desetinném místě. Malá p-hodnota neříká, jak velký rozdíl je (B): u 755 osob vyjde významně i malý rozdíl. *d* není podíl osob (C) ani test (D). Popisuje velikost rozdílu, otázku náhody řeší t-test.
+:::
+
+### 7.8 Korelace ve dvou oddělených shlucích {#sec-t7-q8}
+
+Věk dospívajících tvoří dva oddělené shluky (mladší a starší kohorta) bez osob mezi 14 a 15,75 roku. Korelace věku a monitoringu je v celém vzorku r = −0,28, uvnitř kohort −0,16 a 0,01. Jak výsledek nejlépe interpretovat?
+
+- **A** S každým rokem věku klesá monitoring o 0,28 bodu.
+- **B** Korelace uvnitř kohort jsou chybné, protože vycházejí z menšího počtu osob než celková korelace.
+- **C** Celková korelace hlavně opakuje rozdíl mezi kohortami.
+- **D** Výsledek dokazuje, že vyšší věk způsobuje pokles rodičovského monitoringu.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: C.**
+
+```{r}
+#| label: t7-q8
+#| fig-alt: "Bodový graf věku a monitoringu se dvěma oddělenými shluky; černá přímka přes celý vzorek klesá, barevné přímky uvnitř kohort jsou mnohem plošší."
+mon_vek <- mon |> drop_na(vekr, monit)
+
+mon_vek |> summarise(r = cor(vekr, monit), n = n())
+mon_vek |> summarise(r = cor(vekr, monit), n = n(), min_vek = min(vekr), max_vek = max(vekr), .by = kohorta)
+
+ggplot(mon_vek, aes(x = vekr, y = monit)) +
+  geom_point(aes(color = kohorta), alpha = 0.4) +
+  geom_smooth(method = "lm", formula = y ~ x, color = "black") +
+  geom_smooth(aes(color = kohorta), method = "lm", formula = y ~ x) +
+  labs(x = "Věk (roky)", y = "Rodičovský monitoring (1–4)", color = "Kohorta")
+```
+
+Graf ukazuje dva oddělené shluky: mladší kohorta 11,8–13,9 roku a starší 15,8–19,1 roku. Černá přímka přes celý vzorek klesá hlavně proto, že spojuje průměry obou shluků přes prázdné místo mezi nimi. Uvnitř kohort jsou barevné přímky mnohem plošší: u mladších mírně klesá (r = −0,16), u starších je vodorovná (r = 0,01). Celková korelace tedy hlavně opakuje rozdíl mezi kohortami. Korelace není sklon v bodech za rok (A). Menší skupiny mají širší intervaly, ale jejich korelace nejsou chybné (B). Data jsou průřezová a kohorty se liší i typem školy, kauzální závěr (D) z nich nevyplývá.
+:::
+
+### 7.9 Malé očekávané četnosti v χ² testu {#sec-t7-q9}
+
+Ve čtyřpolní tabulce (2 × 2) vyšly u χ² testu nezávislosti některé očekávané četnosti menší než 5 a R vypsal varování o nepřesné aproximaci. Jaký postup je vhodný?
+
+- **A** Použít Yatesovu korekci na spojitost, která problém malých četností odstraní.
+- **B** Použít Fisherův exaktní test nebo p-hodnotu z Monte Carlo simulace.
+- **C** Vynechat z tabulky buňky s malými četnostmi a test spustit znovu.
+- **D** Místo χ² testu porovnat četnosti t-testem.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: B.** Ukážeme to na smyšlené malé tabulce: 16 osob, z nichž 9 absolvovalo trénink a 7 bylo v kontrolní skupině. Zaznamenali jsme, zda se zlepšily. První blok **záměrně vyvolá varování**:
+
+```{r}
+#| label: t7-q9-chi
+mala_tabulka <- matrix(c(7, 1, 2, 6), nrow = 2,
+                       dimnames = list(skupina = c("trénink", "kontrola"),
+                                       zlepseni = c("ano", "ne")))
+mala_tabulka
+
+chi <- chisq.test(mala_tabulka, correct = FALSE)
+chi$expected
+chi$p.value
+```
+
+Všechny čtyři očekávané četnosti jsou pod 5, a proto R varuje, že aproximace rozdělením χ² nemusí být přesná. Vhodné alternativy:
+
+```{r}
+#| label: t7-q9-fisher
+fisher.test(mala_tabulka)$p.value
+
+set.seed(123)
+chisq.test(mala_tabulka, simulate.p.value = TRUE, B = 10000)$p.value
+```
+
+Fisherův exaktní test počítá *p* přesně ze všech tabulek se stejnými řádkovými a sloupcovými součty. Monte Carlo simulace vytvoří 10 000 tabulek za předpokladu nezávislosti a nepotřebuje velké očekávané četnosti. Obě p-hodnoty jsou vyšší než u χ² testu, ten tedy zde rozdíl přeceňuje. Yatesovu korekci (A) používá `chisq.test()` u tabulek 2 × 2 sám, pokud ji nevypneme. Je ale zbytečně konzervativní a předpoklad dostatečných očekávaných četností nenahrazuje. Vynechání buněk (C) by změnilo data i otázku. t-test (D) porovnává průměry číselné proměnné, ne četnosti kategorií.
+:::
+
+### 7.10 Chybějící hodnoty v `case_when()` {#sec-t7-q10}
+
+Sloupec `vekr` obsahuje hodnoty 12,5; 16 a `NA`. Jaké hodnoty vytvoří `case_when(vekr < 15 ~ "mladší", vekr >= 15 ~ "starší")`?
+
+- **A** "mladší", "starší" a "starší"
+- **B** "mladší", "starší" a "mladší"
+- **C** R skončí chybou, protože podmínky nepokrývají chybějící hodnotu.
+- **D** "mladší", "starší" a `NA`
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+**Správná odpověď: D.**
+
+```{r}
+#| label: t7-q10
+vek <- tibble(vekr = c(12.5, 16, NA))
+vek$vekr < 15
+vek |>
+  mutate(
+    skupina = case_when(vekr < 15 ~ "mladší", vekr >= 15 ~ "starší"),
+    skupina_s_na = case_when(
+      is.na(vekr) ~ "neuvedeno",
+      vekr < 15 ~ "mladší",
+      vekr >= 15 ~ "starší"
+    )
+  )
+```
+
+Porovnání `NA < 15` vrací `NA`, ne `TRUE`. Chybějící věk tedy nesplní žádnou podmínku a řádek dostane `NA`, bez chyby (C). `case_when()` nepřiřazuje automaticky poslední kategorii (A) ani první (B). Pokud chceme pro chybějící věk vlastní kategorii, přidáme podmínku `is.na(vekr)` jako ve sloupci `skupina_s_na`.
+:::
+
+### Úloha navíc 7.A: Liší se monitoring mezi kohortami? {#sec-t7-extra-a}
+
+Pomocí připravených dat `mon` porovnejte rodičovský monitoring mladší a starší kohorty. Uveďte průměry, směrodatné odchylky a počty, Welchův t-test s intervalem spolehlivosti rozdílu a Cohenovo *d* s intervalem. Výsledek shrňte dvěma až třemi větami, které uvádějí směr a velikost rozdílu a alespoň jedno omezení závěru.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: t7-extra-a
+mon_kohorta <- mon |> drop_na(monit)
+
+mon_kohorta |>
+  summarise(M = mean(monit), SD = sd(monit), n = n(), .by = kohorta)
+
+mon_kohorta |>
+  t_test(monit ~ kohorta, detailed = TRUE) |>
+  select(group1, group2, estimate, conf.low, conf.high, statistic, df, p)
+
+set.seed(123)
+mon_kohorta |>
+  cohens_d(monit ~ kohorta, var.equal = TRUE, ci = TRUE)
+```
+
+Pořadí skupin je mladší − starší, kladné `estimate` tedy znamená vyšší monitoring u mladších. Ukázkové shrnutí: *Starší kohorta uváděla nižší rodičovský monitoring než mladší, a to v průměru o 0,32 bodu na škále 1–4 (2,62 oproti 2,93; 95% CI rozdílu [0,24; 0,39]; Welchův t-test, p < 0,001). Cohenovo d = 0,57 [0,42; 0,72] odpovídá střednímu účinku, je tedy zřetelně větší než rozdíl mezi chlapci a dívkami (d = 0,24).*
+
+Omezení: data jsou průřezová, takže nesledujeme pokles u týchž osob s věkem. Kohorty se liší nejen věkem, ale i typem školy, a rozdíl tedy nelze připsat jen věku. Skór vychází z výpovědí dospívajících, ne z toho, co rodiče skutečně vědí.
+:::
+
+### Úloha navíc 7.B: Kdy se Welchův a Studentův test liší? {#sec-t7-extra-b}
+
+V otázce 7.4 daly oba testy téměř stejný výsledek. Na simulovaných datech ukažte situaci, kdy se výrazně liší. Nápověda: zkuste skupiny, které se liší velikostí i rozptylem. Vysvětlete, který výsledek je v takové situaci spolehlivější.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Vytvoříme velkou skupinu A s malým rozptylem a malou skupinu B s velkým rozptylem:
+
+```{r}
+#| label: t7-extra-b
+set.seed(2026)
+ruzne <- tibble(
+  skupina = rep(c("A", "B"), times = c(60, 12)),
+  y = c(rnorm(60, mean = 10, sd = 1), rnorm(12, mean = 11.5, sd = 4))
+)
+
+ruzne |> summarise(M = mean(y), SD = sd(y), n = n(), .by = skupina)
+
+bind_rows(
+  Welch = t_test(ruzne, y ~ skupina),
+  Student = t_test(ruzne, y ~ skupina, var.equal = TRUE),
+  .id = "test"
+) |>
+  select(test, statistic, df, p)
+```
+
+Studentův test počítá se společným rozptylem obou skupin. Ten je tažen k menšímu rozptylu velké skupiny A, a test proto podceňuje nejistotu průměru malé skupiny B s velkým rozptylem. V naší simulaci mu vychází zhruba dvojnásobné *t* (−0,90 oproti −0,46) a *p* = 0,37 místo 0,65. Welchův test odhaduje rozptyl každé skupiny zvlášť a upraví stupně volnosti, zde na 11,3 místo 70. Rozhodující je tedy hlavně malá a rozptýlená skupina B. Zde ani jeden test rozdíl neprokázal, rozdíl mezi nimi je ale velký. Při jiných datech může Studentův test vyjít významně tam, kde Welchův ne. Když se skupiny liší velikostí i rozptylem, drží chybu I. druhu na zvolené hladině jen Welchův test. Studentův test v této situaci příliš často „najde“ rozdíl, který neexistuje. Proto Welchův test používáme jako výchozí: při shodných rozptylech téměř nic neztratí (otázka 7.4) a při rozdílných chrání před falešnými nálezy.
+:::
