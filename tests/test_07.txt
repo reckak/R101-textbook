@@ -56,14 +56,14 @@
 :r1 0 Interval se týká rozdílu populačních průměrů, nikoli rozdílů mezi jednotlivými osobami. Rozdělení obou skupin se z velké části překrývají.
 :r2 ok Interval je sestrojen postupem, který by při opakovaných výběrech zachytil skutečný rozdíl v 95 % případů. Protože interval nulu neobsahuje, odpovídá to p < 0,05 v oboustranném testu.
 :r3 0 Hodnota 0,14 je výběrový odhad, nikoli přesná populační hodnota. Interval vyjadřuje nejistotu tohoto odhadu, nikoli chybu měření jednotlivých skórů.
-:r4 0 Skóry jednotlivých osob leží na škále od 1,25 do 4. Interval spolehlivosti popisuje rozdíl průměrů, nikoli rozsah skórů.
+:r4 0 Skóry jednotlivých osob leží mezi 1,25 a 4. Interval spolehlivosti popisuje rozdíl průměrů, nikoli rozsah skórů.
 --
 ::Velikost účinku::Rozdíl monitoringu mezi dívkami a chlapci vyšel p < 0,001 a Cohenovo d = 0,24, 95% CI [0,09; 0,38]. Které tvrzení je správné?
  :r1 Rozdíl je statisticky významný, ale malý.
  :r2 Jde o velký účinek, protože p-hodnota je menší než 0,001.
  :r3 Přibližně 24 % dívek má vyšší skór než chlapci.
  :r4 Cohenovo d je test, který potvrzuje, že rozdíl nevznikl náhodou.
-:r1 ok Cohenovo d vyjadřuje rozdíl průměrů v jednotkách společné směrodatné odchylky; průměry se tu liší asi o čtvrtinu SD. Hodnota 0,24 i celý interval leží v oblasti malých účinků podle Cohenových hrubých hranic.
+:r1 ok Cohenovo d vyjadřuje rozdíl průměrů v jednotkách společné směrodatné odchylky; průměry se tu liší asi o čtvrtinu SD. Hodnota 0,24 je podle Cohenových hrubých hranic malý účinek; interval sahá od zanedbatelného po malý účinek.
 :r2 0 Statistická významnost neříká, jak velký rozdíl je. U velkých vzorků může být významný i malý rozdíl.
 :r3 0 Hodnota d není podíl osob. Udává, o kolik směrodatných odchylek se liší průměry skupin.
 :r4 0 Cohenovo d test není. Na otázku náhody odpovídá t-test, d popisuje velikost rozdílu.
@@ -79,11 +79,11 @@
 :r4 0 Data jsou průřezová a observační, kauzální závěr z nich nevyplývá. Kohorty se navíc liší i typem školy.
 --
 ::Malé očekávané četnosti v χ² testu::Ve čtyřpolní tabulce (2 × 2) vyšly u χ² testu nezávislosti některé očekávané četnosti menší než 5 a R vypsal varování o nepřesné aproximaci. Jaký postup je vhodný?
- :r1 Zapnout Yatesovu korekci na spojitost, která problém malých četností odstraní.
+ :r1 Použít Yatesovu korekci na spojitost, která problém malých četností odstraní.
  :r2 Použít Fisherův exaktní test nebo p-hodnotu z Monte Carlo simulace.
  :r3 Vynechat z tabulky buňky s malými četnostmi a test spustit znovu.
  :r4 Místo χ² testu porovnat četnosti t-testem.
-:r1 0 Yatesova korekce je u tabulek 2 × 2 zbytečně konzervativní a test ztrácí sílu. Předpoklad dostatečných očekávaných četností nenahrazuje.
+:r1 0 Funkce chisq.test() ji u tabulek 2 × 2 používá ve výchozím nastavení. Korekce je zbytečně konzervativní a test ztrácí sílu. Předpoklad dostatečných očekávaných četností nenahrazuje.
 :r2 ok Fisherův exaktní test (fisher.test()) počítá p-hodnotu přesně z tabulek se stejnými okrajovými součty a používá se hlavně u tabulek 2 × 2. Monte Carlo simulace (chisq.test() s argumentem simulate.p.value = TRUE) vytváří tabulky za předpokladu nezávislosti a nevyžaduje velké očekávané četnosti.
 :r3 0 Vynecháním buněk by se změnila otázka i data. Kontingenční tabulka musí obsahovat všechny kombinace kategorií.
 :r4 0 T-test porovnává průměry číselné proměnné. Pro vztah dvou kategoriálních proměnných se nehodí.

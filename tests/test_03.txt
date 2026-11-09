@@ -1,0 +1,99 @@
+::Výběr řádků podle podmínek::V tabulce flights označuje month měsíc a dep_delay zpoždění odletu v minutách. Které záznamy vybere příkaz flights |> filter(month %in% c(1, 2), dep_delay >= 60)?
+ :r1 Všechny lety z ledna a navíc lety z února se zpožděním alespoň 60 minut.
+ :r2 Lety z ledna nebo února, které mají známé zpoždění odletu alespoň 60 minut.
+ :r3 Lety z kteréhokoli měsíce, pokud mají zpoždění odletu alespoň 60 minut.
+ :r4 Lety z ledna nebo února, které mají zpoždění odletu přesně 60 minut.
+:r1 0 Čárka mezi podmínkami vyžaduje splnění obou pravidel. Hranice zpoždění se týká lednových i únorových letů.
+:r2 ok Operátor %in% ověřuje, zda je měsíc mezi hodnotami 1 a 2. Současně musí být zpoždění alespoň 60 minut, včetně přesně 60. Pipe |> předává tabulku funkci filter().
+:r3 0 Podmínka pro měsíc zůstává v platnosti. Lety z ostatních měsíců tento filtr nezachová.
+:r4 0 Zápis >= znamená alespoň, nikoli přesně. Zůstanou tedy i záznamy s vyšším zpožděním.
+--
+::Chybějící hodnoty ve filtru::Pomocná výuková tabulka ukazka má jediný sloupec zpozdeni s hodnotami -5, 130 a NA. Které hodnoty zůstanou po příkazu ukazka |> filter(zpozdeni > 120)?
+ :r1 Hodnoty 130 a NA.
+ :r2 Hodnoty -5 a 130.
+ :r3 Všechny tři hodnoty, protože filter() řádky pouze seřadí.
+ :r4 Pouze hodnota 130.
+:r1 0 Porovnání chybějící hodnoty s hranicí vrací NA. Filter() zachovává jen řádky s výsledkem TRUE, takže chybějící hodnota nezůstane.
+:r2 0 Hodnota -5 podmínku větší než 120 nesplňuje. Hodnota 130 ji splňuje.
+:r3 0 Filter() vybírá řádky podle podmínky. K řazení slouží arrange().
+:r4 ok Pouze u hodnoty 130 je podmínka TRUE. Pokud bychom chtěli zachovat i chybějící údaje, použili bychom filter(zpozdeni > 120 | is.na(zpozdeni)).
+--
+::Řazení tabulky::Co provede příkaz flights |> arrange(desc(dep_delay)), kde dep_delay označuje zpoždění odletu?
+ :r1 Seřadí řádky od největšího známého zpoždění k nejmenšímu; počet řádků se nezmění.
+ :r2 Ponechá pouze jediný řádek s největším zpožděním.
+ :r3 Seřadí řádky od nejmenšího známého zpoždění k největšímu.
+ :r4 Odstraní všechny řádky, ve kterých zpoždění odletu chybí.
+:r1 ok Arrange() mění pořadí řádků a desc() určuje sestupný směr. Chybějící hodnoty se v této lokální tabulce zařadí na konec. Bez přiřazení se původní objekt flights nepřepíše.
+:r2 0 Samotné řazení zachová všechny řádky. Pro výběr nejvyšších hodnot lze použít slice_max().
+:r3 0 Takto by fungovalo arrange(dep_delay) bez desc(). Funkce desc() směr obrací na sestupný.
+:r4 0 Arrange() chybějící hodnoty neodstraňuje. Pouze je v tomto případě umístí na konec tabulky.
+--
+::Různé kombinace a jejich četnosti::V tabulce flights znamená origin letiště odletu a dest cílové letiště. Jaký je hlavní rozdíl mezi flights |> distinct(origin, dest) a flights |> count(origin, dest)?
+ :r1 Distinct() počítá průměrné zpoždění tras, zatímco count() řadí lety podle času.
+ :r2 Oba příkazy vrátí stejnou tabulku včetně počtu záznamů každé trasy.
+ :r3 Distinct() vrátí různé kombinace letišť; count() navíc uvede počet záznamů každé kombinace ve sloupci n.
+ :r4 Distinct() ponechá jen trasy s jediným letem, zatímco count() ponechá pouze opakované trasy.
+:r1 0 Ani jeden příkaz zde nepracuje se zpožděním nebo časem. Oba vycházejí z kombinací letiště odletu a cíle.
+:r2 0 Distinct() samo četnosti neuvádí. Count() je přidá do sloupce n.
+:r3 ok V obou výstupech jeden řádek představuje kombinaci letišť, nikoli jednotlivý let. Count() k ní připojí četnost záznamů ve vstupní tabulce.
+:r4 0 Distinct() uvede jednou každou zastoupenou kombinaci bez ohledu na její četnost. Count() zahrne i kombinace s jediným záznamem.
+--
+::Výběr a přejmenování sloupců::Tabulka flights obsahuje mimo jiné sloupce origin, dest a air_time. Co vrátí příkaz flights |> select(origin, dest, air_time_min = air_time)?
+ :r1 Všechny původní sloupce a navíc nový sloupec air_time_min.
+ :r2 Pouze tři vybrané sloupce, přičemž air_time bude přejmenován na air_time_min.
+ :r3 Pouze řádky, ve kterých je doba letu alespoň jedna minuta.
+ :r4 Tři vybrané sloupce, přičemž hodnoty air_time budou automaticky přepočteny na jinou časovou jednotku.
+:r1 0 Select() v tomto zápisu ostatní sloupce vynechá. Pro samotné přejmenování se zachováním všech sloupců bychom použili rename(air_time_min = air_time).
+:r2 ok Select() vybírá sloupce a umožňuje je současně přejmenovat zápisem nový název = původní název. Počet řádků ani hodnoty se tím nemění.
+:r3 0 Select() vybírá sloupce, nikoli řádky podle hodnot. Pro výběr řádků slouží filter().
+:r4 0 Změna názvu jednotky nepřepočítává. K výpočtu nových hodnot slouží mutate(); relocate() naproti tomu mění umístění sloupců.
+--
+::Nová proměnná a změna skóru::Ve fiktivní tabulce ucastnici vytvoříte mutate(zmena = skore_po - skore_pred). Vyšší skór znamená více obtíží. Jeden účastník má skore_pred = 20 a skore_po = 16. Jaká bude jeho změna a co znamená?
+ :r1 Změna bude 4 body a znamená snížení skóru obtíží.
+ :r2 Změna bude -4 body a znamená zvýšení skóru obtíží.
+ :r3 Změna bude 18 bodů a znamená průměrný skór účastníka.
+ :r4 Změna bude -4 body a znamená snížení skóru obtíží.
+:r1 0 Snížení skóru je správná interpretace, ale znaménko neodpovídá zadanému pořadí odečítání. Počítáme 16 - 20, tedy -4.
+:r2 0 Výpočet je správný, ale záporná změna zde znamená nižší následný skór. Při tomto směru skórování tedy ukazuje méně obtíží.
+:r3 0 Hodnota 18 je průměr obou skórů. Zadaný příkaz ale počítá jejich rozdíl, nikoli průměr.
+:r4 ok Rozdíl 16 - 20 je -4. Mutate() doplní změnu ke každému účastníkovi a ponechá jednotlivé řádky. Samotné snížení skóru ještě neprokazuje, že je způsobil program.
+--
+::Průměr a počet dostupných hodnot::Fiktivní neseskupená tabulka mereni má tři řádky a sloupec skore s hodnotami 10, 20 a NA. Co vrátí mereni |> summarise(prumer = mean(skore, na.rm = TRUE), pocet = n())?
+ :r1 Jeden řádek s hodnotami prumer = 15 a pocet = 3.
+ :r2 Jeden řádek s hodnotami prumer = 15 a pocet = 2.
+ :r3 Jeden řádek s hodnotami prumer = 10 a pocet = 3.
+ :r4 Jeden řádek s hodnotami prumer = NA a pocet = 3.
+:r1 ok Mean() díky na.rm = TRUE počítá z dostupných hodnot 10 a 20, zatímco n() počítá všechny tři řádky. Počet dostupných skórů by vrátilo sum(!is.na(skore)), zde 2.
+:r2 0 Průměr je správný, ale n() zahrnuje i řádek s chybějícím skórem. Nastavení na.rm uvnitř mean() nemění počet řádků pro n().
+:r3 0 Takový průměr by vznikl nahrazením NA nulou. Na.rm = TRUE chybějící hodnotu při výpočtu vynechá, nenahrazuje ji nulou.
+:r4 0 Bez na.rm = TRUE by mean() skutečně vrátilo NA. V uvedeném příkazu však chybějící hodnotu při výpočtu vynecháváme.
+--
+::Souhrn podle skupin::Fiktivní tabulka mereni obsahuje pět účastníků, každý na jednom řádku. Tři patří do skupiny A a dva do skupiny B; všichni mají dostupný skór. Co bude představovat jeden řádek výsledku mereni |> group_by(skupina) |> summarise(prumer = mean(skore), .groups = "drop")?
+ :r1 Jednoho účastníka s doplněným průměrem jeho skupiny; výsledek bude mít pět řádků.
+ :r2 Celý soubor bez rozlišení skupin; výsledek bude mít jeden řádek.
+ :r3 Jednu skupinu s jejím průměrem; výsledek bude mít dva řádky.
+ :r4 Jednu skupinu bez sloupce skupina, protože .groups = "drop" tento sloupec odstraní.
+:r1 0 Jednotlivé účastníky by ponechalo mutate(prumer = mean(skore)) po seskupení. Summarise() zde vytváří jeden souhrn za skupinu.
+:r2 0 Group_by(skupina) určuje, že se průměr počítá zvlášť pro A a B. Jediný celkový průměr bychom získali bez tohoto seskupení.
+:r3 ok Summarise() vytvoří jeden řádek za každou ze dvou skupin. Argument .groups = "drop" odstraní seskupení výsledku, ale zachová sloupec skupina i vypočtené hodnoty.
+:r4 0 Nastavení .groups = "drop" odstraňuje informaci o seskupení pro další operace, nikoli sloupec s označením skupiny.
+--
+::Výběr nejvyšší hodnoty a shody::Fiktivní neseskupená tabulka vysledky obsahuje tři účastníky se skóry 10, 15 a 15. Kolik řádků vrátí vysledky |> slice_max(skore, n = 1) při výchozím nastavení ostatních argumentů?
+ :r1 Jeden řádek, protože n = 1 vždy zaručuje právě jeden výsledek.
+ :r2 Dva řádky, protože nejvyšší skór mají dva účastníci.
+ :r3 Tři řádky, protože slice_max() pouze řadí celou tabulku.
+ :r4 Žádný řádek, protože shodná maxima vyvolají chybu.
+:r1 0 Výchozí with_ties = TRUE zachovává shody. Pro právě jeden řádek lze zde použít with_ties = FALSE; při shodě se vybere první z nich v současném pořadí.
+:r2 ok Oba účastníci se skórem 15 sdílejí nejvyšší hodnotu, a proto se zachovají oba. Na seskupené tabulce by stejný výběr proběhl zvlášť uvnitř každé skupiny.
+:r3 0 Slice_max() vybírá řádky s nejvyššími hodnotami. Účastník se skórem 10 se do tohoto výběru nedostane.
+:r4 0 Shodná maxima nejsou chybou. Funkce je ve výchozím nastavení všechna zahrne.
+--
+::Od souhrnné tabulky ke grafu::Z tabulky letů nejprve vypočítáte průměrné zpoždění odletu s na.rm = TRUE za každou plánovanou hodinu odletu. Do grafu pak předáte tuto souhrnnou tabulku, na x mapujete hodinu a na y vypočtený průměr. Co představuje jeden bod vytvořený pomocí geom_point()?
+ :r1 Zpoždění jednoho konkrétního letu.
+ :r2 Počet všech letů naplánovaných na danou hodinu.
+ :r3 Průměrné zpoždění všech letů v jednom konkrétním kalendářním dni.
+ :r4 Průměr z dostupných zpoždění letů naplánovaných na danou hodinu napříč dny v souboru.
+:r1 0 Graf už nedostává jednotlivé lety, ale souhrnné řádky za plánované hodiny. Jednotlivá zpoždění tedy body nezobrazují.
+:r2 0 Na osu y jsme mapovali průměrné zpoždění, nikoli počet letů. Počet dostupných záznamů je vhodné sledovat v souhrnné tabulce zvlášť.
+:r3 0 Seskupení podle plánované hodiny spojuje záznamy z různých dnů. Nejde o souhrn za jeden kalendářní den.
+:r4 ok Význam bodu určuje předaná souhrnná tabulka. Spojení bodů čarou samo nevytváří regresní model a graf neprokazuje, že pozdější hodina způsobuje větší zpoždění.

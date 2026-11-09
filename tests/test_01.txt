@@ -86,7 +86,7 @@
 :r1 ok Zápis color = species uvnitř aes() mapuje druh tučňáka na barvu bodu. Jeden bod představuje měření jednoho tučňáka s dostupnými souřadnicemi.
 :r2 0 Barva se řídí výslovně uvedeným sloupcem species, nikoli pořadím řádků.
 :r3 0 Hmotnost je zde mapována na svislou osu y. Barvu určuje species.
-:r4 0 Motiv editoru mění vzhled pracovního prostředí, nikoli mapování barev v grafu. Hotový graf lze uložit do obrázkového souboru funkcí ggsave().
+:r4 0 Motiv editoru mění vzhled pracovního prostředí, nikoli mapování barev v grafu.
 --
 ::Interpretace souvislosti::V bodovém grafu mají tučňáci s delšími ploutvemi obecně vyšší hmotnost. Který závěr je na základě samotného grafu přiměřený?
  :r1 Delší ploutve způsobují vyšší hmotnost tučňáků.
