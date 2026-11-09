@@ -48,6 +48,7 @@ jobs:
             any::performance
             any::see
             any::betaDelta
+            any::betaSandwich
             any::effectsize
             any::knitr
             any::rmarkdown
