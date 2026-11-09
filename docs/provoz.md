@@ -68,9 +68,20 @@ Výstup vzniká ve složce `_book/`, úvodní stránka je `_book/index.html`. Pr
 - `scripts/`: původní podklady a samostatná instalace balíčků.
 - `screenshots/`: zdrojové snímky RStudia.
 - `tests/`: otázky pro IS MUNI; nejde o automatické softwarové testy.
+- `opakovani/`: samostatný opakovací dokument k testům 1–7 s klíčem a řešeními; není součástí knihy a nepublikuje se (viz níže).
 - `quarto/_verification/`: technické kontroly lekce.
 - `quarto/README.md`: autorská dokumentace a záznamy ověření.
 - `docs/provoz.md`: tento provozní návod pro instalaci, kontroly a publikování.
+
+### Opakovací dokument k testům
+
+`opakovani/opakovani_testy_01-07.qmd` je samostatný projekt Quarto s vlastním `opakovani/_quarto.yml`. Kniha jej nevykresluje, protože obsahuje klíč k testům. Vykreslete jej z kořene repozitáře se stejným UTF-8 locale jako knihu:
+
+```sh
+quarto render opakovani/opakovani_testy_01-07.qmd
+```
+
+Výsledkem je jediný soubor `opakovani/opakovani_testy_01-07.html`, který má všechno vložené. Lze jej poslat nebo promítnout a do Gitu se neukládá. Shodu s testy (zadání, možnosti, klíč, sbalená řešení) ověří `Rscript --vanilla quarto/_verification/check-opakovani-01-07.R`. Po úpravě testů 1–7 spusťte kontrolu znovu a dokument znovu vykreslete.
 
 Novou kapitolu přidejte jako `.qmd` do `quarto/` a zapište ji do `book.chapters` v `_quarto.yml`. Řiďte se [AGENTS.md](../AGENTS.md); původní skripty uchovávejte beze změn. Každá kapitola musí běžet bez objektů vytvořených v jiné kapitole.
 

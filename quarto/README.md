@@ -1,5 +1,53 @@
 # Autorská dokumentace učebnice R101
 
+## Opakovací dokument k testům 1–7 a revize testů, 9. 11. 2026
+
+- **Účel:** `opakovani/opakovani_testy_01-07.qmd` slouží k společnému procházení
+  testů z IS MUNI na semináři. Obsahuje 70 otázek z `tests/test_01.txt` až
+  `test_07.txt` (zadání a možnosti doslova, kód jako `inline code`), sbalená
+  řešení s vysvětlením všech možností, u ověřitelných otázek kód a skutečný
+  výstup a 14 otevřených úloh navíc (dvě na test).
+- **Mimo knihu (rozhodnutí uživatele):** dokument obsahuje klíč k testům, proto
+  není v `book.chapters` a nepublikuje se s knihou. Má vlastní projekt
+  `opakovani/_quarto.yml` (`type: default`, `embed-resources: true`), takže
+  výsledkem je jediný HTML soubor. `quarto inspect` kořene ověřil, že kniha
+  vykresluje jen kapitoly; `opakovani/` do `_book/` nepatří. Generované HTML je
+  v `.gitignore`.
+- **Konfigurace:** `knitr.opts_knit.root.dir: ".."` spouští kód z kořene
+  repozitáře, cesty jsou tedy stejné jako v lekcích (`data/raw/...`). Ve
+  vnořeném projektu Quarto 1.9.38 nepředalo `execute.message: false` do knitr
+  (zprávy readr a tidyverse se zobrazovaly), proto je `message: false` nastaveno
+  v `knitr.opts_chunk`. Bloky s `library()` mají `warning: false`, protože místní
+  instalace vypisovala jen varování „package … was built under R version 4.5.3“;
+  ostatní varování (záměrná i ggplot2) zůstávají viditelná. `opakovani.css`
+  zalamuje dlouhý řádkový kód v možnostech; bez něj stránka na mobilu přetékala
+  (šířka 499 px při 376 px). Sdílený `lesson.css` se nemění.
+- **Data:** oddíl 5 čte `help_seeking.xlsx` a `four_countries_teaching.xlsx`,
+  oddíl 7 `monitoring_teaching.sav` (příprava převzata ze závěrečné úlohy
+  lekce 7). Ostatní ukázky používají palmerpenguins, nycflights13 nebo malé
+  smyšlené tabulky. Q-Q graf v 6.10 používá zešikmený vzorek se `set.seed(8)`
+  vybraný tak, aby ležel v pásu; text to uvádí (v 40 vyzkoušených seedech
+  zůstal v pásu zhruba každý třetí vzorek).
+- **Revize testů:** všech 70 otázek má právě jednu správnou možnost a klíč
+  odpovídá. Čísla z testu 7 reprodukována (W = 0,983 u 442 dívek; Levene
+  F = 0,288, *p* = 0,59; estimate −0,139, CI [−0,22; −0,06]; *d* = 0,244,
+  CI [0,09; 0,38]; *r* = −0,28, −0,16, 0,01). `read_excel(na = "-99")` převádí
+  i číselné buňky (help_seeking: 181 kódů −99, po importu žádný). Upřesněné
+  formulace: T3.10 zadání doplněno o `na.rm = TRUE`; T7.6 zpětná vazba r4
+  (pozorovaný rozsah 1,25–4 místo „škály“); T7.7 zpětná vazba r1 (interval
+  sahá od zanedbatelného po malý účinek); T7.9 možnost r1 „Použít“ místo
+  „Zapnout“ Yatesovu korekci (je výchozí) a zpětná vazba; T1.9 r4 bez
+  nesouvisející věty o `ggsave()`. Testy prošly strukturální kontrolou formátu
+  IS MUNI; import do IS MUNI ověřen nebyl.
+- **Ověření:** `Rscript --vanilla quarto/_verification/check-opakovani-01-07.R`
+  porovná názvy, zadání, možnosti A–D a uvedenou správnou odpověď s klíčem
+  testů a zkontroluje 84 sbalených řešení (70 + 14). Render proběhl bez chyb
+  v čisté relaci; všechny číselné komentáře byly porovnány s výstupy. V HTML
+  ověřeno: 84 řešení zpočátku skrytých, rozbalení, 210 bloků kódu s tlačítkem
+  „Zkopírovat“ (kopírování funguje i v řešení), 25 grafů v lightboxu, žádné
+  vodorovné přetečení na šířce 375 px; vizuálně zkontrolovány grafy 2.6, 6.8,
+  6.10 a 7.8.
+
 ## Devátá kapitola: robustní intervaly standardizovaných koeficientů, 9. 11. 2026
 
 - **Podnět uživatele:** zda v `betaDelta::BetaDelta()` nepoužít `type = "adf"`.
