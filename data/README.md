@@ -1,4 +1,4 @@
-# Data k páté až sedmé a deváté lekci
+# Data k páté až sedmé, deváté a jedenácté lekci
 
 Veřejné vstupy lekce jsou výslovně vyjmenované v `_quarto.yml`. Kopírují se do
 `_book/data/raw/`, odkud je lze stáhnout i bez přístupu do IS MUNI. Kapitola
@@ -104,3 +104,34 @@ který je v `.gitignore`; spouští se z kořene projektu příkazem
 `Rscript --vanilla scripts/prepare_lesson_09_data.R` v UTF-8 locale a ověřuje shodu hodnot.
 Hotový soubor je v Gitu jako výjimka z ignorované složky `data/clean/` a je uvedený
 v `project.resources`.
+
+## Vstup jedenácté lekce
+
+| Soubor | Původ a použití |
+| --- | --- |
+| `clean/cykliste.rds` | Výuková verze místního souboru `raw/bicyclists2025.jasp` (2355 × 9), dat ze studie: Walker, I. (2007). Drivers overtaking bicyclists: Objective data on the effects of riding position, helmet use, vehicle type and apparent gender. *Accident Analysis & Prevention, 39*(2), 417–425. <https://doi.org/10.1016/j.aap.2006.08.010>. Podle vyučujícího jsou data pro výuku upravena. |
+
+Soubor má 2355 řádků seřazených podle `id` (číslo události; zdroj `.jasp` je seřazený jinak)
+a 9 sloupců s českými názvy: `id`, `vozidlo` (`vehicle`), `barva` (`color`), `ulice` (`street`),
+`vzdalenost_predjeti` (`pass_distance`, metry), `helma` (`helmet`), `okraj` (`kerb`),
+`cyklopruh` (`bikelane`) a `mesto` (`city`). Kategorie jsou faktory s českými úrovněmi ve stejném
+pořadí jako ve zdroji; `okraj` je obyčejný, nikoli uspořádaný faktor s úrovněmi `0,25` až `1,25`.
+Sloupec `barva` má 14 chybějících hodnot, ostatní sloupce jsou úplné. Metadata JASP (popisky,
+typy měřítek a místní cesty k souborům v atributu `jasp`) se do RDS neukládají.
+
+Zdroj označuje druhou kategorii vozidel „Large Goods Vehicle“. Walker (2007) ji definuje jako
+LGV, tedy lehká užitková vozidla a minibusy, a odlišuje ji od těžkých nákladních vozidel (HGV).
+Výukový soubor ji proto nazývá `dodávka`; „Heavy Goods Vehicle“ je `nákladní vozidlo`
+a „Powered Two Wheeler“ `motocykl`.
+
+**Didaktické úpravy.** Vyučující uvedl, že data jsou upravená pro výuku, a rozhodl, že lekce
+to oznámí stejně jako devátá lekce, bez podrobností. Výsledky se proto neshodují s článkem:
+soubor má 2355 předjetí včetně jednostopých motorových vozidel, článek analyzoval 2320 předjetí
+po vyřazení 35 odlehlých hodnot, a liší se také průměrné vzdálenosti a rozložení počtů podle helmy.
+
+Generátor `scripts/prepare_lesson_11_data.R` vyžaduje místní `data/raw/bicyclists2025.jasp`,
+který se do Gitu neukládá, a balíčky DBI, RSQLite, jsonlite a tibble pro `scripts/read_jasp.R`;
+spouští se z kořene projektu příkazem `Rscript --vanilla scripts/prepare_lesson_11_data.R`
+v UTF-8 locale a ověřuje shodu hodnot i kódů kategorií se zdrojem. Hotový soubor je v Gitu
+jako výjimka z ignorované složky `data/clean/` a je uvedený v `project.resources`. Starší místní
+`data/clean/bicyclists2025.rds` s anglickými názvy a metadaty JASP se nezveřejňuje.
