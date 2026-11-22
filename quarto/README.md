@@ -48,6 +48,25 @@
   vodorovné přetečení na šířce 375 px; vizuálně zkontrolovány grafy 2.6, 6.8,
   6.10 a 7.8.
 
+## Sedmá a devátá kapitola: termín „směrodatná chyba“, 22. 11. 2026
+
+Uživatel rozhodl sjednotit překlad *standard error* v celé knize na „směrodatná chyba“
+a při prvním výkladu uvést „česky též standardní chyba“. Sedmá kapitola termín už
+používala; devátá psala „standardní chyba“.
+
+- **Devátá kapitola:** 14 výskytů ve všech pádech nahrazeno („směrodatnou chybu“,
+  „směrodatné chyby“, „směrodatnými chybami“, „směrodatných chyb“). U popisu sloupce
+  `Std. Error` ve výstupu `summary()` je doplněno „česky též standardní chyba“.
+- **Sedmá kapitola:** u definice v oddílu o *t*-testu doplněno „(*standard error*; česky
+  též standardní chyba)“. První zmínka termínu je už o několik odstavců dříve ve výčtu
+  předpokladů; poznámka je u definice, kde se pojem vysvětluje.
+- **`tests/test_09.txt`:** dva výskyty v otázce o heteroskedasticitě (možnost `r4` a její
+  zpětná vazba) změněny stejně. Struktura souboru ověřena (10 bloků po 9 řádcích,
+  40 možností, 40 zpětných vazeb, 10 `ok`, 9 oddělovačů). Pokud je test už importovaný
+  v IS MUNI, zůstává tam původní znění, dokud jej uživatel nenaimportuje znovu.
+- Jde jen o změnu znění; kód, výstupy ani čísla se nemění. Obě kapitoly byly znovu
+  vykresleny (Quarto 1.10.19, R 4.5.1) bez chyb a varování.
+
 ## Devátá kapitola: robustní intervaly standardizovaných koeficientů, 9. 11. 2026
 
 - **Podnět uživatele:** zda v `betaDelta::BetaDelta()` nepoužít `type = "adf"`.
