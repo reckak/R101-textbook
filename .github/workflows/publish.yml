@@ -52,6 +52,7 @@ jobs:
             any::effectsize
             any::emmeans
             any::sandwich
+            any::ggdist
             any::knitr
             any::rmarkdown
       - name: Render complete book

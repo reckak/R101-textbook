@@ -65,7 +65,7 @@ schválil v plánu.
   z tabulky, který se v nevyváženém designu celkovému součtu nerovná.
 - **Raincloud graf** (přání uživatele) je v popisné části se surovými průměry a 95% CI, aby
   průměry odpovídaly zobrazeným bodům; odhadnuté marginální průměry mají vlastní graf.
-  Sestaven z `geom_jitter()`, `geom_boxplot()` a `see::geom_violinhalf()`; balíček ggrain
+  Sestaven z `geom_jitter()`, `geom_boxplot()` a `see::geom_violinhalf()`, která vyžaduje balíček `ggdist` (první běh CI na to upozornil chybou; balíček byl doplněn do instalace, CI a instalačního bloku kapitoly); balíček ggrain
   nebyl použit, protože by byl novou závislostí a při zkoušce vyvolal varování ggplot2
   o zastaralém argumentu `size`.
 - **Autokorelace:** Durbinův–Watsonův test se `set.seed(123)` (p-hodnota se počítá
@@ -121,7 +121,7 @@ kapitoly) a `check-html.cjs` prošly. Kontrola HTML běžela v nainstalovaném C
 a rozbalitelných řešení, kopírování 68 bloků, 7 grafů, 366 místních cílů odkazů, mobil
 390/390 px; desátá: bez kódu, 12 odkazů. Všech 7 grafů bylo prohlédnuto a interpretace
 i alternativní texty odpovídají vykresleným grafům (u grafu sousedních reziduí byl popis
-tvaru mraku bodů opraven podle obrázku). Nové balíčky `emmeans` a `sandwich` doplněny do
+tvaru mraku bodů opraven podle obrázku). Nové balíčky `emmeans`, `sandwich` a `ggdist` doplněny do
 instalace a CI. Místní instalace vypisuje jen poznámky „package … was built under R
 version“, které kontrola při načítání balíčků toleruje. Skutečný běh CI na GitHubu tímto
 ověřen není.

@@ -43,12 +43,12 @@ Data pocházejí ze studie Iana Walkera o tom, jak řidiči předjíždějí cyk
 
 ### Balíčky a načtení dat {#sec-anova-balicky}
 
-Nově použijeme dva balíčky. **`emmeans`** počítá z odhadnutého modelu průměry skupin, jejich rozdíly a testy; jeho název je zkratkou *estimated marginal means*. **`sandwich`** nabízí robustní odhady směrodatných chyb a použijeme jej v nepovinné části na konci lekce. Pokud je ještě nemáte, nainstalujte je jednorázově v konzoli:
+Nově použijeme tři balíčky. **`emmeans`** počítá z odhadnutého modelu průměry skupin, jejich rozdíly a testy; jeho název je zkratkou *estimated marginal means*. **`sandwich`** nabízí robustní odhady směrodatných chyb a použijeme jej v nepovinné části na konci lekce. **`ggdist`** potřebuje funkce `geom_violinhalf()` z balíčku see, kterou nakreslíme křivky hustoty v grafu (oddíl [-@sec-anova-raincloud]); sami jej načítat nebudeme. Pokud je ještě nemáte, nainstalujte je jednorázově v konzoli:
 
 ```{r}
 #| label: l11-instalace
 #| eval: false
-install.packages(c("emmeans", "sandwich"))
+install.packages(c("emmeans", "sandwich", "ggdist"))
 ```
 
 Balíčky broom, car, effectsize a see znáte z deváté lekce (oddíl [-@sec-regrese-balicky]), rstatix ze sedmé a psych ze šesté. Stejně jako dosud načteme jen balíčky, jejichž funkce budeme používat často; funkce ostatních voláme s předponou `balicek::funkce()` (oddíl [-@sec-balicky]).
