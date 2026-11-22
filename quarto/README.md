@@ -65,9 +65,25 @@ schválil v plánu.
   z tabulky, který se v nevyváženém designu celkovému součtu nerovná.
 - **Raincloud graf** (přání uživatele) je v popisné části se surovými průměry a 95% CI, aby
   průměry odpovídaly zobrazeným bodům; odhadnuté marginální průměry mají vlastní graf.
-  Sestaven z `geom_jitter()`, `geom_boxplot()` a `see::geom_violinhalf()`, která vyžaduje balíček `ggdist` (první běh CI na to upozornil chybou; balíček byl doplněn do instalace, CI a instalačního bloku kapitoly); balíček ggrain
-  nebyl použit, protože by byl novou závislostí a při zkoušce vyvolal varování ggplot2
-  o zastaralém argumentu `size`.
+  Sestaven z `geom_jitter()`, `geom_boxplot()` a `ggdist::stat_slab()`. Původně používal
+  `see::geom_violinhalf()` s `coord_flip()`; na připomínku uživatele se vzdálenost předjetí
+  mapuje přímo na osu *x* a `coord_flip()` odpadl. `geom_violinhalf()` vodorovnou orientaci
+  neumí (nemá argument `orientation`, hustota se při `y = helma` zploští do čáry), proto
+  hustotu kreslí `stat_slab()` z balíčku ggdist, který už byl povinnou závislostí. Balíček see
+  se v kapitole nepoužívá. Osa *x* začíná v nule se značkami po 0,5 m (přání uživatele).
+  Balíček ggrain nebyl použit, protože by byl novou závislostí a při zkoušce vyvolal varování
+  ggplot2 o zastaralém argumentu `size`.
+- **Úpravy 22. 11. 2026 podle připomínek uživatele:** kvartily Q1/Q3 v popisných
+  statistikách (1,30 a 1,77 m); oprava `near(sum(vahy) == 0)` (končila chybou) na
+  `near(sum(vahy), 0)` s odkazem na výklad ve 4. lekci; přeformulovaný výklad neparciálního
+  (jedinečný podíl celkové variability, obdoba semiparciálního *R*²) a parciálního η²
+  a zdůvodnění, proč se parciální míry hodí ke srovnání mezi designy; poznámka o hotové
+  funkci effectsize pro neparciální míry; možnost záporného ω² (effectsize jej vypisuje
+  jako 0, ověřeno); vzájemné ovlivňování řidičů jako další zdroj autokorelace; upřesnění,
+  že SE 0,029 → 0,039 patří k rozdílu při 0,25 m. Při korektuře uživatelových úprav
+  opraveny překlepy a gramatika, sjednocen termín „odhadnuté marginální průměry“
+  a „normální rozdělení“ a opraveno tvrzení, že efekt při 0,75 m byl „na hraně
+  významnosti“ (*p* = 0,12).
 - **Autokorelace:** Durbinův–Watsonův test se `set.seed(123)` (p-hodnota se počítá
   simulací) a nepovinný blok s `sandwich::NeweyWest()` ve výchozím nastavení
   (automatická šířka pásma, *prewhitening*). Varianta bez *prewhiteningu* a s pevným
