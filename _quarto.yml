@@ -12,6 +12,7 @@ project:
     - data/clean/help_seeking_data.rds
     - data/clean/help_seeking_codebook.rds
     - data/clean/vztahy_zavazek.rds
+    - data/clean/cykliste.rds
 book:
   title: "R101: Praktický úvod do R"
   page-footer:
@@ -27,6 +28,8 @@ book:
     - quarto/lekce_07.qmd
     - quarto/lekce_08.qmd
     - quarto/lekce_09.qmd
+    - quarto/lekce_10.qmd
+    - quarto/lekce_11.qmd
 lang: cs
 language:
   code-copy-button-tooltip: "Zkopírovat"

@@ -34,13 +34,15 @@ function check(condition, message) { if (!condition) throw new Error(message); }
     const homeLink = page.locator('#quarto-sidebar a.sidebar-link').first();
     check(['/', '/index.html'].includes(new URL(await homeLink.getAttribute('href'), page.url()).pathname), 'Home navigation missing');
     check((await page.locator('h1 .chapter-number').innerText()).trim() === '1', 'First lesson must be chapter 1');
-    for (const chapterNumber of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+    for (const chapterNumber of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
       await page.setViewportSize({ width: 1440, height: 1000 });
-      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat', 4: 'Vektory, faktory', 5: 'Import dat', 6: 'Práce se skóry', 7: 'Základní statistické', 8: 'Čtecí týden', 9: 'Lineární regrese' };
+      const titles = { 1: 'První kroky', 2: 'Základy tvorby', 3: 'Úpravy dat', 4: 'Vektory, faktory', 5: 'Import dat', 6: 'Práce se skóry', 7: 'Základní statistické', 8: 'Čtecí týden', 9: 'Lineární regrese', 10: 'Sloučení a změna struktury', 11: 'Analýza rozptylu' };
+      // Chapters without their own lesson text: short pages with links only.
+      const shortChapter = [8, 10].includes(chapterNumber);
       await page.locator('#quarto-sidebar a.sidebar-link').filter({ hasText: titles[chapterNumber] }).click();
       await page.waitForLoadState('networkidle');
       check((await page.locator('h1 .chapter-number').innerText()).trim() === String(chapterNumber), 'Wrong chapter number');
-      const source = fs.readFileSync(path.join(__dirname, '..', 'lekce_0' + chapterNumber + '.qmd'), 'utf8');
+      const source = fs.readFileSync(path.join(__dirname, '..', 'lekce_' + String(chapterNumber).padStart(2, '0') + '.qmd'), 'utf8');
       const expectedSolutions = (source.match(/collapse="true" title="Ukázat řešení"/g) || []).length;
       const toc = page.locator('#TOC');
       check(await toc.isVisible(), 'Right TOC missing');
@@ -48,8 +50,8 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       const tocBox = await toc.boundingBox();
       const mainBox = await page.locator('main').boundingBox();
       check(tocBox.x >= mainBox.x + mainBox.width - 1 && tocBox.y < 180, 'TOC not at top right');
-      check(await toc.locator('a[data-scroll-target]').count() > (chapterNumber === 8 ? 1 : 5), 'TOC incomplete');
-      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny', 4: '#sec-struktury-faktory', 5: '#sec-import-labelled', 6: '#sec-skory-rozdeleni', 7: '#sec-testy-ttest', 8: '#sec-cteni-opakovani', 9: '#sec-regrese-diagnostika' }[chapterNumber];
+      check(await toc.locator('a[data-scroll-target]').count() > (shortChapter ? 1 : 5), 'TOC incomplete');
+      const tocTarget = { 1: '#sec-balicky', 2: '#sec-vztahy', 3: '#sec-upravy-souhrny', 4: '#sec-struktury-faktory', 5: '#sec-import-labelled', 6: '#sec-skory-rozdeleni', 7: '#sec-testy-ttest', 8: '#sec-cteni-opakovani', 9: '#sec-regrese-diagnostika', 10: '#sec-datacamp-reshape', 11: '#sec-anova-podminene' }[chapterNumber];
       await toc.locator('a[data-scroll-target="' + tocTarget + '"]').click();
       // A short page (the reading week) cannot scroll its last section to the top; reaching the end is enough.
       await page.waitForFunction(id => {
@@ -194,7 +196,7 @@ function check(condition, message) { if (!condition) throw new Error(message); }
         check(JSON.stringify(fs.readdirSync(path.join(root, 'data')).sort()) === JSON.stringify(['clean', 'raw']),
           'Published data folder contains unexpected subfolders');
         const cleanFiles = fs.readdirSync(path.join(root, 'data', 'clean')).sort();
-        check(JSON.stringify(cleanFiles) === JSON.stringify(['help_seeking_codebook.rds', 'help_seeking_data.rds', 'vztahy_zavazek.rds']),
+        check(JSON.stringify(cleanFiles) === JSON.stringify(['cykliste.rds', 'help_seeking_codebook.rds', 'help_seeking_data.rds', 'vztahy_zavazek.rds']),
           'Published data/clean directory contains unexpected files');
       } else if (chapterNumber === 7) {
         await screenshot('html-downloads', '#sec-testy-data');
@@ -223,6 +225,38 @@ function check(condition, message) { if (!condition) throw new Error(message); }
         check(await page.locator('main div.sourceCode').count() === 0, 'Reading week must not contain code');
         check(await page.locator('main a[href$="lekce_07.html#sec-testy-pearson"]').count() === 1,
           'Reading week must link to the correlation section of lesson 07');
+      } else if (chapterNumber === 10) {
+        check(await page.locator('main div.sourceCode').count() === 0, 'DataCamp week must not contain code blocks');
+        for (const course of ['joining-data-with-dplyr', 'reshaping-data-with-tidyr']) {
+          check(await page.locator('main a[href="https://app.datacamp.com/learn/courses/' + course + '"]').count() === 1,
+            'DataCamp week must link to the course ' + course);
+        }
+        check(await page.locator('main a[href$="lekce_07.html#sec-testy-skor"]').count() === 1,
+          'DataCamp week must link to the pivoting example of lesson 07');
+      } else if (chapterNumber === 11) {
+        await screenshot('html-downloads', '#sec-anova-data');
+        await screenshot('html-table', '#sec-anova-joint-tests > .cell:first-of-type');
+        await screenshot('html-graph', '#fig-anova-raincloud');
+        await screenshot('html-emm', '#fig-anova-emm');
+        await screenshot('html-effects', '#sec-anova-efekt-helmy');
+        await screenshot('html-solution', '#sec-anova-samostatne .callout');
+        const downloads = page.locator('main a[download]');
+        check(await downloads.count() === 1, 'Lesson 11 must expose one downloadable file');
+        for (const link of await downloads.all()) {
+          const href = await link.getAttribute('href');
+          const filename = await link.getAttribute('download');
+          const response = await context.request.get(new URL(href, page.url()).href);
+          const bytes = await response.body();
+          const original = fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'clean', filename));
+          check(response.ok() && bytes.equals(original), 'Download differs from source: ' + filename);
+          const [download] = await Promise.all([page.waitForEvent('download'), link.click()]);
+          check(await download.failure() === null, 'Download click failed: ' + filename);
+          check(download.suggestedFilename() === filename, 'Wrong download filename');
+        }
+        for (const id of ['#sec-anova-rozhodnuti', '#sec-anova-potize']) {
+          check(await page.locator(id + ' .table-responsive').getAttribute('tabindex') === '0',
+            'Lesson 11 table must be keyboard focusable: ' + id);
+        }
       } else {
         await screenshot('html-downloads', '#sec-regrese-data');
         await screenshot('html-table', '#sec-regrese-lm > .cell:first-of-type');
@@ -249,8 +283,8 @@ function check(condition, message) { if (!condition) throw new Error(message); }
       }
       await page.setViewportSize({ width: 390, height: 844 });
       await screenshot('html-mobile');
-      if (chapterNumber >= 5 && chapterNumber !== 8) {
-        const downloadSection = { 5: '#sec-import-data', 6: '#sec-skory-data', 7: '#sec-testy-data', 9: '#sec-regrese-data' }[chapterNumber];
+      if (chapterNumber >= 5 && !shortChapter) {
+        const downloadSection = { 5: '#sec-import-data', 6: '#sec-skory-data', 7: '#sec-testy-data', 9: '#sec-regrese-data', 11: '#sec-anova-data' }[chapterNumber];
         await screenshot('html-mobile-downloads', downloadSection);
         const downloadTable = page.locator(downloadSection + ' .table-responsive').first();
         check(await downloadTable.evaluate(el => getComputedStyle(el).overflowX === 'auto'),
