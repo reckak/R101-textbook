@@ -60,6 +60,7 @@ stopifnot(identical(dim(cykliste), c(2355L, 9L)), !is.unsorted(cykliste$id),
 y <- cykliste$vzdalenost_predjeti
 stopifnot(near(mean(y), 1.553, 0.001), near(sd(y), 0.381, 0.001), near(median(y), 1.514, 0.001),
           near(range(y), c(0.394, 3.787), 1e-8),
+          near(unname(quantile(y, c(0.25, 0.75))), c(1.30, 1.77), 0.006),
           near(c(psych::skew(y), psych::skew(sqrt(y)), psych::skew(log(y))), c(0.752, 0.249, -0.265), 0.001),
           near(mean(sqrt(y))^2, 1.530, 0.001),
           near(prumery$M, c(1.73, 1.63, 1.55, 1.49, 1.44, 1.55, 1.51, 1.47, 1.50, 1.44), 0.006),
