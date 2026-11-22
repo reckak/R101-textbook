@@ -62,11 +62,11 @@
  :r1 Nelineární vztah, protože body netvoří rovnoměrný pás kolem nuly.
  :r2 Silnou multikolinearitu, tedy vysoké korelace mezi prediktory.
  :r3 Zkreslené bodové odhady směrnic, které je nutné přepočítat bez odlehlých osob.
- :r4 Heteroskedasticitu, kvůli které mohou být standardní chyby a intervaly nepřesné.
+ :r4 Heteroskedasticitu, kvůli které mohou být směrodatné chyby a intervaly nepřesné.
 :r1 0 Na nelinearitu by ukazoval oblouk nebo vlna červené křivky. Vodorovná křivka s měnícím se rozptylem bodů ukazuje na jiný problém.
 :r2 0 Multikolinearitu tento graf neukazuje; posuzujeme ji pomocí VIF. Graf reziduí proti predikovaným hodnotám ověřuje linearitu a homoskedasticitu.
 :r3 0 Heteroskedasticita bodové odhady regresních koeficientů nezkresluje. Odlehlé osoby navíc nevyřazujeme jen proto, že nezapadají do modelu.
-:r4 ok Měnící se rozptyl reziduí znamená porušení homoskedasticity. Bodové odhady zůstávají nezkreslené, ale klasické standardní chyby, intervaly a p-hodnoty mohou být nepřesné, a proto je ověřujeme například bootstrapem.
+:r4 ok Měnící se rozptyl reziduí znamená porušení homoskedasticity. Bodové odhady zůstávají nezkreslené, ale klasické směrodatné chyby, intervaly a p-hodnoty mohou být nepřesné, a proto je ověřujeme například bootstrapem.
 --
 ::Leverage a Cookova vzdálenost::Osoby 33 a 124 mají v regresním modelu podobně vysokou leverage (0,20 a 0,19, průměr je 0,04). Osoba 33 má standardizované reziduum 1,81, osoba 124 reziduum −3,28. Které tvrzení je správné?
  :r1 Osoba 124 je vlivnější, protože vysokou leverage kombinuje s velkým reziduem.

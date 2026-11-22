@@ -394,7 +394,7 @@ Výstup čteme po částech:
 
 - **`Call`** zopakuje zadaný model. Hodí se pro kontrolu, že jsme odhadli správný model na správných datech.
 - **`Residuals`** shrnuje rozdělení reziduí (minimum, kvartily, maximum). Medián 0,22 je kladný a minimum −3,30 je mnohem dál od nuly než maximum 1,11. Rezidua tedy vypadají levostranně zešikmená: model některé osoby výrazně nadhodnocuje.
-- **`Coefficients`** je hlavní tabulka modelu. Řádek `(Intercept)` je konstanta, řádek `investice` směrnice prediktoru. Sloupec `Estimate` obsahuje odhad, `Std. Error` jeho standardní chybu (nejistotu odhadu), `t value` poměr odhadu a jeho standardní chyby a `Pr(>|t|)` *p*-hodnotu *t*-testu. Hvězdičky za řádkem vyjadřují, které z tradičních hranic *p*-hodnoty (0,05; 0,01; 0,001) je *p*-hodnota menší; hranice uvádí legenda `Signif. codes`.
+- **`Coefficients`** je hlavní tabulka modelu. Řádek `(Intercept)` je konstanta, řádek `investice` směrnice prediktoru. Sloupec `Estimate` obsahuje odhad, `Std. Error` jeho směrodatnou chybu (česky též standardní chyba; vyjadřuje nejistotu odhadu), `t value` poměr odhadu a jeho směrodatné chyby a `Pr(>|t|)` *p*-hodnotu *t*-testu. Hvězdičky za řádkem vyjadřují, které z tradičních hranic *p*-hodnoty (0,05; 0,01; 0,001) je *p*-hodnota menší; hranice uvádí legenda `Signif. codes`.
 - **`Residual standard error`** je reziduální směrodatná odchylka: 0,80 při 118 stupních volnosti (120 osob minus 2 odhadnuté koeficienty).
 - **`Multiple R-squared`** a **`Adjusted R-squared`** jsou *R*^2^ a adjustované *R*^2^.
 - **`F-statistic`** je *F*-test celého modelu s 1 a 118 stupni volnosti a jeho *p*-hodnota.
@@ -500,7 +500,7 @@ Sloupec `RSS` je součet čtverců reziduí: v modelu 2 je o 17,6 menší (`Sum 
 
 ### Standardizované koeficienty {#sec-regrese-beta}
 
-Nestandardizované směrnice *b* jsou v jednotkách proměnných: směrnice délky vztahu vyjadřuje průměrný rozdíl v závislé proměnné při rozdílu délky vztahu o jeden měsíc, ostatní při rozdílu o jeden bod škály (0–6). Proto je nelze přímo porovnat a z toho, že 0,014 je menší než 0,21, neplyne, že délka vztahu souvisí se závazkem slaběji. **Standardizované koeficienty** β udávají, o kolik **směrodatných odchylek** se liší závislá proměnná, když se prediktor liší o jednu směrodatnou odchylku a ostatní prediktory jsou stejné. Funkce `BetaDelta()` z balíčku betaDelta je spočítá i se standardními chybami a intervaly spolehlivosti. Standardní chyby odvozuje tzv. metodou delta, která zohledňuje i nejistotu plynoucí z toho, že směrodatné odchylky použité ke standardizaci jsou odhadnuté z dat:
+Nestandardizované směrnice *b* jsou v jednotkách proměnných: směrnice délky vztahu vyjadřuje průměrný rozdíl v závislé proměnné při rozdílu délky vztahu o jeden měsíc, ostatní při rozdílu o jeden bod škály (0–6). Proto je nelze přímo porovnat a z toho, že 0,014 je menší než 0,21, neplyne, že délka vztahu souvisí se závazkem slaběji. **Standardizované koeficienty** β udávají, o kolik **směrodatných odchylek** se liší závislá proměnná, když se prediktor liší o jednu směrodatnou odchylku a ostatní prediktory jsou stejné. Funkce `BetaDelta()` z balíčku betaDelta je spočítá i se směrodatnými chybami a intervaly spolehlivosti. Směrodatné chyby odvozuje tzv. metodou delta, která zohledňuje i nejistotu plynoucí z toho, že směrodatné odchylky použité ke standardizaci jsou odhadnuté z dat:
 
 ```{r}
 #| label: l09-beta
@@ -564,7 +564,7 @@ model_3 <- lm(zavazek ~ investice + spokojenost + alternativy + delka_vztahu_rok
 tidy(model_3, conf.int = TRUE)
 ```
 
-Směrnice délky vztahu je nyní 0,16 s intervalem \[0,06; 0,26\]: lidé, jejichž vztah trvá o **rok** déle, mají při stejné spokojenosti, investicích a alternativách v průměru o 0,16 bodu silnější závazek. Je to přesně dvanáctinásobek původní směrnice, u níž byl jednotkou jeden měsíc místo jednoho roku (0,0137 · 12 = 0,164). Konstanta, ostatní směrnice, standardní chyby, *t*-hodnoty, *p*-hodnoty i *R*^2^ se nezměnily: změna jednotky prediktoru mění jen měřítko jeho směrnice, nikoli model. Standardizovaný koeficient β je na jednotce nezávislý a zůstává 0,26.
+Směrnice délky vztahu je nyní 0,16 s intervalem \[0,06; 0,26\]: lidé, jejichž vztah trvá o **rok** déle, mají při stejné spokojenosti, investicích a alternativách v průměru o 0,16 bodu silnější závazek. Je to přesně dvanáctinásobek původní směrnice, u níž byl jednotkou jeden měsíc místo jednoho roku (0,0137 · 12 = 0,164). Konstanta, ostatní směrnice, směrodatné chyby, *t*-hodnoty, *p*-hodnoty i *R*^2^ se nezměnily: změna jednotky prediktoru mění jen měřítko jeho směrnice, nikoli model. Standardizovaný koeficient β je na jednotce nezávislý a zůstává 0,26.
 
 ### Cvičení 6: Smysluplná konstanta {.exercise}
 
@@ -588,13 +588,13 @@ Argument `.names = "{.col}_c"` v `across()` vytvoří nové sloupce s příponou
 
 ## Předpoklady lineární regrese {#sec-regrese-predpoklady}
 
-Odhady koeficientů, jejich standardní chyby, intervaly spolehlivosti a *p*-hodnoty platí za určitých předpokladů. Většinu z nich posuzujeme podle **reziduí**, protože rezidua ukazují, co model nevysvětlil:
+Odhady koeficientů, jejich směrodatné chyby, intervaly spolehlivosti a *p*-hodnoty platí za určitých předpokladů. Většinu z nich posuzujeme podle **reziduí**, protože rezidua ukazují, co model nevysvětlil:
 
 1.  **Linearita:** vztah závislé proměnné a každého prediktoru je (při neměnné úrovni ostatních prediktorů) dobře popsatelný přímkou. Při porušení linearity směrnice popisuje vztah zkresleně a predikce jsou v některých oblastech systematicky chybné.
 2.  **Nezávislost pozorování:** rezidua různých osob spolu nesouvisejí. Vyplývá hlavně z plánu výzkumu: porušena je například u opakovaných měření téže osoby, u párů nebo u žáků z týchž tříd. V našich datech odpovídá každá osoba jednou a partneři týchž párů v nich nejsou, předpoklad je tedy přiměřený.
-3.  **Homoskedasticita** (shoda rozptylů): rezidua mají podobný rozptyl při všech predikovaných hodnotách. Při **heteroskedasticitě** mohou být standardní chyby, intervaly a *p*-hodnoty nepřesné, i když bodové odhady regresních koeficientů samy zkreslené nejsou.
+3.  **Homoskedasticita** (shoda rozptylů): rezidua mají podobný rozptyl při všech predikovaných hodnotách. Při **heteroskedasticitě** mohou být směrodatné chyby, intervaly a *p*-hodnoty nepřesné, i když bodové odhady regresních koeficientů samy zkreslené nejsou.
 4.  **Normalita reziduí:** rezidua mají přibližně normální rozdělení. Ovlivňuje přesnost *p*-hodnot a intervalů hlavně v malých vzorcích; u větších vzorků je regrese vůči mírnému porušení tohoto předpokladu odolná.
-5.  **Absence silné multikolinearity:** prediktory spolu nesouvisejí natolik, aby nebylo možné oddělit jejich jedinečné vztahy. Silná multikolinearita zvětšuje standardní chyby koeficientů.
+5.  **Absence silné multikolinearity:** prediktory spolu nesouvisejí natolik, aby nebylo možné oddělit jejich jedinečné vztahy. Silná multikolinearita zvětšuje směrodatné chyby koeficientů.
 6.  **Žádná nadměrně vlivná pozorování:** výsledky by neměly záviset na několika málo osobách. Nejde o předpoklad v užším smyslu, ale o kontrolu stability výsledků.
 
 Pro **nezávislost v čase**, například u měření seřazených podle data, se používá Durbinův–Watsonův test (`car::durbinWatsonTest()`). U našich dat nemá pořadí řádků věcný význam, takže by výsledek testu nic neříkal; nezávislost posuzujeme podle plánu výzkumu.
@@ -661,7 +661,7 @@ plot(model_3, which = 3, labels.id = analyza$id, id.n = 3)
 
 **Co graf ukazuje:** odmocninu absolutní hodnoty standardizovaných reziduí proti predikovaným hodnotám. Absolutní hodnota vyjadřuje velikost rezidua bez ohledu na znaménko, takže graf ukazuje přímo, jak velké chyby model dělá. **Jaký předpoklad ověřuje:** homoskedasticitu. **Jak jej číst:** červená křivka by měla být přibližně vodorovná a body podobně rozptýlené v celém rozsahu. **Co je problém:** stoupající nebo klesající křivka znamená, že velikost chyb se mění s predikovanou hodnotou.
 
-**Co vidíme:** Křivka od predikcí kolem 4 směrem k vyšším predikcím klesá: u osob s vysokým predikovaným závazkem dělá model menší chyby. Graf tedy znovu svědčí o **heteroskedasticitě**, která byla patrná také v prvním grafu. Formální test (například `car::ncvTest(model_3)`) ji potvrzuje, χ²(1) = 13,23, *p* \< 0,001. Důsledkem je, že klasické standardní chyby a intervaly spolehlivosti mohou být nepřesné; v oddílu [-@sec-regrese-bootstrap] je proto ověříme bootstrapem.
+**Co vidíme:** Křivka od predikcí kolem 4 směrem k vyšším predikcím klesá: u osob s vysokým predikovaným závazkem dělá model menší chyby. Graf tedy znovu svědčí o **heteroskedasticitě**, která byla patrná také v prvním grafu. Formální test (například `car::ncvTest(model_3)`) ji potvrzuje, χ²(1) = 13,23, *p* \< 0,001. Důsledkem je, že klasické směrodatné chyby a intervaly spolehlivosti mohou být nepřesné; v oddílu [-@sec-regrese-bootstrap] je proto ověříme bootstrapem.
 
 ### Odlehlá a vlivná pozorování {#sec-regrese-vlivne}
 
@@ -849,7 +849,7 @@ bootstrap_3 <- car::Boot(model_3, R = 5000)
 summary(bootstrap_3)
 ```
 
-Sloupec `original` obsahuje koeficienty modelu 3, `bootBias` rozdíl mezi průměrem bootstrapových odhadů a původním odhadem (zde je zanedbatelný), `bootSE` bootstrapovou standardní chybu a `bootMed` medián bootstrapových odhadů. Bootstrapová standardní chyba spokojenosti (0,104) je výrazně větší než klasická (0,074), u ostatních prediktorů se liší méně. Zpráva `Loading required namespace: boot` nad výpisem jen oznamuje, že `car::Boot()` načetla balíček boot, který bootstrap počítá a je součástí každé instalace R.
+Sloupec `original` obsahuje koeficienty modelu 3, `bootBias` rozdíl mezi průměrem bootstrapových odhadů a původním odhadem (zde je zanedbatelný), `bootSE` bootstrapovou směrodatnou chybu a `bootMed` medián bootstrapových odhadů. Bootstrapová směrodatná chyba spokojenosti (0,104) je výrazně větší než klasická (0,074), u ostatních prediktorů se liší méně. Zpráva `Loading required namespace: boot` nad výpisem jen oznamuje, že `car::Boot()` načetla balíček boot, který bootstrap počítá a je součástí každé instalace R.
 
 Percentilové intervaly vypíše `confint()` s `type = "perc"`. Pro srovnání vypíšeme i klasické intervaly z `confint(model_3)`:
 
@@ -889,16 +889,16 @@ Meze se od intervalů s 5000 opakováními liší nejvýše o několik setin (na
 
 ### Robustní intervaly standardizovaných koeficientů {#sec-regrese-beta-hc}
 
-Bootstrap ověřil intervaly nestandardizovaných směrnic. Stejnou otázku si musíme položit i u standardizovaných koeficientů β z oddílu [-@sec-regrese-beta]. Funkce `BetaDelta()` počítá jejich standardní chyby ve výchozím nastavení podle **normální teorie**: předpokládá, že všechny proměnné modelu mají společně **vícerozměrné normální rozdělení**. Z toho plyne i normalita a shodný rozptyl reziduí. Diagnostika ale ukázala, že ani jedno neplatí: rezidua jsou zešikmená doleva a jejich rozptyl se s rostoucí predikcí zmenšuje. Chceme-li robustnější výsledky, má smysl použít funkci `BetaHC()` z balíčku **betaSandwich**, kterou jste nainstalovali na začátku lekce.
+Bootstrap ověřil intervaly nestandardizovaných směrnic. Stejnou otázku si musíme položit i u standardizovaných koeficientů β z oddílu [-@sec-regrese-beta]. Funkce `BetaDelta()` počítá jejich směrodatné chyby ve výchozím nastavení podle **normální teorie**: předpokládá, že všechny proměnné modelu mají společně **vícerozměrné normální rozdělení**. Z toho plyne i normalita a shodný rozptyl reziduí. Diagnostika ale ukázala, že ani jedno neplatí: rezidua jsou zešikmená doleva a jejich rozptyl se s rostoucí predikcí zmenšuje. Chceme-li robustnější výsledky, má smysl použít funkci `BetaHC()` z balíčku **betaSandwich**, kterou jste nainstalovali na začátku lekce.
 
-V čem je rozdíl? Bodové odhady β jsou v obou funkcích stejné, liší se jen jejich **standardní chyby**, a tedy i intervaly a *p*-hodnoty. `BetaDelta()` odvozuje nejistotu z toho, jak by data vypadala při vícerozměrném normálním rozdělení. `BetaHC()` používá tzv. **sendvičový odhad** (*heteroskedasticity-consistent*, HC): nejistotu počítá z čtverců skutečných reziduí jednotlivých osob, takže nepředpokládá shodný rozptyl reziduí ani normalitu. Varianta **HC3** (výchozí nastavení) navíc zvětšuje váhu reziduí osob s vysokou leverage. Model se totiž k těmto bodům přibližuje, a jejich rezidua proto bývají menší, než odpovídá skutečné chybě. Podobný robustní přístup nabízí volba `type = "adf"` přímo v `BetaDelta()`, potřebuje ale velké vzorky (řádově stovky osob); pro vzorek o 120 osobách autoři balíčků doporučují HC3.
+V čem je rozdíl? Bodové odhady β jsou v obou funkcích stejné, liší se jen jejich **směrodatné chyby**, a tedy i intervaly a *p*-hodnoty. `BetaDelta()` odvozuje nejistotu z toho, jak by data vypadala při vícerozměrném normálním rozdělení. `BetaHC()` používá tzv. **sendvičový odhad** (*heteroskedasticity-consistent*, HC): nejistotu počítá z čtverců skutečných reziduí jednotlivých osob, takže nepředpokládá shodný rozptyl reziduí ani normalitu. Varianta **HC3** (výchozí nastavení) navíc zvětšuje váhu reziduí osob s vysokou leverage. Model se totiž k těmto bodům přibližuje, a jejich rezidua proto bývají menší, než odpovídá skutečné chybě. Podobný robustní přístup nabízí volba `type = "adf"` přímo v `BetaDelta()`, potřebuje ale velké vzorky (řádově stovky osob); pro vzorek o 120 osobách autoři balíčků doporučují HC3.
 
 ```{r}
 #| label: l09-beta-hc
 betaSandwich::BetaHC(model_3, alpha = 0.05)
 ```
 
-Výstup má stejnou podobu jako výstup `BetaDelta()`; záhlaví uvádí, že jde o standardní chyby HC3. Model 3 se od modelu 2 liší jen jednotkou délky vztahu, standardizované koeficienty jsou proto stejné jako v oddílu [-@sec-regrese-beta].
+Výstup má stejnou podobu jako výstup `BetaDelta()`; záhlaví uvádí, že jde o směrodatné chyby HC3. Model 3 se od modelu 2 liší jen jednotkou délky vztahu, standardizované koeficienty jsou proto stejné jako v oddílu [-@sec-regrese-beta].
 
 | Prediktor    |     β | Normální teorie 95% CI | HC3 95% CI         |
 |:-------------|------:|:-----------------------|:-------------------|
@@ -907,9 +907,9 @@ Výstup má stejnou podobu jako výstup `BetaDelta()`; záhlaví uvádí, že jd
 | Alternativy  | −0,23 | \[−0,39; −0,07\]       | \[−0,40; −0,06\]   |
 | Délka vztahu |  0,26 | \[0,11; 0,41\]         | \[0,12; 0,41\]     |
 
-: Intervaly spolehlivosti standardizovaných koeficientů modelu 3 podle normální teorie (`BetaDelta()`) a se sendvičovými standardními chybami HC3 (`BetaHC()`) {#tbl-regrese-beta-hc}
+: Intervaly spolehlivosti standardizovaných koeficientů modelu 3 podle normální teorie (`BetaDelta()`) a se sendvičovými směrodatnými chybami HC3 (`BetaHC()`) {#tbl-regrese-beta-hc}
 
-U alternativ a délky vztahu se intervaly téměř nezměnily. U **spokojenosti** je ale standardní chyba HC3 (0,137) o 70 % větší než podle normální teorie (0,081) a interval \[−0,03; 0,52\] už zahrnuje nulu (*p* = 0,078). Důvod známe z diagnostiky: směrnice spokojenosti závisí na osobách 33 a 124, které mají vysokou leverage i velká rezidua, a HC3 jim dává větší váhu. Stejným směrem ukazuje bootstrap, jehož interval směrnice spokojenosti leží jen těsně nad nulou (\[0,01; 0,42\]). Že spokojenost souvisí se závazkem kladně, odpovídá teorii i bodovým odhadům, ale z těchto dat to nelze považovat za spolehlivě prokázané: robustní metody vedou k intervalům na hranici nuly nebo nulu zahrnujícím. Rozdíl mezi „významným“ a „nevýznamným“ výsledkem je tu dán spíše volbou metody než daty, a proto do zprávy uvádíme odhad s intervalem, nikoli jen hvězdičky.
+U alternativ a délky vztahu se intervaly téměř nezměnily. U **spokojenosti** je ale směrodatná chyba HC3 (0,137) o 70 % větší než podle normální teorie (0,081) a interval \[−0,03; 0,52\] už zahrnuje nulu (*p* = 0,078). Důvod známe z diagnostiky: směrnice spokojenosti závisí na osobách 33 a 124, které mají vysokou leverage i velká rezidua, a HC3 jim dává větší váhu. Stejným směrem ukazuje bootstrap, jehož interval směrnice spokojenosti leží jen těsně nad nulou (\[0,01; 0,42\]). Že spokojenost souvisí se závazkem kladně, odpovídá teorii i bodovým odhadům, ale z těchto dat to nelze považovat za spolehlivě prokázané: robustní metody vedou k intervalům na hranici nuly nebo nulu zahrnujícím. Rozdíl mezi „významným“ a „nevýznamným“ výsledkem je tu dán spíše volbou metody než daty, a proto do zprávy uvádíme odhad s intervalem, nikoli jen hvězdičky.
 
 ## Analýza citlivosti {#sec-regrese-citlivost}
 
@@ -1023,7 +1023,7 @@ intervaly |>
 
 ## Nepovinně: vliv jednotlivých osob na koeficienty {#sec-regrese-dfbetas}
 
-Cookova vzdálenost shrnuje vliv pozorování na celý model. **DFBETAS** ukazují vliv na **každý koeficient zvlášť** (konstantu i směrnice): o kolik standardních chyb by se koeficient změnil, kdybychom pozorování vynechali. Orientační hranice pro bližší pohled je 2/√*n*, zde 2/√120 ≈ 0,18. Pro velký vzorek zachytí mnoho pozorování; slouží k vyhledání případů, které stojí za prohlédnutí, nikoli k jejich vyřazení.
+Cookova vzdálenost shrnuje vliv pozorování na celý model. **DFBETAS** ukazují vliv na **každý koeficient zvlášť** (konstantu i směrnice): o kolik směrodatných chyb by se koeficient změnil, kdybychom pozorování vynechali. Orientační hranice pro bližší pohled je 2/√*n*, zde 2/√120 ≈ 0,18. Pro velký vzorek zachytí mnoho pozorování; slouží k vyhledání případů, které stojí za prohlédnutí, nikoli k jejich vyřazení.
 
 ```{r}
 #| label: l09-dfbetas

@@ -588,7 +588,7 @@ Zápis `monit ~ pohlavi` je **rovnice modelu** (v R *formula*): vlevo od vlnovky
 
 **K čemu slouží.** *t*-test posuzuje, zda se liší průměry dvou skupin v populaci, ze které vzorek pochází.
 
-**Princip.** Nulová hypotéza zní: populační průměry obou skupin jsou stejné (μ₁ = μ₂); alternativní hypotéza, že se liší (oboustranný test). Statistika *t* je rozdíl výběrových průměrů dělený jeho **směrodatnou chybou**, tedy odhadem toho, jak moc by rozdíl průměrů kolísal mezi opakovanými výběry stejné velikosti:
+**Princip.** Nulová hypotéza zní: populační průměry obou skupin jsou stejné (μ₁ = μ₂); alternativní hypotéza, že se liší (oboustranný test). Statistika *t* je rozdíl výběrových průměrů dělený jeho **směrodatnou chybou** (*standard error*; česky též standardní chyba), tedy odhadem toho, jak moc by rozdíl průměrů kolísal mezi opakovanými výběry stejné velikosti:
 
 $$
 t = \frac{M_1 - M_2}{SE_{M_1 - M_2}}
