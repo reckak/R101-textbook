@@ -161,3 +161,10 @@ status_l09 <- system2(
   c("--vanilla", "quarto/_verification/check-lesson-09.R")
 )
 stopifnot(status_l09 == 0L)
+
+# Execute lesson 11 independently, including both ANOVA models, emmeans, diagnostics and the standalone solution.
+status_l11 <- system2(
+  file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript"),
+  c("--vanilla", "quarto/_verification/check-lesson-11.R")
+)
+stopifnot(status_l11 == 0L)

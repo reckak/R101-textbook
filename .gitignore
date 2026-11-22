@@ -15,6 +15,7 @@
 /quarto/_verification/*.png
 /quarto/_verification/html-check.json
 /quarto/_verification/standalone-solution.R
+/quarto/_verification/standalone-solution-*.R
 /node_modules/
 /data/clean/*
 # Prepared public inputs for lessons 06, 09 and 11; other files in data/clean are lesson outputs.

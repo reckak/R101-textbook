@@ -1,5 +1,131 @@
 # Autorská dokumentace učebnice R101
 
+## Desátá kapitola (kurzy DataCamp) a jedenáctá kapitola: analýza rozptylu, 22. 11. 2026
+
+Na pokyn uživatele je desátá kapitola jen stránkou „Sloučení a změna struktury dat“
+(název určil uživatel) s odkazy na dva kurzy DataCampu, které studenti v desátém týdnu
+absolvovali: *Joining Data with dplyr* a *Reshaping Data with tidyr*. Je bez kódu
+a cvičení a podle rozhodnutí uživatele neříká nic o přístupu ke kurzům. Popis obsahu
+kurzů (názvy funkcí, čtyři kapitoly, asi čtyři hodiny) odpovídá jejich veřejným stránkám
+na `www.datacamp.com/courses/…`, ověřeným 22. 11. 2026; odkazy v kapitole vedou na adresy
+`app.datacamp.com/learn/courses/…`, které dodal uživatel a které vyžadují přihlášení.
+ANOVA je proto jedenáctou kapitolou, aby číslování odpovídalo osnově předmětu.
+
+Jedenáctá kapitola nemá podkladový skript (`week_11.R` neexistuje). Vychází ze staršího
+zadání seminárního úkolu pro JASP (`zdroje/anova_zadani.docx`, místní soubor, SHA-256
+`7d7ba685763c7cad86ec8610ebdc2008a3910dabdd67515a653e8ca21bacc108`) a z článku Walkera
+(2007). Obsahuje osm průběžných cvičení a samostatně spustitelnou závěrečnou úlohu; všech
+9 řešení je sbalených. Titulek „Analýza rozptylu (ANOVA)“ navrhl Claude a uživatel jej
+schválil v plánu.
+
+### Data a rozhodnutí uživatele
+
+- **Vstup:** místní `data/raw/bicyclists2025.jasp` (2355 × 9, SHA-256
+  `f54cf3eb8822e2d448aeaa38093fbb0f65217035a9789c82a89083d7aad881c9`), čtený pomocí
+  `scripts/read_jasp.R`. Uživatel rozhodl zveřejnit českou výukovou verzi
+  `data/clean/cykliste.rds` (SHA-256
+  `e13f2faaada11409ab0de7d1de9640872c8d1f64e476fdb68d8b0944a707bee2`) s českými názvy
+  a úrovněmi a bez metadat JASP; ta obsahovala místní cesty k souborům. Generátor
+  `scripts/prepare_lesson_11_data.R`, podrobnosti v `data/README.md`. Dřívější místní
+  `data/clean/bicyclists2025.rds` (vytvořený v `scripts/tryout.R`) se nepoužívá
+  a nezveřejňuje.
+- **Pořadí řádků:** zdroj `.jasp` není seřazený podle `id`; výukový soubor je, protože
+  na pořadí stojí Durbinův–Watsonův test. Že `id` odpovídá průběhu jízd, není ve zdroji
+  výslovně uvedeno. Opírá se o to, že řádky podle `id` tvoří 47 souvislých úseků se
+  stejnou helmou a vzdáleností od okraje (medián 41 předjetí), což odpovídá popisu sběru
+  v článku; kapitola to studentům ukazuje stejným výpočtem.
+- **„Large Goods Vehicle“ → `dodávka`:** zdroj tak označuje kategorii s 293 předjetími.
+  Walker (2007) ji definuje jako LGV, „light-goods vehicle/minibus“, a odlišuje ji od HGV.
+  Výukový soubor proto používá `dodávka`, `nákladní vozidlo` (HGV) a `motocykl`
+  (Powered Two Wheeler).
+- **`okraj` jako neuspořádaný faktor:** v JASP je proměnná ordinální; uspořádaný faktor by
+  v `lm()` dostal polynomické kontrasty. Úrovně jsou texty `0,25` až `1,25`.
+- **Didaktické úpravy:** uživatel uvedl, že data jsou pro výuku upravená, a rozhodl to
+  studentům oznámit stejně jako u deváté lekce. Výsledky se s článkem neshodují: soubor má
+  2355 předjetí (článek 2320 po vyřazení 35 odlehlých hodnot, bez jednostopých vozidel),
+  počty helma × okraj jsou oproti Tabulce 1 článku prohozené mezi řádky (v datech bez helmy
+  426/270/153/197/160), průměry jsou asi o 0,2 m vyšší než na Obr. 1 a interakce
+  helma × okraj je v datech významná, v článku nikoli.
+- **Rozsah:** jednofaktorová ANOVA podle vozidla s Welchovou verzí jako úvod, jádrem
+  faktoriální model `helma * okraj + vozidlo`. Plánované kontrasty ze zadání jsou jen
+  cvičením 4 (profesionální × ostatní řidiči); kontrasty (b) a (c) ze zadání, jejich
+  ortogonalita a Cohenovo *d* kontrastů v kapitole nejsou.
+- **Testy efektů:** uživatel zvolil `emmeans::joint_tests()` místo `car::Anova()`.
+  Dávají testy typu III bez změny kontrastů; kontrola ověřuje shodu s
+  `car::Anova(type = 3)` při `contr.sum`. `joint_tests()` ukládá *F* zaokrouhlené na tři
+  desetinná místa, takže ručně počítané součty čtverců se od přesných liší až na pátém
+  desetinném místě.
+- **Transformace:** odmocnina přímo v rovnici všech modelů (rozhodnutí uživatele), se dvěma
+  argumenty: technickým (dolní mez 0 a pravostranné zešikmení; formulace uživatele)
+  a věcným (bezpečnost). Model v metrech je cvičením 7 jako analýza citlivosti.
+- **Velikosti účinku:** na přání uživatele η² i ω², neparciální i parciální. Neparciální se
+  počítají ručně z výstupu `joint_tests()` s celkovým součtem čtverců ve jmenovateli.
+  `effectsize::eta_squared(car::Anova(…, type = 3), partial = FALSE)` dává nepatrně jiné
+  hodnoty (např. 0,0081 místo 0,0079 u helmy), protože dělí součtem součtů čtverců
+  z tabulky, který se v nevyváženém designu celkovému součtu nerovná.
+- **Raincloud graf** (přání uživatele) je v popisné části se surovými průměry a 95% CI, aby
+  průměry odpovídaly zobrazeným bodům; odhadnuté marginální průměry mají vlastní graf.
+  Sestaven z `geom_jitter()`, `geom_boxplot()` a `see::geom_violinhalf()`; balíček ggrain
+  nebyl použit, protože by byl novou závislostí a při zkoušce vyvolal varování ggplot2
+  o zastaralém argumentu `size`.
+- **Autokorelace:** Durbinův–Watsonův test se `set.seed(123)` (p-hodnota se počítá
+  simulací) a nepovinný blok s `sandwich::NeweyWest()` ve výchozím nastavení
+  (automatická šířka pásma, *prewhitening*). Varianta bez *prewhiteningu* a s pevným
+  zpožděním 5 dává téměř stejné směrodatné chyby (u okraje 0,037 místo 0,039).
+- **Termín „směrodatná chyba“:** uživatel rozhodl sjednotit knihu na „směrodatná chyba“
+  s poznámkou „česky též standardní chyba“ při prvním výskytu. Jedenáctá kapitola to
+  dodržuje; sjednocení deváté kapitoly je samostatná změna v jiné větvi.
+- **Závěrečná úloha** (analýza jen osobních aut) je vlastní úloha, v zadání nebyla.
+- Test pro IS MUNI k lekci podle rozhodnutí uživatele zatím nevznikl.
+
+### Co kapitola ze zadání nepřevzala
+
+Pokyny k protokolu („Do textu“, struktura a pojmenování souborů), zmínky o JASP a Excelu,
+Brownův–Forsytheův test a Cohenovo *d* kontrastů. Otázky zadání o parciálních efektech,
+rozdílu EMM a surových průměrů, počtu post hoc srovnání (45) a korekci podmíněných efektů
+kapitola zodpovídá ve výkladu.
+
+### Zdroje
+
+Walker (2007), Olivier & Walter (2013), Walker & Robinson (2019), Searle et al. (1980),
+Lenth (2016), Allen et al. (verze 2, 2021), Durbin & Watson (1950), Newey & West (1987),
+Zeileis (2004) a Lakens (2013) ověřeny přes scite 22. 11. 2026 (existence, DOI, žádné
+editoriální poznámky). U reanalýz Olivier & Walter a Walker & Robinson kapitola uvádí jen
+závěr vyjádřený v jejich názvech; plné texty nebyly čteny. Holm (1979) scite neověřilo,
+proto kapitola odkazuje na dokumentaci `p.adjust`. Z článku Walkera (2007) pocházejí popis
+sběru dat, hypotézy a poznámka o významu malých efektů při milionech předjetí denně.
+
+### Ověření
+
+Nový `check-lesson-11.R` (zapojený do `check-r.R`) spouští všechny bloky a řešení v čisté
+relaci bez neočekávaných varování a ověřuje čísla citovaná v textu: strukturu dat a počty
+v buňkách, popisné statistiky, šikmosti, jednofaktorový model s Welchovým testem, η² a ω²,
+kontrast, obě pořadí sekvenčních testů, shodu `joint_tests()` s typem III, čtyři velikosti
+účinku, odhadnuté marginální průměry a jejich rozdíl proti surovým, podmíněné efekty,
+diagnostiku, Durbinův–Watsonův test a jeho opakovatelnost se seedem, Neweyho–Westovu
+kontrolu, zamíchané řádky, závěrečnou úlohu včetně samostatného spuštění a při místním
+`.jasp` shodu RDS se zdrojem. Nový `check-lesson-11-downloads.R` po odeslání větve ověřil,
+že adresa připnutá na commit `79d0d13` vrací data shodná s místním souborem i po stažení
+(shoda MD5).
+
+`check-html.cjs` rozšířen na kapitoly 10 a 11: cesta ke zdroji kapitoly už počítá
+s dvoucifernými čísly, krátké kapitoly 8 a 10 sdílejí mírnější požadavek na osnovu,
+u desáté se kontrolují oba odkazy na DataCamp a nepřítomnost kódu, u jedenácté stažení
+RDS s bajtovou shodou a klávesnicově dostupné tabulky; seznam `_book/data/clean` obsahuje
+`cykliste.rds`. Do `.gitignore` přibyl vzor pro pomocné `standalone-solution-*.R`.
+
+Render celé knihy (Quarto 1.10.19 dodávané s RStudiem, R 4.5.1, UTF-8 locale; na tomto
+počítači nebylo k dispozici Quarto 1.9.38 uváděné v `docs/provoz.md`), `check-r.R` (všechny
+kapitoly) a `check-html.cjs` prošly. Kontrola HTML běžela v nainstalovaném Chromu přes
+`CHROME_PATH`, protože prohlížeč Playwrightu nebyl stažen. Jedenáctá kapitola: 9 sbalených
+a rozbalitelných řešení, kopírování 68 bloků, 7 grafů, 366 místních cílů odkazů, mobil
+390/390 px; desátá: bez kódu, 12 odkazů. Všech 7 grafů bylo prohlédnuto a interpretace
+i alternativní texty odpovídají vykresleným grafům (u grafu sousedních reziduí byl popis
+tvaru mraku bodů opraven podle obrázku). Nové balíčky `emmeans` a `sandwich` doplněny do
+instalace a CI. Místní instalace vypisuje jen poznámky „package … was built under R
+version“, které kontrola při načítání balíčků toleruje. Skutečný běh CI na GitHubu tímto
+ověřen není.
+
 ## Opakovací dokument k testům 1–7 a revize testů, 9. 11. 2026
 
 - **Účel:** `opakovani/opakovani_testy_01-07.qmd` slouží k společnému procházení

@@ -1,0 +1,23 @@
+---
+title: "Sloučení a změna struktury dat"
+---
+
+## Dva kurzy místo nové lekce {#sec-datacamp-uvod}
+
+Desátý týden nemá vlastní výklad v této učebnici. Místo něj projděte dva kurzy na platformě DataCamp. Oba jsou v angličtině, skládají se ze čtyř kapitol a každý zabere přibližně čtyři hodiny. Navazují na práci s funkcemi balíčku dplyr, kterou znáte ze [třetí lekce](lekce_03.qmd), zejména na `filter()`, `mutate()` a `summarise()` (oddíly [-@sec-upravy-filter], [-@sec-upravy-mutate] a [-@sec-upravy-by]).
+
+## Sloučení tabulek: Joining Data with dplyr {#sec-datacamp-joins}
+
+Kurz [Joining Data with dplyr](https://app.datacamp.com/learn/courses/joining-data-with-dplyr) se věnuje **sloučení tabulek** (*join*). Data z výzkumu bývají často rozdělená do několika souborů: v jednom jsou například odpovědi v dotazníku, ve druhém demografické údaje a ve třetím výsledky z druhé vlny sběru. Před analýzou je potřeba tabulky propojit podle společného klíče, obvykle podle identifikátoru osoby.
+
+Kurz postupně představuje funkce `inner_join()`, `left_join()`, `right_join()` a `full_join()`, které k řádkům jedné tabulky připojují sloupce z druhé a liší se tím, co udělají s řádky bez protějšku. Dále ukazuje `semi_join()` a `anti_join()`, které řádky jen vybírají podle toho, zda mají ve druhé tabulce protějšek, a `bind_rows()`, která skládá tabulky pod sebe. Při procházení kurzu si u každé funkce všímejte, kolik řádků má výsledek a kde vznikly chybějící hodnoty; právě počet řádků po sloučení je nejrychlejší kontrola, že se tabulky spojily tak, jak jste zamýšleli.
+
+## Změna struktury dat: Reshaping Data with tidyr {#sec-datacamp-reshape}
+
+Kurz [Reshaping Data with tidyr](https://app.datacamp.com/learn/courses/reshaping-data-with-tidyr) se věnuje **změně struktury dat**, tedy převodům mezi různými uspořádáními téže tabulky. Vychází z pojmu uspořádaných dat (*tidy data*), ve kterých má každá proměnná svůj sloupec a každé pozorování svůj řádek.
+
+Nejdůležitější částí je převod mezi širokým a dlouhým formátem pomocí `pivot_longer()` a `pivot_wider()`. Funkci `pivot_longer()` jste už použili v [sedmé lekci](lekce_07.qmd) při kontrole položek dotazníku (oddíl [-@sec-testy-skor]); kurz ji probírá soustavněji a doplňuje opačný převod. Tyto převody budete potřebovat hlavně u opakovaných měření, kde jsou jednotlivá měření téže osoby uložena ve sloupcích vedle sebe, a při přípravě dat pro grafy v ggplot2. Kurz dále ukazuje rozdělení hodnot, které jsou v jednom sloupci spojené dohromady, doplnění chybějících kombinací pozorování a práci s vnořenými daty.
+
+## Jak s kurzy pracovat {#sec-datacamp-postup}
+
+Kurzy procházejte v uvedeném pořadí a cvičení řešte samostatně; nápovědu si zobrazte až ve chvíli, kdy si opravdu nevíte rady. Po dokončení zkuste oba postupy na vlastních datech v projektu `r101`: například rozdělte některou tabulku z předchozích lekcí na dvě části se společným identifikátorem a znovu je spojte, nebo převeďte položky dotazníku do dlouhého formátu a zpět. Jedenáctá lekce se k analýze dat vrací analýzou rozptylu a na tyto kurzy přímo nenavazuje.

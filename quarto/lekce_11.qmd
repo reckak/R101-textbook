@@ -1,0 +1,1036 @@
+---
+title: "Analýza rozptylu (ANOVA)"
+subtitle: "Jednofaktorová a faktoriální ANOVA, transformace, odhadnuté marginální průměry a podmíněné efekty na datech o předjíždění cyklistů"
+---
+
+## Co se naučíte {#sec-anova-cile}
+
+V této lekci projdete celou analýzu rozptylu od kontroly dat po závěr. Budeme se ptát, v jaké vzdálenosti míjejí řidiči cyklistu a zda tato vzdálenost souvisí s typem vozidla, s tím, zda má cyklista helmu, a s tím, jak daleko od okraje silnice jede. Nejprve data popíšete a zobrazíte, potom zdůvodníte **odmocninovou transformaci** závislé proměnné. **Jednofaktorovou analýzou rozptylu** porovnáte typy vozidel a **faktoriální analýzou rozptylu** prozkoumáte helmu, vzdálenost od okraje a jejich **interakci**. Naučíte se číst *F*-testy, počítat velikosti účinku η^2^ a ω^2^ a pomocí balíčku emmeans získat **odhadnuté marginální průměry** a **podmíněné efekty**: rozdíl mezi jízdou s helmou a bez ní zvlášť pro každou vzdálenost od okraje. Nakonec zkontrolujete předpoklady modelu včetně nezávislosti pozorování, kterou u dat seřazených v čase ověřuje Durbinův–Watsonův test.
+
+U každého kroku uvádíme, co děláme, proč to děláme a jak výsledek číst. Analýza rozptylu je zvláštním případem lineárního modelu, takže navážeme hlavně na [devátou lekci](lekce_09.qmd): na funkci `lm()` a rovnici modelu (oddíl [-@sec-regrese-lm]), na srovnání vnořených modelů funkcí `anova()` (oddíl [-@sec-regrese-prirustek]), na předpoklady a diagnostické grafy (oddíly [-@sec-regrese-predpoklady] a [-@sec-regrese-diagnostika]) a na robustní směrodatné chyby (oddíl [-@sec-regrese-beta-hc]). Ze [sedmé lekce](lekce_07.qmd) využijeme Welchův test, Levenův test a šikmost (oddíly [-@sec-testy-ttest], [-@sec-testy-levene] a [-@sec-testy-skor]) a ze [čtvrté lekce](lekce_04.qmd) faktory (oddíl [-@sec-struktury-faktory]). Předpokládáme znalost principu analýzy rozptylu ze statistiky: rozklad variability na část mezi skupinami a uvnitř skupin a *F*-test.
+
+## Příprava projektu a dat {#sec-anova-priprava}
+
+Otevřete projekt `r101` a založte skript `scripts/11_anova.R`.
+
+### Soubor k této lekci {#sec-anova-data}
+
+Stáhněte soubor a uložte jej do složky `data/clean` svého projektu:
+
+::: table-responsive
+| Soubor ke stažení | Obsah |
+|:-----------------------------------|:-----------------------------------|
+| [cykliste.rds](../data/clean/cykliste.rds){download="cykliste.rds"} | Záznamy 2355 předjetí cyklisty motorovým vozidlem: číslo události, typ a barva vozidla, typ ulice, vzdálenost předjetí, helma, vzdálenost cyklisty od okraje silnice, cyklopruh a město. |
+:::
+
+Data pocházejí ze studie Iana Walkera o tom, jak řidiči předjíždějí cyklisty ([Walker, 2007](https://doi.org/10.1016/j.aap.2006.08.010)). **Data jsou pro didaktické účely upravena**, výsledky proto slouží k nácviku analýzy, nikoli jako zjištění o chování řidičů, a s výsledky článku se neshodují. Názvy proměnných i kategorie jsou česky.
+
+::: table-responsive
+| Proměnná | Význam |
+|:-----------------------------------|:-----------------------------------|
+| `id` | Pořadové číslo předjetí; řádky jsou podle něj seřazené. |
+| `vozidlo` | Typ vozidla, které cyklistu předjelo: `osobní auto`, `dodávka` (lehká užitková vozidla a minibusy), `SUV/pick-up`, `autobus`, `nákladní vozidlo`, `taxi` a `motocykl` (jednostopá motorová vozidla). |
+| `barva` | Barva vozidla. |
+| `ulice` | Typ ulice, například `hlavní silnice` nebo `městská ulice`. |
+| `vzdalenost_predjeti` | Vzdálenost, ve které vozidlo cyklistu minulo, v metrech. |
+| `helma` | Zda měl cyklista helmu: `bez helmy`, `s helmou`. |
+| `okraj` | Vzdálenost cyklisty od okraje silnice v metrech: `0,25`, `0,50`, `0,75`, `1,00` a `1,25`. |
+| `cyklopruh` | Zda cyklista jel v cyklopruhu: `ne`, `ano`. |
+| `mesto` | Město: `Salisbury` nebo `Bristol`. |
+
+: Proměnné v souboru `cykliste.rds` {#tbl-anova-promenne}
+:::
+
+### Balíčky a načtení dat {#sec-anova-balicky}
+
+Nově použijeme dva balíčky. **`emmeans`** počítá z odhadnutého modelu průměry skupin, jejich rozdíly a testy; jeho název je zkratkou *estimated marginal means*. **`sandwich`** nabízí robustní odhady směrodatných chyb a použijeme jej v nepovinné části na konci lekce. Pokud je ještě nemáte, nainstalujte je jednorázově v konzoli:
+
+```{r}
+#| label: l11-instalace
+#| eval: false
+install.packages(c("emmeans", "sandwich"))
+```
+
+Balíčky broom, car, effectsize a see znáte z deváté lekce (oddíl [-@sec-regrese-balicky]), rstatix ze sedmé a psych ze šesté. Stejně jako dosud načteme jen balíčky, jejichž funkce budeme používat často; funkce ostatních voláme s předponou `balicek::funkce()` (oddíl [-@sec-balicky]).
+
+```{r}
+#| label: l11-nacteni
+library(tidyverse)
+library(broom)
+library(emmeans)
+
+theme_set(theme_classic(base_size = 13))
+
+cykliste <- read_rds("data/clean/cykliste.rds")
+glimpse(cykliste)
+```
+
+Tabulka má 2355 řádků a 9 sloupců. Každý řádek je jedno předjetí. Kategoriální proměnné jsou uložené jako faktory s českými úrovněmi, vzdálenost předjetí jako číslo `<dbl>`. Všimněte si, že `okraj` je **faktor**, přestože jeho úrovně vypadají jako čísla: vzdálenost od okraje má jen pět hodnot a v této lekci s ní pracujeme jako s kategoriální proměnnou. Úrovně jsou texty s desetinnou čárkou, proto je v kódu píšeme v uvozovkách, například `okraj == "0,50"`.
+
+Při načtení vypíše emmeans uvítací zprávu s upozorněním, že při filtrování jeho výsledků se ztrácejí důležité informace. Výstupy emmeans totiž kromě čísel nesou i poznámky o tom, přes které proměnné se průměrovalo a jak byly upraveny *p*-hodnoty. Budeme je proto číst v původní podobě a na tibble je převedeme jen tehdy, když z nich budeme kreslit graf.
+
+### Alternativa: načtení dat z URL {#sec-anova-url}
+
+Stejně jako v deváté lekci (oddíl [-@sec-regrese-url]) můžete soubor místo ručního stažení načíst přímo z internetu, protože `read_rds()` přijímá místo cesty k souboru také URL. Odkaz vede na pevnou verzi dat v repozitáři učebnice (dlouhý řetězec znaků je identifikátor této verze), takže pozdější změny repozitáře nezmění vstupní data příkladu. Následující alternativu můžete spustit, máte-li připojení k internetu:
+
+```{r}
+#| label: l11-url-rds
+#| eval: false
+data_url <- str_c(
+  "https://raw.githubusercontent.com/reckak/R101-textbook/",
+  "79d0d13e21d5dcb421d6a9ad00c5f3cf5c2b7663/data/clean/cykliste.rds"
+)
+cykliste <- read_rds(data_url)
+glimpse(cykliste)
+```
+
+Výsledek je stejný jako při načtení z disku: 2355 řádků a 9 sloupců. Adresa musí vést na samotný soubor (`raw.githubusercontent.com`), nikoli na stránku souboru na `github.com`, která vrací webovou stránku v HTML.
+
+Takto načtená data existují jen v aktuální relaci R; po restartu by se stahovala znovu. Trvalou místní kopii vytvoříte tak, že soubor nejprve stáhnete funkcí `download.file()` do složky `data/clean` a potom jej načtete z disku stejně jako v předchozím oddílu. Kód využívá objekt `data_url` z předchozího bloku:
+
+```{r}
+#| label: l11-url-download
+#| eval: false
+dir.create("data/clean", recursive = TRUE, showWarnings = FALSE)
+download.file(
+  url = data_url,
+  destfile = "data/clean/cykliste.rds",
+  mode = "wb"
+)
+
+cykliste <- read_rds("data/clean/cykliste.rds")
+```
+
+`mode = "wb"` zapíše stažené bajty beze změny; u binárních souborů, jako je RDS, jej proto uvádíme vždy. Při dalším spuštění skriptu stačí načtení z disku a internet už není potřeba.
+
+## Kontext výzkumu {#sec-anova-kontext}
+
+### Studie o předjíždění cyklistů {#sec-anova-studie}
+
+Srážky, při kterých motorové vozidlo předjíždí cyklistu, patří k nejzávažnějším nehodám cyklistů. Ian Walker proto zjišťoval, na čem závisí odstup, který řidiči cyklistovi při předjíždění nechávají ([Walker, 2007](https://doi.org/10.1016/j.aap.2006.08.010)). Sám najezdil na kole 320 km po ulicích dvou anglických měst, Salisbury a Bristolu, v různou denní dobu. Kolo bylo vybaveno ultrazvukovým snímačem, který zaznamenával, v jaké vzdálenosti jej vozidla míjela, a kamerou, podle jejíhož záznamu se určil typ vozidla. Cyklista jel ve stálé vzdálenosti od okraje silnice (0,25 až 1,25 m) a vždy po několika kilometrech tuto vzdálenost změnil; měnil také, zda jede s helmou, nebo bez ní.
+
+Jedna z hypotéz vycházela z představy, že řidiči přizpůsobují své chování tomu, jak zranitelný se jim cyklista zdá. Cyklista s helmou může působit chráněněji nebo zkušeněji, a řidiči si proto k němu mohou dovolit menší odstup. Druhá hypotéza se týkala rady, kterou si cyklisté často předávají: kdo jede dál od okraje, toho prý řidiči objíždějí větším obloukem.
+
+### Design a výzkumné otázky {#sec-anova-design}
+
+**Jednotkou pozorování** je jedno předjetí, nikoli osoba: každý řádek popisuje jiné vozidlo, které cyklistu minulo. Všechna předjetí se ale týkají téhož cyklisty a následovala po sobě v čase, k čemuž se vrátíme u předpokladu nezávislosti (oddíl [-@sec-anova-nezavislost]).
+
+**Design** se označuje jako naturalistický experiment. Výzkumník sám určoval, zda pojede s helmou a jak daleko od okraje, takže tyto proměnné jsou manipulované. Podmínky ale nebyly jednotlivým předjetím přidělovány náhodně: střídaly se po úsecích jízdy, a mohou se proto lišit i ulicí, hustotou provozu nebo denní dobou. Typ vozidla manipulovaný nebyl vůbec, ten výzkumník pouze zaznamenal. Rozdíly mezi podmínkami proto budeme interpretovat opatrně: o helmě a vzdálenosti od okraje můžeme uvažovat jako o možných příčinách jen s výhradou, že se úseky jízdy mohly lišit i jinak.
+
+**Závislou proměnnou** je vzdálenost předjetí v metrech. **Nezávislé proměnné** jsou tři kategoriální proměnné, kterým se v analýze rozptylu říká **faktory**: typ vozidla (7 úrovní), helma (2 úrovně) a vzdálenost od okraje (5 úrovní).
+
+**Výzkumné otázky:**
+
+1.  Liší se vzdálenost předjetí podle typu vozidla?
+2.  Míjejí řidiči cyklistu v menší vzdálenosti, když má helmu a když jede dál od okraje silnice? A závisí efekt helmy na tom, jak daleko od okraje cyklista jede? Očekáváme, že se helma projeví hlavně při jízdě blízko okraje.
+
+## Popisné statistiky a kontrola dat {#sec-anova-popis}
+
+### Četnosti a chybějící hodnoty {#sec-anova-kontrola}
+
+Začneme kontrolou, zda jsou data úplná a zda kategorie odpovídají popisu. Počet chybějících hodnot v každém sloupci spočítáme pomocí `across()`:
+
+```{r}
+#| label: l11-chybejici
+cykliste |>
+  summarise(across(everything(), \(x) sum(is.na(x))))
+```
+
+Zápis `\(x) sum(is.na(x))` je krátká funkce, kterou `across()` použije na každý sloupec: spočítá, kolik hodnot v něm chybí. Chybí jen 14 hodnot barvy vozidla. Proměnné, se kterými budeme pracovat, jsou úplné, takže žádné řádky nevyřazujeme.
+
+```{r}
+#| label: l11-cetnosti
+cykliste |>
+  count(vozidlo) |>
+  mutate(procento = n / sum(n) * 100)
+
+cykliste |>
+  count(helma)
+```
+
+Téměř tři čtvrtiny předjetí (1708, tj. 72,5 %) připadají na osobní auta. Ostatní typy jsou mnohem vzácnější: autobusů je 46, taxíků 49 a motocyklů jen 34. Skupiny podle typu vozidla jsou tedy **velmi nestejně velké**, což budeme muset zohlednit při volbě testu (oddíl [-@sec-anova-welch]). Jízd bez helmy je 1206 a s helmou 1149, tyto dvě skupiny jsou vyrovnané.
+
+### Vzdálenost předjetí {#sec-anova-deskriptivy}
+
+```{r}
+#| label: l11-deskriptivy
+cykliste |>
+  summarise(
+    n = n(),
+    M = mean(vzdalenost_predjeti),
+    SD = sd(vzdalenost_predjeti),
+    Mdn = median(vzdalenost_predjeti),
+    Min = min(vzdalenost_predjeti),
+    Max = max(vzdalenost_predjeti),
+    sikmost = psych::skew(vzdalenost_predjeti)
+  )
+```
+
+Řidiči míjeli cyklistu v průměru ve vzdálenosti 1,55 m (*SD* = 0,38). Hodnoty sahají od 0,39 m do 3,79 m. Všechny jsou kladné a věcně možné: i nejmenší hodnota znamená, že vozidlo cyklistu minulo, byť těsně, a čtyřmetrový odstup je na široké silnici také představitelný. Průměr je vyšší než medián (1,51 m) a šikmost 0,75 je kladná: rozdělení má delší pravý konec. K tomu se vrátíme v oddílu [-@sec-anova-odmocnina].
+
+### Je design vyvážený? {#sec-anova-vyvazenost}
+
+Pro faktoriální analýzu potřebujeme vědět, kolik pozorování připadá na každou **kombinaci** úrovní helmy a vzdálenosti od okraje. Těmto kombinacím se říká buňky designu. Funkce `count()` se dvěma proměnnými spočítá četnosti všech kombinací a `pivot_wider()` je rozloží do tabulky s úrovněmi `okraj` ve sloupcích:
+
+```{r}
+#| label: l11-kontingencni
+cykliste |>
+  count(helma, okraj) |>
+  pivot_wider(names_from = okraj, values_from = n)
+```
+
+Design má 2 × 5 = 10 buněk. Kdyby byl **vyvážený**, měly by všechny buňky stejný počet pozorování. To zde neplatí: počty sahají od 153 do 426. Bez helmy jel cyklista nejčastěji těsně u okraje (426 předjetí ve vzdálenosti 0,25 m), s helmou jsou předjetí rozložena rovnoměrněji. Helma a vzdálenost od okraje tedy spolu v datech souvisejí. Důsledek je důležitý: při prostém srovnání průměrů s helmou a bez helmy bychom zčásti srovnávali i různé vzdálenosti od okraje. Proto potřebujeme model, který zohlední oba faktory najednou, a proto v nevyváženém designu záleží na tom, jakým způsobem se efekty testují (oddíl [-@sec-anova-sekvencni]).
+
+### Průměry v buňkách designu {#sec-anova-prumery}
+
+Průměry, směrodatné odchylky a počty v jednotlivých buňkách spočítáme pomocí `summarise()` s argumentem `.by` (oddíl [-@sec-upravy-by]). Přidáme také **směrodatnou chybu** průměru (*standard error*, *SE*; česky též standardní chyba), tedy směrodatnou odchylku vydělenou odmocninou z počtu pozorování, a z ní 95% interval spolehlivosti průměru. Funkce `qt(0.975, n - 1)` vrací hodnotu *t*-rozdělení, kterou směrodatnou chybu násobíme; u velkých skupin je blízká 1,96. Tabulku uložíme, protože ji použijeme i v grafu.
+
+```{r}
+#| label: l11-prumery
+prumery <- cykliste |>
+  summarise(
+    n = n(),
+    M = mean(vzdalenost_predjeti),
+    SD = sd(vzdalenost_predjeti),
+    .by = c(helma, okraj)
+  ) |>
+  mutate(
+    SE = SD / sqrt(n),
+    dolni = M - qt(0.975, n - 1) * SE,
+    horni = M + qt(0.975, n - 1) * SE
+  ) |>
+  arrange(helma, okraj)
+
+prumery
+```
+
+Bez helmy průměrná vzdálenost předjetí se vzdáleností od okraje plynule klesá: z 1,73 m při jízdě 0,25 m od okraje na 1,44 m při jízdě 1,25 m od okraje. S helmou je pokles mnohem mírnější, z 1,55 m na 1,44 m. Rozdíl mezi jízdou bez helmy a s helmou je proto největší u okraje (1,73 oproti 1,55 m, tedy asi 18 cm) a při vzdálenosti 1 m a více prakticky mizí. To je přesně vzorec, který popisuje **interakce**: efekt jednoho faktoru závisí na úrovni druhého. Směrodatné odchylky jsou ve všech buňkách podobné, od 0,33 do 0,41 m, a jsou několikanásobně větší než rozdíly mezi průměry: jednotlivá předjetí se od sebe liší mnohem víc než podmínky.
+
+### Graf: jednotlivá předjetí, boxplot a hustota {#sec-anova-raincloud}
+
+Tabulka průměrů neukazuje, jak vypadají data, ze kterých průměry vznikly. Užitečný je graf, který spojuje tři pohledy: jednotlivá pozorování, boxplot a křivku hustoty. Říká se mu *raincloud plot*, protože hustota připomíná mrak a body pod ní déšť ([Allen et al., 2021](https://doi.org/10.12688/wellcomeopenres.15191.2)). Sestavíme jej z vrstev, které už znáte, a z jedné nové:
+
+-   `geom_jitter()` nakreslí jednotlivá předjetí a náhodně je rozptýlí do šířky, aby se nepřekrývala (`height = 0` zajistí, že se nemění hodnota vzdálenosti);
+-   `geom_boxplot()` přidá úzký boxplot; `position_nudge(x = 0.24)` jej posune vedle bodů a `outlier.shape = NA` potlačí kreslení odlehlých hodnot, které už ukazují body;
+-   `see::geom_violinhalf()` z balíčku see nakreslí polovinu houslového grafu, tedy křivku hustoty;
+-   `geom_pointrange()` přidá z tabulky `prumery` průměr s 95% intervalem spolehlivosti (červeně).
+
+Funkce `facet_grid(rows = vars(okraj))` vytvoří pro každou vzdálenost od okraje jeden panel a `coord_flip()` graf otočí, aby vzdálenost předjetí ležela na vodorovné ose.
+
+```{r}
+#| label: fig-anova-raincloud
+#| fig-cap: "Vzdálenost předjetí podle helmy v pěti vzdálenostech cyklisty od okraje silnice (panely, v metrech). Body jsou jednotlivá předjetí, nad nimi boxplot a křivka hustoty; červeně průměr s 95% intervalem spolehlivosti."
+#| fig-alt: "Pět panelů pod sebou pro vzdálenosti od okraje 0,25 až 1,25 m, v každém dva vodorovné pásy bodů s boxplotem a křivkou hustoty pro jízdu s helmou a bez helmy. Rozdělení jsou jednovrcholová s delším pravým koncem a z velké části se překrývají; červený bod průměru je bez helmy v horních panelech posunut doprava oproti jízdě s helmou, v dolních dvou panelech leží oba průměry téměř nad sebou."
+#| fig-width: 8
+#| fig-height: 8
+cykliste |>
+  ggplot(aes(x = helma, y = vzdalenost_predjeti, fill = helma)) +
+  geom_jitter(width = 0.12, height = 0, alpha = 0.2, size = 0.6) +
+  geom_boxplot(width = 0.12, outlier.shape = NA,
+               position = position_nudge(x = 0.24)) +
+  see::geom_violinhalf(position = position_nudge(x = 0.34), alpha = 0.7) +
+  geom_pointrange(data = prumery,
+                  aes(y = M, ymin = dolni, ymax = horni),
+                  color = "red", size = 0.35, linewidth = 0.8) +
+  facet_grid(rows = vars(okraj)) +
+  coord_flip() +
+  guides(fill = "none") +
+  labs(x = NULL, y = "Vzdálenost předjetí (m)")
+```
+
+Graf ukazuje tři věci. Za prvé se rozdělení obou podmínek ve všech panelech z velké části **překrývají**: i tam, kde se průměry liší, je mnoho předjetí s helmou vzdálenějších než mnoho předjetí bez helmy. Za druhé je vidět vzorec z tabulky: v horních třech panelech (0,25 až 0,75 m) leží průměr bez helmy vpravo od průměru s helmou, ve dvou dolních panelech jsou oba průměry téměř nad sebou. Intervaly spolehlivosti průměrů jsou úzké, protože buňky obsahují stovky pozorování. Za třetí mají všechna rozdělení **delší pravý konec**: několik vozidel minulo cyklistu ve vzdálenosti tří metrů i více, zatímco směrem k nule rozdělení končí poměrně ostře.
+
+### Cvičení 1: Liší se města? {.exercise}
+
+Spočítejte počet předjetí, průměr, směrodatnou odchylku a medián vzdálenosti předjetí zvlášť pro Salisbury a Bristol. Potom zjistěte, kolik předjetí připadá v každém městě na jednotlivé vzdálenosti od okraje. Proč by bylo zavádějící vysvětlovat rozdíl mezi městy chováním tamních řidičů?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l11-reseni-mesta
+cykliste |>
+  summarise(
+    n = n(),
+    M = mean(vzdalenost_predjeti),
+    SD = sd(vzdalenost_predjeti),
+    Mdn = median(vzdalenost_predjeti),
+    .by = mesto
+  )
+
+cykliste |>
+  count(mesto, okraj) |>
+  pivot_wider(names_from = okraj, values_from = n)
+```
+
+V Salisbury bylo zaznamenáno 1905 předjetí s průměrem 1,56 m, v Bristolu 450 s průměrem 1,52 m. Rozdíl necelých čtyř centimetrů je malý ve srovnání se směrodatnými odchylkami (0,37 a 0,41 m). Druhá tabulka navíc ukazuje, že se města liší skladbou podmínek: v Bristolu jel cyklista téměř vždy nejvýše 0,75 m od okraje a jen 27 předjetí připadá na vzdálenosti 1 m a 1,25 m, kdežto v Salisbury je takových předjetí 774. Města se liší také typem ulic. Prostý rozdíl mezi městy proto nelze přičíst řidičům: mísí se v něm vzdálenost od okraje, typ ulice a možná i další okolnosti. Jde o stejný problém, jaký jsme viděli u helmy a vzdálenosti od okraje, a je to důvod, proč rozdíly mezi skupinami posuzujeme modelem, který zohlední více proměnných najednou.
+:::
+
+## Odmocninová transformace {#sec-anova-odmocnina}
+
+Než odhadneme první model, rozhodneme, v jaké podobě do něj závislá proměnná vstoupí. Místo vzdálenosti v metrech použijeme její **odmocninu**. Máme pro to dva důvody.
+
+**Technický důvod.** Vzdálenost předjetí má přirozenou dolní mez: nemůže být záporná, protože to by znamenalo, že vozidlo do cyklisty narazilo. Blízko této meze se hodnoty „hromadí“, zatímco směrem nahoru jim nic nebrání. Proměnné s takovou mezí bývají pravostranně zešikmené a naše data nejsou výjimkou (šikmost 0,75). Lineární model předpokládá přibližně normální rozdělení reziduí (oddíl [-@sec-regrese-predpoklady]) a zešikmení závislé proměnné se obvykle přenáší i do nich. Odmocnina velké hodnoty stlačuje více než malé, takže pravý konec rozdělení zkrátí a rozdělení přiblíží normálnímu.
+
+**Věcný důvod.** Bezpečnost předjetí zřejmě nezávisí na vzdálenosti rovnoměrně. Rozdíl mezi 20 a 50 cm je rozdílem mezi téměř kolizí a nepříjemně těsným předjetím; stejně velký rozdíl mezi 150 a 180 cm už na bezpečnosti mnoho nemění. Odmocnina tuto úvahu vystihuje: stejně velký rozdíl v metrech je po transformaci tím menší, čím větších vzdáleností se týká.
+
+```{r}
+#| label: l11-odmocnina-priklad
+sqrt(c(0.2, 0.5, 1.5, 1.8))
+```
+
+Rozdíl mezi 0,2 a 0,5 m se po odmocnění změní na 0,71 − 0,45 = 0,26, rozdíl mezi 1,5 a 1,8 m na 1,34 − 1,22 = 0,12, tedy méně než polovinu. Jak transformace změnila tvar rozdělení, ukáže šikmost a histogramy:
+
+```{r}
+#| label: l11-sikmost
+cykliste |>
+  summarise(
+    sikmost_metry = psych::skew(vzdalenost_predjeti),
+    sikmost_odmocnina = psych::skew(sqrt(vzdalenost_predjeti))
+  )
+```
+
+```{r}
+#| label: fig-anova-transformace
+#| fig-cap: "Rozdělení vzdálenosti předjetí v metrech (vlevo) a po odmocninové transformaci (vpravo)."
+#| fig-alt: "Dva histogramy vedle sebe. Levý, v metrech, má vrchol kolem 1,5 m a dlouhý pravý konec sahající k 3,8 m. Pravý, po odmocnění, je téměř souměrný s vrcholem kolem 1,25 a krátkými konci na obou stranách."
+#| fig-width: 8
+#| fig-height: 4
+cykliste |>
+  mutate(odmocnina = sqrt(vzdalenost_predjeti)) |>
+  pivot_longer(c(vzdalenost_predjeti, odmocnina),
+               names_to = "skala", values_to = "hodnota") |>
+  mutate(skala = if_else(skala == "odmocnina",
+                         "Odmocnina vzdálenosti", "Vzdálenost (m)"),
+         skala = fct_relevel(skala, "Vzdálenost (m)")) |>
+  ggplot(aes(x = hodnota)) +
+  geom_histogram(bins = 40, color = "black", fill = "grey80") +
+  facet_wrap(vars(skala), scales = "free_x") +
+  labs(x = NULL, y = "Počet předjetí")
+```
+
+Šikmost klesla z 0,75 na 0,25. Levý histogram má dlouhý pravý konec, pravý je téměř souměrný. Transformace tedy splnila technický účel. Převod do dlouhého formátu pomocí `pivot_longer()` zde slouží jen k tomu, abychom oba histogramy nakreslili jedním příkazem do dvou panelů; `scales = "free_x"` dovolí každému panelu vlastní osu *x*.
+
+**Co transformace mění.** Model bude vysvětlovat odmocninu vzdálenosti, takže jeho koeficienty a průměry budou v jednotkách „odmocnina z metru“, které se nedají přímo interpretovat. Výsledky proto vždy převedeme zpět na metry umocněním na druhou; balíček emmeans to udělá za nás. Je ale třeba vědět, že průměr odmocnin umocněný na druhou **není totéž** co aritmetický průměr vzdáleností: u pravostranně zešikmených dat vychází o něco nižší a leží blíže mediánu. V našich datech je aritmetický průměr 1,55 m, medián 1,51 m a zpětně převedený průměr odmocnin 1,53 m. Zpětně převedené průměry tedy popisují typickou vzdálenost předjetí, ne přesně aritmetický průměr.
+
+Transformaci zapíšeme **přímo do rovnice modelu**, například `sqrt(vzdalenost_predjeti) ~ vozidlo`, a nevytváříme pro ni nový sloupec. Model si tak pamatuje, jakou transformaci jsme použili, a emmeans podle toho pozná, jak převést výsledky zpět na metry.
+
+### Cvičení 2: Logaritmus místo odmocniny {.exercise}
+
+Další často používanou transformací pravostranně zešikmených proměnných je přirozený logaritmus, funkce `log()`. Spočítejte šikmost vzdálenosti předjetí po logaritmické transformaci a porovnejte ji se šikmostí původní proměnné a odmocniny. Která transformace přiblížila rozdělení souměrnému tvaru nejlépe?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l11-reseni-logaritmus
+cykliste |>
+  summarise(
+    metry = psych::skew(vzdalenost_predjeti),
+    odmocnina = psych::skew(sqrt(vzdalenost_predjeti)),
+    logaritmus = psych::skew(log(vzdalenost_predjeti))
+  )
+```
+
+Šikmost je 0,75 v metrech, 0,25 po odmocnění a −0,27 po logaritmické transformaci. Logaritmus stlačuje velké hodnoty silněji než odmocnina a zde to „přehnal“: z pravostranného zešikmení udělal přibližně stejně velké levostranné. Obě transformace tedy přiblížily rozdělení souměrnému tvaru podobně, jen z opačných stran. Samotná šikmost mezi nimi nerozhodne; pro odmocninu mluví věcná úvaha o bezpečnosti a také to, že se s ní rozdíly snadno převádějí zpět na metry. Volbu transformace je vždy lepší opřít o věcný důvod než o to, která dá nejmenší šikmost.
+:::
+
+## ANOVA jako lineární model {#sec-anova-linearni-model}
+
+Analýza rozptylu se často vykládá jako samostatná metoda, ale je to lineární model, ve kterém jsou prediktory kategoriální. Odhadujeme ji proto stejnou funkcí `lm()` jako regresi v deváté lekci. První model má jediný faktor, typ vozidla:
+
+```{r}
+#| label: l11-model-vozidlo
+model_vozidlo <- lm(sqrt(vzdalenost_predjeti) ~ vozidlo, data = cykliste)
+tidy(model_vozidlo, conf.int = TRUE)
+```
+
+### Faktor jako sada indikátorových proměnných {#sec-anova-indikatory}
+
+Faktor se sedmi úrovněmi nevstupuje do modelu jako jedno číslo. Funkce `lm()` jej převede na šest **indikátorových** (*dummy*) proměnných, o kterých byla zmínka ve čtvrté lekci (oddíl [-@sec-struktury-faktory]). Každá nabývá hodnoty 1 pro jednu úroveň a 0 pro ostatní. První úroveň faktoru, zde `osobní auto`, vlastní indikátor nedostane a stává se **referenční kategorií**.
+
+Tabulka koeficientů se pak čte takto:
+
+-   **Konstanta** 1,25 je průměr odmocniny vzdálenosti u referenční kategorie, tedy u osobních aut. Po umocnění, 1,25^2^ ≈ 1,55, dostaneme typickou vzdálenost předjetí osobním autem v metrech.
+-   Každý další koeficient je **rozdíl** průměru dané kategorie od průměru osobních aut. Řádek `vozidloautobus` s odhadem −0,107 říká, že autobusy míjejí cyklistu těsněji než osobní auta; název řádku vzniká spojením názvu faktoru a úrovně.
+
+Rozdíly jsou v jednotkách odmocniny, proto zatím čteme jen jejich znaménko a to, zda interval spolehlivosti obsahuje nulu. Těsněji než osobní auta míjejí cyklistu autobusy, nákladní vozidla, taxíky a dodávky; u SUV a motocyklů interval nulu obsahuje. V metrech si průměry zobrazíme v oddílu [-@sec-anova-vozidlo-prumery].
+
+Tabulka koeficientů má dvě nevýhody. Srovnává vše jen s referenční kategorií, takže z ní nevyčteme například rozdíl mezi autobusy a taxíky. A neodpovídá na obecnou otázku, zda se typy vozidel vůbec liší. Na tu odpovídá *F*-test.
+
+### *F*-test jako srovnání dvou modelů {#sec-anova-f-test}
+
+Hlavní test analýzy rozptylu ověřuje nulovou hypotézu, že **všechny skupiny mají v populaci stejný průměr**. Dá se chápat jako srovnání dvou vnořených modelů, které znáte z deváté lekce (oddíl [-@sec-regrese-prirustek]): modelu, který všem předjetím předpovídá stejnou hodnotu, a modelu, který každému typu vozidla dovolí vlastní průměr. Zápis `~ 1` označuje model, který obsahuje pouze konstantu:
+
+```{r}
+#| label: l11-f-test
+model_nulovy <- lm(sqrt(vzdalenost_predjeti) ~ 1, data = cykliste)
+anova(model_nulovy, model_vozidlo)
+```
+
+Sloupec `RSS` je **reziduální součet čtverců**: součet druhých mocnin reziduí, tedy variabilita, kterou model nevysvětlil. Model s jedinou konstantou ponechává nevysvětleno 53,68, model s typem vozidla 52,44. Rozdíl 1,25 (`Sum of Sq`) je variabilita **mezi skupinami**, kterou typ vozidla vysvětluje; za tuto úsporu „platíme“ šesti odhadnutými koeficienty navíc (`Df` = 6). Statistika *F* porovnává vysvětlenou variabilitu připadající na jeden koeficient s nevysvětlenou variabilitou připadající na jeden reziduální stupeň volnosti. Je-li nulová hypotéza pravdivá, pohybuje se *F* kolem 1; čím je větší, tím hůře jsou data slučitelná se shodnými průměry.
+
+## Jednofaktorová ANOVA: typ vozidla {#sec-anova-jednofaktorova}
+
+### Tabulka analýzy rozptylu {#sec-anova-vozidlo-test}
+
+Stejný test dostaneme pohodlněji, když funkci `anova()` předáme jen model s faktorem. Výstupu se říká tabulka analýzy rozptylu:
+
+```{r}
+#| label: l11-anova-vozidlo
+anova(model_vozidlo)
+```
+
+Řádek `vozidlo` popisuje variabilitu mezi typy vozidel, řádek `Residuals` variabilitu uvnitř skupin. `Df` jsou stupně volnosti: 6 pro faktor (7 úrovní − 1) a 2348 reziduálních (2355 předjetí − 7 odhadnutých průměrů). `Sum Sq` jsou součty čtverců a `Mean Sq` **průměrné čtverce**, tedy součty čtverců vydělené stupni volnosti. Statistika *F* je podíl obou průměrných čtverců: 0,2076 / 0,0223 = 9,30.
+
+**Interpretace.** Typy vozidel se v průměrné vzdálenosti předjetí liší, *F*(6, 2348) = 9,30, *p* \< 0,001: takto velké rozdíly mezi průměry by při shodných populačních průměrech byly velmi nepravděpodobné. Statistická významnost ale sama neříká, jak velké rozdíly jsou. Při 2355 pozorováních vyjde statisticky významně i rozdíl, který je prakticky nepodstatný, proto se vždy ptáme také na velikost účinku.
+
+### Velikost účinku: η^2^ a ω^2^ {#sec-anova-velikost-ucinku}
+
+Nejznámější mírou velikosti účinku v analýze rozptylu je **η^2^** (éta kvadrát): podíl součtu čtverců faktoru na celkovém součtu čtverců, tedy podíl variability závislé proměnné, který faktor vysvětluje. V jednofaktorovém modelu je totožný s *R*^2^ (oddíl [-@sec-regrese-r2-princip]). Z tabulky jej lze spočítat ručně: 1,245 / (1,245 + 52,435) = 0,023.
+
+η^2^ popisuje vzorek a populační hodnotu systematicky **nadhodnocuje**: i kdyby se skupiny v populaci vůbec nelišily, průměry ve vzorku se díky náhodě trochu liší a η^2^ vyjde kladné. Míra **ω^2^** (omega kvadrát) toto zkreslení koriguje tím, že od součtu čtverců faktoru odečte část, kterou lze očekávat jen díky náhodě. Je proto o něco nižší a jako odhad populační velikosti účinku vhodnější ([Lakens, 2013](https://doi.org/10.3389/fpsyg.2013.00863)). Obě míry počítá balíček effectsize:
+
+```{r}
+#| label: l11-eta-vozidlo
+effectsize::eta_squared(model_vozidlo, alternative = "two.sided") |>
+  as_tibble()
+
+effectsize::omega_squared(model_vozidlo, alternative = "two.sided") |>
+  as_tibble()
+```
+
+Argument `alternative = "two.sided"` vyžádá běžný oboustranný interval spolehlivosti, stejně jako u semiparciálního *R*^2^ v deváté lekci (oddíl [-@sec-regrese-sr2]); `as_tibble()` zobrazí výsledek jako tabulku s více desetinnými místy. Obě funkce přitom v konzoli vypíšou zprávu, že v jednofaktorovém modelu je parciální míra totožná s neparciální; rozdíl mezi nimi vysvětlíme u faktoriálního modelu (oddíl [-@sec-anova-velikosti]).
+
+Typ vozidla vysvětluje 2,3 % variability odmocniny vzdálenosti předjetí (η^2^ = 0,023, 95% CI \[0,011; 0,034\]); korigovaný odhad je ω^2^ = 0,021. U takto velkého vzorku se obě míry téměř neliší, protože náhodná složka je vůči celku zanedbatelná; rozdíl mezi nimi roste u malých vzorků a u faktorů s mnoha úrovněmi. Efekt je **statisticky významný, ale malý**: 97,7 % variability vzdálenosti předjetí s typem vozidla nesouvisí. To neznamená, že je bezvýznamný. Podíl vysvětlené variability je nízký hlavně proto, že většinu předjetí tvoří osobní auta, která se mezi sebou velmi liší; o tom, jak velké jsou rozdíly mezi typy vozidel, vypovídají lépe průměry v metrech.
+
+### Průměry typů vozidel v metrech {#sec-anova-vozidlo-prumery}
+
+Průměry jednotlivých skupin z modelu spočítá funkce `emmeans()`. Prvním argumentem je model, druhým jednostranná rovnice s vlnovkou, která říká, pro úrovně kterého faktoru průměry chceme. Argument `type = "response"` převede výsledky z odmocninové škály zpět na škálu závislé proměnné, tedy na metry:
+
+```{r}
+#| label: l11-emm-vozidlo
+emm_vozidlo <- emmeans(model_vozidlo, ~ vozidlo, type = "response")
+emm_vozidlo
+```
+
+Sloupec `response` je odhadnutý průměr v metrech, `SE` jeho směrodatná chyba a `lower.CL` a `upper.CL` meze 95% intervalu spolehlivosti. Poznámka pod tabulkou potvrzuje, že intervaly byly převedeny zpět z odmocninové škály. Meze intervalu vznikly tak, že se interval nejprve spočítal na odmocninové škále a potom se obě meze umocnily na druhou, proto není kolem odhadu přesně souměrný.
+
+Nejtěsněji míjejí cyklistu autobusy (1,30 m, 95% CI \[1,20; 1,40\]) a nákladní vozidla (1,37 m), následují taxíky (1,41 m) a dodávky (1,49 m). Osobní auta (1,55 m) a SUV (1,54 m) se neliší a největší odstup nechávají motocykly (1,67 m). Rozdíl mezi autobusy a osobními auty činí asi 25 cm, což je při typickém odstupu kolem 1,5 m věcně podstatné. Odhady vzácných typů vozidel jsou ale nepřesné: interval autobusů je široký 20 cm, interval osobních aut jen 4 cm, protože osobních aut je téměř čtyřicetkrát více.
+
+### Welchova ANOVA {#sec-anova-welch}
+
+Klasický *F*-test předpokládá, že všechny skupiny mají v populaci stejný rozptyl. Ze sedmé lekce víte, že při různých rozptylech a zároveň různě velkých skupinách může být Studentův *t*-test nepřesný, a proto jsme jako výchozí používali Welchův test (oddíl [-@sec-testy-ttest]). Totéž platí pro více než dvě skupiny. Naše skupiny jsou extrémně nestejně velké (34 až 1708), takže na shodě rozptylů záleží. Welchovu obdobu jednofaktorové analýzy rozptylu počítá funkce `oneway.test()` ze základního R, která shodu rozptylů ve výchozím nastavení nepředpokládá:
+
+```{r}
+#| label: l11-welch
+oneway.test(sqrt(vzdalenost_predjeti) ~ vozidlo, data = cykliste)
+```
+
+Welchův test dává *F*(6; 175,8) = 9,58, *p* \< 0,001. Stupně volnosti ve jmenovateli (`denom df`) nejsou celé číslo a jsou mnohem menší než 2348: test je upravuje podle toho, jak se liší rozptyly a velikosti skupin, a opírá se hlavně o malé skupiny. Závěr se nemění, statistika *F* je téměř stejná jako u klasického testu (9,30). Směrodatné odchylky odmocniny se totiž mezi typy vozidel liší jen málo, od 0,14 u autobusů a motocyklů po 0,17 u taxíků. Kdyby se oba testy rozcházely, byl by při takto nevyrovnaných skupinách důvěryhodnější Welchův.
+
+### Co celkový *F*-test neříká {#sec-anova-omnibus}
+
+Celkový *F*-test říká pouze, že data nejsou dobře slučitelná s tím, že by všech sedm typů vozidel mělo stejný průměr. Neříká, **které** typy se liší. Na to odpovídají navazující srovnání a ta lze vést dvěma způsoby:
+
+-   **Post hoc testy** porovnají všechny dvojice skupin. U sedmi skupin je to 21 dvojic; při tolika testech roste pravděpodobnost, že některý vyjde statisticky významně jen náhodou, a *p*-hodnoty je proto třeba upravit. Úprava snižuje sílu každého jednotlivého srovnání.
+-   **Plánované kontrasty** testují několik málo srovnání, která plynou z hypotéz formulovaných předem, například „profesionální řidiči oproti ostatním“. Testů je méně, takže každý má větší sílu. Jeden takový kontrast si vyzkoušíte ve cvičení 4.
+
+Oba postupy vycházejí z odhadnutých průměrů, které už máme v objektu `emm_vozidlo`.
+
+### Cvičení 3: Souvisí vzdálenost předjetí s barvou vozidla? {.exercise}
+
+Odhadněte jednofaktorový model, ve kterém je odmocnina vzdálenosti předjetí vysvětlena barvou vozidla (`barva`). Zobrazte tabulku analýzy rozptylu, η^2^ a průměry jednotlivých barev v metrech. Kolik pozorování do modelu vstoupilo a proč? Liší se vzdálenost předjetí podle barvy?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l11-reseni-barva
+model_barva <- lm(sqrt(vzdalenost_predjeti) ~ barva, data = cykliste)
+
+nobs(model_barva)
+anova(model_barva)
+effectsize::eta_squared(model_barva, alternative = "two.sided") |>
+  as_tibble()
+emmeans(model_barva, ~ barva, type = "response")
+```
+
+Funkce `nobs()` vrací počet pozorování, ze kterých byl model odhadnut: 2341, nikoli 2355. U 14 předjetí barva chybí a `lm()` řádky s chybějící hodnotou kterékoli proměnné modelu vynechá bez upozornění. Proto je dobré `nobs()` kontrolovat vždy, když model obsahuje proměnnou s chybějícími hodnotami.
+
+Rozdíly mezi barvami jsou malé a data jsou s nulovou hypotézou shodných průměrů dobře slučitelná, *F*(6, 2334) = 1,82, *p* = 0,090, η^2^ = 0,005. Průměry jednotlivých barev leží mezi 1,48 m (bílá) a 1,55 m (černá) a jejich intervaly spolehlivosti se z velké části překrývají. Nevýznamný výsledek ale nedokazuje, že barva nehraje žádnou roli; říká jen, že případný rozdíl je malý a v těchto datech jej nelze odlišit od náhody. Nižší průměr bílých vozidel navíc nemusí souviset s barvou samotnou: více než polovinu bílých vozidel v datech tvoří dodávky, které míjejí cyklistu těsněji než osobní auta. Ověřit to můžete pomocí `count(barva, vozidlo)`.
+:::
+
+### Cvičení 4: Profesionální řidiči oproti ostatním {.exercise}
+
+Otestujte plánovaný kontrast: liší se průměrná vzdálenost předjetí u vozidel, která obvykle řídí profesionální řidiči (dodávka, autobus, nákladní vozidlo, taxi), od ostatních vozidel (osobní auto, SUV/pick-up, motocykl)? Kontrast zadáte funkcí `contrast()` z emmeans jako pojmenovaný vektor **vah** v pořadí úrovní faktoru. Čtyři profesionální typy dostanou váhu 1/4, tři ostatní váhu −1/3; ověřte, že součet vah je nula. Aby byl výsledek v metrech, použijte před `contrast()` funkci `regrid()`, která průměry převede na metry ještě před výpočtem rozdílu. Argument `infer = TRUE` přidá interval spolehlivosti.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l11-reseni-kontrast
+levels(cykliste$vozidlo)
+
+vahy <- c(-1/3, 1/4, -1/3, 1/4, 1/4, 1/4, -1/3)
+sum(vahy)
+
+emm_vozidlo |>
+  regrid() |>
+  contrast(method = list("profesionální − ostatní" = vahy), infer = TRUE)
+```
+
+`levels()` ukáže pořadí úrovní, podle kterého váhy zapisujeme: osobní auto (−1/3), dodávka (1/4), SUV/pick-up (−1/3), autobus (1/4), nákladní vozidlo (1/4), taxi (1/4) a motocykl (−1/3). Součet vah je nula (R může vypsat velmi malé číslo blízké nule, protože zlomky ukládá s omezenou přesností). Díky vahám 1/4 a −1/3 je výsledkem rozdíl dvou průměrů: průměru čtyř profesionálních typů a průměru tří ostatních. Každý typ vozidla má v rámci své skupiny stejnou váhu bez ohledu na to, kolik takových vozidel v datech je.
+
+Profesionální řidiči míjeli cyklistu v průměru asi o 20 cm těsněji než ostatní (rozdíl −0,195 m, 95% CI \[−0,26; −0,13\]), *t*(2348) = −6,05, *p* \< 0,001. Rozdíl dvaceti centimetrů je při typickém odstupu kolem 1,5 m věcně podstatný. Jde o jediný předem naplánovaný test, proto *p*-hodnotu neupravujeme. Typ vozidla ale není totéž co profesionalita řidiče: autobusy a nákladní vozidla jsou také širší a delší a jejich řidiči mají při předjíždění méně místa, takže rozdíl nelze přičíst jen tomu, kdo řídí.
+:::
+
+## Faktoriální model: helma, vzdálenost od okraje a typ vozidla {#sec-anova-faktorialni}
+
+### Rovnice modelu s interakcí {#sec-anova-model-helma}
+
+Druhá výzkumná otázka se týká dvou faktorů a toho, zda efekt jednoho závisí na druhém. Model s více faktory se nazývá **faktoriální** a obsahuje dva druhy členů:
+
+-   **Hlavní efekt** faktoru popisuje, jak se liší průměry jeho úrovní, zprůměrované přes úrovně ostatních faktorů.
+-   **Interakce** dvou faktorů popisuje, nakolik se efekt jednoho faktoru mění podle úrovně druhého. Zde se ptáme, zda rozdíl mezi jízdou s helmou a bez ní závisí na vzdálenosti od okraje.
+
+V rovnici modelu znamená hvězdička „oba hlavní efekty a jejich interakce“: `helma * okraj` je zkratkou za `helma + okraj + helma:okraj`, kde dvojtečka označuje samotnou interakci. Typ vozidla přidáme znaménkem plus, tedy jen jako hlavní efekt. Slouží jako **kontrolní proměnná**: víme už, že různé typy vozidel míjejí cyklistu různě těsně, a chceme, aby srovnání helmy a vzdálenosti od okraje nebylo ovlivněno tím, jaká vozidla zrovna jela kolem.
+
+```{r}
+#| label: l11-model-helma
+model_helma <- lm(sqrt(vzdalenost_predjeti) ~ helma * okraj + vozidlo,
+                  data = cykliste)
+
+glance(model_helma) |>
+  select(r.squared, adj.r.squared, sigma, df, df.residual, nobs)
+```
+
+Model má 16 koeficientů: konstantu, 1 pro helmu, 4 pro vzdálenost od okraje, 6 pro typ vozidla a 4 pro interakci (sloupec `df` = 15 uvádí počet koeficientů bez konstanty). Reziduálních stupňů volnosti je 2355 − 16 = 2339. Celý model vysvětluje 8,5 % variability odmocniny vzdálenosti předjetí (*R*^2^ = 0,085). Jednotlivé koeficienty zde nevypisujeme: vztahují se k referenční kombinaci (jízda bez helmy 0,25 m od okraje, osobní auto), jsou na odmocninové škále a u modelu s interakcí se z nich průměry skládají pracně. Výsledky modelu proto přečteme ve dvou krocích: nejprve *F*-testy jednotlivých členů, potom odhadnuté průměry.
+
+### Proč nestačí `anova()`: na pořadí členů záleží {#sec-anova-sekvencni}
+
+U jednofaktorového modelu jsme tabulku analýzy rozptylu získali funkcí `anova()`. Zkusme totéž u faktoriálního modelu, a to dvakrát: jednou s helmou na prvním místě rovnice, podruhé se vzdáleností od okraje na prvním místě. Oba zápisy popisují tentýž model.
+
+```{r}
+#| label: l11-sekvencni
+anova(model_helma)
+
+model_jine_poradi <- lm(sqrt(vzdalenost_predjeti) ~ okraj * helma + vozidlo,
+                        data = cykliste)
+anova(model_jine_poradi)
+```
+
+Řádky reziduí a interakce jsou v obou tabulkách stejné, ale test helmy se liší: *F* = 49,0, když je helma v rovnici první, a *F* = 30,7, když je druhá. Funkce `anova()` totiž počítá **sekvenční** testy: každý člen testuje jen s ohledem na členy, které jsou v rovnici **před ním**. Helma na prvním místě tak „dostane připsánu“ i tu část variability, kterou sdílí se vzdáleností od okraje.
+
+Ve vyváženém designu by na pořadí nezáleželo, protože by faktory spolu nesouvisely. Náš design vyvážený není (oddíl [-@sec-anova-vyvazenost]): bez helmy jel cyklista častěji těsně u okraje, kde jsou odstupy největší. Potřebujeme proto testy, které každý člen posuzují s ohledem na **všechny ostatní** členy modelu a na pořadí nezávisejí.
+
+### Testy efektů: `joint_tests()` {#sec-anova-joint-tests}
+
+Takové testy počítá funkce `joint_tests()` z balíčku emmeans:
+
+```{r}
+#| label: l11-joint-tests
+testy <- joint_tests(model_helma)
+testy
+```
+
+Každý řádek je test jednoho členu modelu: `df1` jsou stupně volnosti členu, `df2` reziduální stupně volnosti, `F.ratio` statistika *F* a `p.value` její *p*-hodnota. Test hlavního efektu zde porovnává průměry úrovní faktoru **zprůměrované přes úrovně ostatních faktorů se stejnou vahou**, tedy odhadnuté marginální průměry, které si zobrazíme v dalším oddílu. Tomuto způsobu testování se říká součty čtverců **typu III** a jako výchozí jej používají programy JASP a SPSS; sekvenční testy z `anova()` se označují jako typ I.
+
+**Interpretace.**
+
+-   **Interakce** helmy a vzdálenosti od okraje je statisticky významná, *F*(4, 2339) = 6,24, *p* \< 0,001. Rozdíl mezi jízdou s helmou a bez ní tedy není ve všech vzdálenostech od okraje stejný, jak naznačovaly už popisné průměry.
+-   **Hlavní efekt helmy**, *F*(1, 2339) = 20,30, *p* \< 0,001, říká, že v průměru přes všech pět vzdáleností od okraje se jízda s helmou a bez ní liší. Hodnota *F* je nižší než v obou sekvenčních tabulkách.
+-   **Hlavní efekt vzdálenosti od okraje**, *F*(4, 2339) = 18,89, *p* \< 0,001, říká totéž o pěti vzdálenostech v průměru přes obě úrovně helmy.
+-   **Typ vozidla** se uplatňuje i po zohlednění helmy a vzdálenosti od okraje, *F*(6, 2339) = 8,22, *p* \< 0,001.
+
+Je-li interakce významná, je třeba číst hlavní efekty opatrně. Hlavní efekt helmy je průměrem z pěti rozdílů, které se od sebe liší; může tak zakrýt, že rozdíl je někde velký a jinde žádný. Hlavní otázka proto zní, jak velký je efekt helmy **při jednotlivých vzdálenostech od okraje**. Odpovíme na ni v oddílu [-@sec-anova-podminene].
+
+### Velikosti účinku ve faktoriálním modelu {#sec-anova-velikosti}
+
+Ve faktoriálním modelu se používají dvě varianty η^2^ a ω^2^, které se liší tím, s čím se součet čtverců efektu porovnává:
+
+-   **η^2^** (neparciální) je podíl součtu čtverců efektu na **celkovém** součtu čtverců. Odpovídá na otázku, jakou část veškeré variability závislé proměnné efekt vysvětluje, a čte se tedy stejně jako *R*^2^.
+-   **Parciální η^2^** vztahuje součet čtverců efektu jen k součtu efektu a reziduí. Z porovnání vynechává variabilitu, kterou vysvětlují ostatní členy modelu, a je proto vždy stejné nebo větší než neparciální η^2^. Parciální variantu uvádí například SPSS; v programu JASP lze zvolit obě.
+
+Obdobně existuje ω^2^ a parciální ω^2^ jako méně zkreslené protějšky. Neparciální míry jsou intuitivnější, protože mají u všech efektů stejný jmenovatel a lze je mezi sebou přímo porovnávat. Parciální míry se hodí k porovnání téhož efektu mezi studiemi, které do modelu zařadily různé další faktory. Ve zprávě vždy uveďte, kterou variantu reportujete.
+
+Parciální míry spočítáme z testů funkcemi `F_to_eta2()` a `F_to_omega2()` z balíčku effectsize, kterým stačí statistika *F* a oboje stupně volnosti. Neparciální míry spočítáme ručně ze součtů čtverců. Součet čtverců efektu získáme z testu: *F* je podíl průměrného čtverce efektu a reziduálního průměrného čtverce, takže součet čtverců efektu je *F* × stupně volnosti efektu × reziduální průměrný čtverec. Reziduální průměrný čtverec je druhá mocnina reziduální směrodatné odchylky, kterou vrací funkce `sigma()`.
+
+```{r}
+#| label: l11-velikosti
+ms_rezidualni <- sigma(model_helma)^2
+
+odmocnina <- sqrt(cykliste$vzdalenost_predjeti)
+ss_celkem <- sum((odmocnina - mean(odmocnina))^2)
+
+velikosti <- testy |>
+  as_tibble() |>
+  rename(clen = `model term`) |>
+  mutate(
+    SS = F.ratio * df1 * ms_rezidualni,
+    eta2 = SS / ss_celkem,
+    omega2 = (SS - df1 * ms_rezidualni) / (ss_celkem + ms_rezidualni),
+    eta2_p = effectsize::F_to_eta2(F.ratio, df1, df2)$Eta2_partial,
+    omega2_p = effectsize::F_to_omega2(F.ratio, df1, df2)$Omega2_partial
+  ) |>
+  select(clen, SS, eta2, omega2, eta2_p, omega2_p)
+
+velikosti
+```
+
+Sloupec `model term` má v názvu mezeru, proto jej při přejmenování píšeme ve zpětných apostrofech. `ss_celkem` je celkový součet čtverců: součet druhých mocnin odchylek odmocniny vzdálenosti od jejího průměru.
+
+Vzdálenost od okraje vysvětluje 3,0 % celkové variability (η^2^ = 0,030), typ vozidla 1,9 %, interakce 1,0 % a hlavní efekt helmy 0,8 %. Hodnoty ω^2^ jsou o něco nižší (0,028; 0,017; 0,008 a 0,008): korekce je nejvíce znát u členů s více stupni volnosti, tedy u typu vozidla a interakce. Parciální míry jsou jen nepatrně vyšší než neparciální (například 0,031 oproti 0,030 u vzdálenosti od okraje), protože žádný člen nevysvětluje velkou část variability, kterou by bylo možné ze jmenovatele odečíst.
+
+Všimněte si, že se neparciální η^2^ **nesčítají** na *R*^2^ modelu: jejich součet je 0,067, kdežto *R*^2^ = 0,085. V nevyváženém designu se faktory o část vysvětlené variability dělí a testy typu III tuto sdílenou část nepřipíšou žádnému z nich.
+
+Všechny efekty jsou podle obvyklých měřítek malé. Vzdálenost, ve které řidič cyklistu mine, závisí na mnoha okolnostech, které model neobsahuje: na šířce silnice, protijedoucích vozidlech, rychlosti i na řidiči samém. Autor studie k tomu poznamenává, že i faktory vysvětlující malou část variability stojí za pozornost, protože k předjetí cyklisty dochází denně v milionech případů ([Walker, 2007](https://doi.org/10.1016/j.aap.2006.08.010)). O praktickém významu proto lépe než podíly variability vypovídají rozdíly v centimetrech.
+
+### Cvičení 5: Interakce jako srovnání dvou modelů {.exercise}
+
+Odhadněte model bez interakce, `sqrt(vzdalenost_predjeti) ~ helma + okraj + vozidlo`, a porovnejte jej funkcí `anova()` s modelem `model_helma`. Jak výsledek souvisí s testem interakce z `joint_tests()`? O kolik se přidáním interakce zvýšilo *R*^2^?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l11-reseni-bez-interakce
+model_bez_interakce <- lm(sqrt(vzdalenost_predjeti) ~ helma + okraj + vozidlo,
+                          data = cykliste)
+
+anova(model_bez_interakce, model_helma)
+
+glance(model_bez_interakce)$r.squared
+glance(model_helma)$r.squared
+```
+
+Srovnání vnořených modelů dává *F*(4, 2339) = 6,24, *p* \< 0,001, tedy přesně stejný výsledek jako řádek `helma:okraj` v `joint_tests()`. Test interakce totiž není nic jiného než otázka, zda model s interakcí popisuje data lépe než model bez ní. Interakce přidává čtyři koeficienty a zvyšuje *R*^2^ z 0,075 na 0,085, tedy o jeden procentní bod, což odpovídá jejímu η^2^ = 0,010. U interakce jako posledního členu modelu se sekvenční test, test typu III i srovnání modelů shodují; u hlavních efektů to v nevyváženém designu neplatí.
+:::
+
+## Odhadnuté marginální průměry {#sec-anova-emm}
+
+### Průměry buněk z modelu {#sec-anova-emm-bunky}
+
+**Odhadnuté marginální průměry** (*estimated marginal means*, EMM) jsou průměry, které pro jednotlivé skupiny předpovídá model. Zápis `~ helma | okraj` čteme „průměry úrovní helmy zvlášť pro každou úroveň vzdálenosti od okraje“; svislá čára odděluje faktor, který nás zajímá, od faktoru, podle kterého výsledky dělíme.
+
+```{r}
+#| label: l11-emm-bunky
+emm_bunky <- emmeans(model_helma, ~ helma | okraj, type = "response")
+emm_bunky
+```
+
+Výstup má pět částí, jednu pro každou vzdálenost od okraje, a v každé dva odhadnuté průměry v metrech s intervaly spolehlivosti. Pod tabulkou jsou dvě důležité poznámky. První, *Results are averaged over the levels of: vozidlo*, říká, že průměry jsou **zprůměrované přes typy vozidel**. Druhá potvrzuje zpětný převod z odmocninové škály.
+
+Bez helmy klesá odhadnutá vzdálenost předjetí z 1,65 m při jízdě 0,25 m od okraje na 1,36 m při jízdě 1,25 m od okraje. S helmou klesá jen z 1,47 m na 1,38 m. Při vzdálenostech 1,00 a 1,25 m jsou odhady pro obě podmínky téměř shodné a jejich intervaly se téměř úplně překrývají.
+
+### Proč se liší od surových průměrů {#sec-anova-emm-surove}
+
+Odhadnuté průměry jsou asi o 7 cm nižší než průměry v tabulce `prumery` z oddílu [-@sec-anova-prumery]: například bez helmy u okraje 1,65 m oproti 1,73 m. Rozdíl má dvě příčiny.
+
+Hlavní příčinou je průměrování přes typ vozidla. Surový průměr buňky je průměrem předjetí, která v ní skutečně nastala, a 72,5 % z nich připadá na osobní auta. Odhadnutý marginální průměr naopak nejprve spočítá předpověď modelu pro každý ze sedmi typů vozidel a ty potom zprůměruje se **stejnou vahou**. Autobusy a nákladní vozidla, která míjejí cyklistu těsněji, tak mají v odhadnutém průměru mnohem větší váhu než v datech, a průměr je proto asi o 5 cm nižší. Menší částí rozdílu, asi 2 cm, přispívá zpětný převod z odmocninové škály (oddíl [-@sec-anova-odmocnina]).
+
+Která čísla jsou „správná“? Odpovídají na různé otázky. Surové průměry popisují data tak, jak byla nasbírána. Odhadnuté marginální průměry popisují, co model předpovídá pro každou buňku při **stejné skladbě vozidel**, a jsou proto vhodné ke srovnání buněk mezi sebou: rozdíl mezi nimi není ovlivněn tím, že v jedné buňce náhodou projelo více autobusů. Právě tyto průměry porovnávají testy z `joint_tests()`. Rozdíly mezi buňkami, o které nám jde, vycházejí u obou druhů průměrů velmi podobně. Kdybyste chtěli vážit typy vozidel podle jejich zastoupení v datech, nabízí `emmeans()` argument `weights = "proportional"`.
+
+### Graf odhadnutých průměrů {#sec-anova-emm-graf}
+
+Interakci nejlépe ukáže graf. Výstup `emmeans()` převedeme na tibble a nakreslíme body s intervaly spolehlivosti spojené čarami; `position_dodge()` obě řady mírně odsune od sebe, aby se intervaly nepřekrývaly.
+
+```{r}
+#| label: fig-anova-emm
+#| fig-cap: "Odhadnuté marginální průměry vzdálenosti předjetí podle helmy a vzdálenosti cyklisty od okraje silnice, zprůměrované přes typy vozidel. Úsečky jsou 95% intervaly spolehlivosti."
+#| fig-alt: "Čárový graf se dvěma řadami bodů s intervaly. Řada bez helmy klesá strmě z 1,65 m při 0,25 m od okraje na 1,36 m při 1,25 m. Řada s helmou začíná níže, na 1,47 m, a klesá jen mírně na 1,38 m. U vzdáleností 1,00 a 1,25 m se obě řady setkávají a jejich intervaly se překrývají."
+emm_bunky |>
+  as_tibble() |>
+  ggplot(aes(x = okraj, y = response, color = helma, shape = helma, group = helma)) +
+  geom_line(position = position_dodge(width = 0.2)) +
+  geom_pointrange(aes(ymin = lower.CL, ymax = upper.CL),
+                  position = position_dodge(width = 0.2)) +
+  labs(x = "Vzdálenost cyklisty od okraje silnice (m)",
+       y = "Odhadnutá vzdálenost předjetí (m)",
+       color = NULL, shape = NULL)
+```
+
+Kdyby interakce nebyla, byly by obě čáry rovnoběžné: helma by vzdálenost předjetí měnila o stejnou hodnotu bez ohledu na to, kde cyklista jede. Čáry se ale sbíhají. U okraje je odstup bez helmy o téměř 20 cm větší než s helmou, při vzdálenosti 1 m a více se obě podmínky neliší. Graf ukazuje také druhý hlavní výsledek: čím dál od okraje cyklista jede, tím těsněji jej řidiči míjejí, a to hlavně při jízdě bez helmy. Rada „jeď dál od okraje, řidiči tě objedou větším obloukem“ se tedy v těchto datech nepotvrzuje.
+
+Osa *y* nezačíná v nule, takže graf rozdíly opticky zvětšuje. Celý rozsah osy je asi 40 cm, zatímco jednotlivá předjetí se liší o metry (@fig-anova-raincloud).
+
+## Podmíněné efekty helmy {#sec-anova-podminene}
+
+### Rozdíl s helmou a bez helmy při každé vzdálenosti od okraje {#sec-anova-efekt-helmy}
+
+**Podmíněný efekt** (*simple effect*) je efekt jednoho faktoru při pevně zvolené úrovni druhého faktoru. Zde nás zajímá rozdíl mezi jízdou s helmou a bez helmy zvlášť pro každou z pěti vzdáleností od okraje. Vyjdeme z objektu `emm_bunky` a použijeme tři funkce:
+
+-   `regrid()` převede odhadnuté průměry na metry, aby byly v metrech i jejich rozdíly. Bez tohoto kroku by emmeans počítal rozdíly na odmocninové škále a upozornil by na to poznámkou.
+-   `pairs()` spočítá rozdíly dvojic průměrů uvnitř každé skupiny určené svislou čarou, tedy rozdíl mezi helmou a jízdou bez helmy při každé vzdálenosti od okraje. S `reverse = TRUE` odečítá v pořadí „s helmou − bez helmy“, takže záporná hodnota znamená těsnější předjetí s helmou.
+-   `summary()` s argumentem `infer = TRUE` zobrazí intervaly spolehlivosti i testy.
+
+```{r}
+#| label: l11-efekty-helmy
+efekty_helmy <- emm_bunky |>
+  regrid() |>
+  pairs(reverse = TRUE)
+
+summary(efekty_helmy, by = NULL, adjust = "holm", infer = TRUE)
+```
+
+### Korekce pro pět testů {#sec-anova-holm}
+
+Provádíme pět testů najednou. Kdyby helma neměla žádný efekt, vyšel by každý z nich statisticky významně s pravděpodobností 5 %; pravděpodobnost, že vyjde významně **alespoň jeden z pěti**, je ale podstatně vyšší. Proto *p*-hodnoty upravujeme. Argument `adjust = "holm"` použije **Holmovu korekci**: nejmenší *p*-hodnotu vynásobí počtem testů (pěti), druhou nejmenší čtyřmi a tak dále. Chrání před falešně pozitivními výsledky stejně spolehlivě jako známější Bonferroniho korekce, která násobí všechny *p*-hodnoty pěti, ale má větší sílu.
+
+Argument `by = NULL` je zde nezbytný. Bez něj by emmeans považoval každou vzdálenost od okraje za samostatnou skupinu testů; v každé takové skupině je jediný test, takže by se neupravovalo nic. S `by = NULL` tvoří všech pět testů jednu rodinu, což potvrzuje poznámka *P value adjustment: holm method for 5 tests*. Intervaly spolehlivosti upravuje emmeans Bonferroniho metodou (poznámka *Conf-level adjustment*), protože Holmova korekce je definována jen pro *p*-hodnoty; intervaly jsou proto o něco širší, než by odpovídalo samotným testům.
+
+### Interpretace {#sec-anova-efekty-interpretace}
+
+Sloupec `estimate` je rozdíl v metrech:
+
+-   Při jízdě **0,25 m od okraje** míjeli řidiči cyklistu s helmou o 18 cm těsněji než bez helmy (95% CI \[−0,25; −0,10\] m), *p* \< 0,001.
+-   Při **0,50 m** činí rozdíl 12 cm (95% CI \[−0,19; −0,04\] m), *p* \< 0,001.
+-   Při **0,75 m** je odhad rozdílu 8 cm, ale interval sahá od −0,18 do 0,02 m a po korekci je *p* = 0,12. S daty je slučitelný jak zřetelný efekt helmy, tak žádný.
+-   Při **1,00 m a 1,25 m** jsou rozdíly prakticky nulové (0,7 cm a 1,6 cm opačným směrem) a jejich intervaly sahají přibližně od −8 do +11 cm.
+
+Výsledky odpovídají očekávání: efekt helmy se projevuje při jízdě blízko okraje a se vzdáleností od okraje slábne. Při jízdě u okraje nejde o zanedbatelný rozdíl: 18 cm je více než desetina typického odstupu.
+
+Tři poznámky k interpretaci:
+
+**Hlavní efekt by nestačil.** Hlavní efekt helmy shrnuje všech pět rozdílů jedním číslem. Zprůměrovaný rozdíl asi 7 cm by nevystihl ani jízdu u okraje, kde je rozdíl dvaapůlkrát větší, ani jízdu dál od okraje, kde není žádný.
+
+**Nevýznamný rozdíl není důkaz shody.** U vzdáleností 1,00 a 1,25 m netvrdíme, že helma efekt nemá, ale že případný efekt je malý: intervaly vylučují rozdíly větší než asi 10 cm oběma směry. U vzdálenosti 0,75 m je závěr nejistý a nelze ji řadit ani k jedné skupině.
+
+**Proč ne všechny dvojice.** Post hoc testy interakce by porovnaly všech 10 buněk mezi sebou, tedy 45 dvojic. Většina z nich nás nezajímá (například jízda s helmou u okraje oproti jízdě bez helmy 1,25 m od okraje) a korekce pro 45 testů by citelně snížila sílu těch pěti, o které nám jde. Podmíněné efekty jsou odpovědí na předem položenou otázku, proto je testů jen pět.
+
+### Cvičení 6: Efekt vzdálenosti od okraje s helmou a bez helmy {.exercise}
+
+Podívejte se na interakci z druhé strany: jak moc se liší vzdálenost předjetí mezi jízdou nejdál od okraje (1,25 m) a nejblíž okraji (0,25 m), zvlášť pro jízdu bez helmy a s helmou? Spočítejte odhadnuté průměry se zápisem `~ okraj | helma`, převeďte je na metry a kontrast zadejte váhami podobně jako ve cvičení 4. Protože jde o dva testy, použijte Holmovu korekci.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l11-reseni-okraj
+emm_okraj <- emmeans(model_helma, ~ okraj | helma, type = "response")
+
+efekty_okraje <- emm_okraj |>
+  regrid() |>
+  contrast(method = list("1,25 − 0,25" = c(-1, 0, 0, 0, 1)))
+
+summary(efekty_okraje, by = NULL, adjust = "holm", infer = TRUE)
+```
+
+Váhy `c(-1, 0, 0, 0, 1)` odečtou průměr první úrovně (0,25) od průměru páté (1,25); prostřední tři úrovně mají váhu nula a do kontrastu nevstupují.
+
+Bez helmy míjeli řidiči cyklistu jedoucího 1,25 m od okraje o 28 cm těsněji než cyklistu jedoucího u okraje (95% CI \[−0,36; −0,21\] m), *p* \< 0,001. S helmou byl tento rozdíl jen 9 cm (95% CI \[−0,17; −0,01\] m), *p* = 0,008. Vzdálenost od okraje tedy souvisí s odstupem v obou podmínkách, ale bez helmy asi třikrát silněji. Je to tatáž interakce jako v oddílu [-@sec-anova-efekty-interpretace], jen popsaná z pohledu druhého faktoru: interakci lze vždy číst oběma směry a volba závisí na výzkumné otázce.
+:::
+
+## Předpoklady a diagnostika {#sec-anova-predpoklady}
+
+Analýza rozptylu je lineární model, takže pro ni platí stejné předpoklady jako pro regresi (oddíl [-@sec-regrese-predpoklady]): nezávislost pozorování, shoda rozptylů (homoskedasticita), přibližná normalita reziduí a žádná nadměrně vlivná pozorování. Linearitu zde posuzovat nemusíme, protože všechny prediktory jsou kategoriální a model každé skupině odhaduje vlastní průměr. Posoudíme je stejnými diagnostickými grafy jako v deváté lekci.
+
+### Rezidua a predikované hodnoty {#sec-anova-rvf}
+
+```{r}
+#| label: fig-anova-rvf
+#| fig-cap: "Rezidua proti predikovaným hodnotám modelu `model_helma` (*Residuals vs Fitted*) na odmocninové škále."
+#| fig-alt: "Bodový graf, ve kterém body tvoří svislé sloupce nad predikovanými hodnotami od 1,09 do 1,35. Sloupce mají podobnou výšku, většinou mezi −0,4 a 0,4, červená křivka leží na nule. Nejvíce vybočují body 1059 nahoře a 988 dole."
+plot(model_helma, which = 1)
+```
+
+Princip grafu znáte z oddílu [-@sec-regrese-rvf]. Protože model obsahuje jen kategoriální prediktory, nabývají predikované hodnoty jen tolika různých hodnot, kolik je kombinací úrovní faktorů, a body proto tvoří **svislé sloupce**. Shodu rozptylů posoudíme podle toho, zda jsou sloupce podobně vysoké. To zde platí: většina reziduí leží mezi −0,4 a 0,4 bez ohledu na predikovanou hodnotu, jen sloupce vlevo jsou řidší, protože patří vzácným typům vozidel. Červená křivka leží na nule: model odhaduje průměry skupin, takže systematický trend reziduí u něj neočekáváme. Graf označuje čísla řádků; protože jsou data seřazená podle `id` a žádný řádek jsme nevyřadili, shodují se s `id` předjetí.
+
+### Normalita reziduí {#sec-anova-qq}
+
+```{r}
+#| label: fig-anova-qq
+#| fig-cap: "Q-Q graf standardizovaných reziduí modelu `model_helma`."
+#| fig-alt: "Q-Q graf, ve kterém body leží na přímce v rozsahu teoretických kvantilů přibližně od −2,5 do 2,5. Na pravém konci se body odchylují nad přímku až k hodnotě 5, na levém konci leží jeden bod, označený 988, pod přímkou u hodnoty −4,7."
+plot(model_helma, which = 2)
+```
+
+Naprostá většina bodů leží na přímce. Odchylky jsou jen na koncích: několik předjetí bylo výrazně vzdálenějších a několik výrazně těsnějších, než by odpovídalo normálnímu rozdělení. Rozdělení reziduí má tedy o něco těžší chvosty, zejména pravý. Shapirův–Wilkův test tuto odchylku označí za statisticky významnou:
+
+```{r}
+#| label: l11-shapiro
+shapiro.test(residuals(model_helma))
+```
+
+Statistika *W* = 0,993 je velmi blízko jedné, tedy hodnotě pro dokonale normální data, a přesto je *p* \< 0,001. Je to dobrá ukázka toho, co bylo řečeno v oddílu [-@sec-testy-shapiro]: při tisících pozorování odhalí test i odchylku, která je prakticky bezvýznamná. Při takto velkém vzorku jsou navíc testy průměrů vůči mírné nenormalitě reziduí odolné. Odmocninová transformace zde splnila svůj účel; jak by diagnostika vypadala bez ní, zjistíte ve cvičení 7.
+
+### Shoda rozptylů {#sec-anova-rozptyly}
+
+Shodu rozptylů mezi deseti buňkami designu posoudíme Levenovým testem (oddíl [-@sec-testy-levene]) a poměrem největšího a nejmenšího rozptylu. Funkce `levene_test()` z rstatix potřebuje závislou proměnnou jako sloupec, proto odmocninu výjimečně uložíme do pomocné tabulky:
+
+```{r}
+#| label: l11-levene
+cykliste_odm <- cykliste |>
+  mutate(odmocnina = sqrt(vzdalenost_predjeti))
+
+cykliste_odm |>
+  rstatix::levene_test(odmocnina ~ helma * okraj)
+
+cykliste_odm |>
+  summarise(SD = sd(odmocnina), .by = c(helma, okraj)) |>
+  summarise(
+    nejmensi_SD = min(SD),
+    nejvetsi_SD = max(SD),
+    pomer_rozptylu = (max(SD) / min(SD))^2
+  )
+```
+
+Levenův test nenaznačuje rozdíly v rozptylech, *F*(9, 2345) = 1,33, *p* = 0,22. Směrodatné odchylky odmocniny se mezi buňkami pohybují od 0,13 do 0,16 a největší rozptyl je 1,4krát větší než nejmenší. Takový poměr je nízký; obavy obvykle vzbuzují až poměry kolem tří a více, zvlášť při nestejně velkých skupinách. Předpoklad shody rozptylů je tedy přiměřený.
+
+### Odlehlá pozorování {#sec-anova-odlehle}
+
+Funkce `augment()` připojí k datům rezidua a diagnostické míry (oddíl [-@sec-regrese-qq]). Vypíšeme předjetí, jejichž standardizované reziduum je v absolutní hodnotě větší než 3:
+
+```{r}
+#| label: l11-odlehle
+diagnostika <- augment(model_helma, data = cykliste)
+
+diagnostika |>
+  filter(abs(.std.resid) > 3) |>
+  select(id, vozidlo, helma, okraj, vzdalenost_predjeti, .std.resid, .cooksd) |>
+  arrange(.std.resid)
+```
+
+Takových předjetí je 17, tedy 0,7 % dat; u normálního rozdělení bychom jich čekali asi 6. Šest z nich jsou neobvykle těsná předjetí (0,39 až 0,70 m), jedenáct neobvykle vzdálená (2,88 až 3,79 m). Všechny hodnoty jsou věcně možné a pro otázku bezpečnosti jsou těsná předjetí dokonce tím nejdůležitějším, co data obsahují. Nevyřazujeme je. Žádné z nich navíc nemá na odhady velký vliv: největší Cookova vzdálenost (oddíl [-@sec-regrese-vlivne]) je 0,017, hluboko pod hodnotami, které by naznačovaly, že výsledky stojí na jednom pozorování. Při 2355 předjetích nemůže jediné pozorování průměry buněk znatelně posunout.
+
+### Cvičení 7: Model bez transformace {.exercise}
+
+Odhadněte stejný faktoriální model se vzdáleností předjetí v metrech, bez odmocniny. Porovnejte Q-Q graf jeho reziduí s grafem @fig-anova-qq a spočítejte šikmost reziduí obou modelů. Potom spočítejte podmíněné efekty helmy (zde už nepotřebujete `type = "response"` ani `regrid()`). Změnily by se závěry analýzy?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: fig-anova-reseni-qq-metry
+#| fig-cap: "Q-Q graf standardizovaných reziduí modelu se vzdáleností předjetí v metrech."
+#| fig-alt: "Q-Q graf, ve kterém se body na pravém konci odchylují nad přímku výrazněji než u modelu s odmocninou, nejvyšší bod dosahuje hodnoty přes 6; levý konec leží mírně nad přímkou."
+model_metry <- lm(vzdalenost_predjeti ~ helma * okraj + vozidlo, data = cykliste)
+
+plot(model_metry, which = 2)
+```
+
+```{r}
+#| label: l11-reseni-metry
+psych::skew(residuals(model_metry))
+psych::skew(residuals(model_helma))
+
+joint_tests(model_metry)
+
+emmeans(model_metry, ~ helma | okraj) |>
+  pairs(reverse = TRUE) |>
+  summary(by = NULL, adjust = "holm", infer = TRUE)
+```
+
+Rezidua modelu v metrech jsou zřetelně zešikmená doprava (šikmost 0,73 oproti 0,22 u modelu s odmocninou). V Q-Q grafu se pravý konec odchyluje nad přímku dříve a výše, největší standardizované reziduum přesahuje 6. Transformace tedy rozdělení reziduí normálnímu skutečně přiblížila.
+
+Závěry se přitom nemění. Testy efektů jsou téměř stejné (interakce *F*(4, 2339) = 6,52 oproti 6,24) a podmíněné efekty helmy vycházejí −0,19 m, −0,12 m, −0,08 m, 0,01 m a 0,01 m, tedy nejvýše o centimetr jinak než u modelu s odmocninou. Také zde je po korekci nejistý efekt při 0,75 m (*p* = 0,11).
+
+Že oba modely vedou ke stejným závěrům, je dobrá zpráva: výsledky nestojí na jednom analytickém rozhodnutí. Při tak velkém vzorku jsou testy průměrů vůči zešikmení reziduí odolné, takže transformace zde nebyla nutná k tomu, aby testy platily. Přesto má smysl ji ponechat: je věcně zdůvodněná a model s ní lépe popisuje data. Takové ověření jiným rozumným postupem se nazývá analýza citlivosti (oddíl [-@sec-regrese-citlivost]).
+:::
+
+## Nezávislost pozorování {#sec-anova-nezavislost}
+
+### Proč je zde nezávislost v ohrožení {#sec-anova-bloky}
+
+Předpoklad nezávislosti říká, že rezidua různých pozorování spolu nesouvisejí. V deváté lekci jsme jej posoudili podle plánu výzkumu a Durbinův–Watsonův test jsme nepoužili, protože pořadí řádků nemělo věcný význam. Zde je situace jiná: předjetí následovala **po sobě v čase** a řádky jsou seřazené podle `id`, tedy v pořadí, v jakém jsou události evidovány. Že pořadí odpovídá průběhu jízd, ukáže počet souvislých úseků se stejnou helmou a stejnou vzdáleností od okraje. Funkce `consecutive_id()` přidělí nové číslo pokaždé, když se oproti předchozímu řádku změní hodnota některé z uvedených proměnných:
+
+```{r}
+#| label: l11-bloky
+cykliste |>
+  mutate(usek = consecutive_id(helma, okraj)) |>
+  count(usek) |>
+  summarise(pocet_useku = n(), median_delky = median(n), nejdelsi = max(n))
+```
+
+Data tvoří 47 souvislých úseků o typické délce 41 předjetí, což odpovídá popisu sběru dat: cyklista jel nějakou dobu ve stejných podmínkách a potom je změnil. Předjetí v jednom úseku ale nesdílejí jen helmu a vzdálenost od okraje. Proběhla na stejné ulici, při podobné hustotě provozu a ve stejnou denní dobu. Na úzké ulici s hustým provozem budou všechna předjetí těsnější, na široké a prázdné silnici vzdálenější. Tyto okolnosti model neobsahuje, takže se projeví v reziduích: rezidua předjetí, která následovala těsně po sobě, si budou podobná. Takové závislosti se říká **autokorelace**.
+
+### Durbinův–Watsonův test {#sec-anova-dw}
+
+**Durbinův–Watsonův test** ([Durbin & Watson, 1950](https://doi.org/10.1093/biomet/37.3-4.409)) ověřuje nulovou hypotézu, že reziduum každého pozorování nesouvisí s reziduem pozorování, které mu bezprostředně předcházelo. Jeho statistika se pohybuje od 0 do 4 a přibližně platí *DW* ≈ 2 × (1 − *r*), kde *r* je korelace sousedních reziduí. Hodnota kolem 2 znamená, že sousední rezidua spolu nesouvisejí; hodnoty pod 2 ukazují na kladnou autokorelaci (sousední rezidua jsou si podobná), hodnoty nad 2 na zápornou.
+
+Test má smysl jen tehdy, když jsou řádky seřazené v pořadí, ve kterém pozorování vznikla. Funkce `durbinWatsonTest()` z balíčku car počítá *p*-hodnotu simulací, proto před ní nastavíme seed:
+
+```{r}
+#| label: l11-dw
+set.seed(123)
+car::durbinWatsonTest(model_helma)
+```
+
+Sloupec `Autocorrelation` je korelace sousedních reziduí, *r* = 0,20, a `D-W Statistic` hodnota testu, *DW* = 1,60. Uvedená *p*-hodnota 0 znamená, že žádná z tisíce simulací nedala tak extrémní výsledek, tedy *p* \< 0,001. Rezidua po sobě jdoucích předjetí jsou si tedy podobná: bylo-li jedno předjetí vzdálenější, než model předpovídá, bývá takové i následující. Autokorelace 0,20 je slabá až střední, ale u dat tohoto druhu není překvapivá.
+
+Vztah sousedních reziduí si můžeme zobrazit. Funkce `lag()` z dplyr vrací hodnotu z předchozího řádku; první řádek žádného předchůdce nemá, proto jej před kreslením vynecháme.
+
+```{r}
+#| label: fig-anova-lag
+#| fig-cap: "Reziduum každého předjetí proti reziduu předjetí, které mu bezprostředně předcházelo. Přímka je regresní přímka s 95% pásem spolehlivosti."
+#| fig-alt: "Bodový graf se širokým, téměř kruhovým mrakem bodů kolem nuly. Mírně stoupající modrá přímka ukazuje slabý kladný vztah mezi reziduem předchozího a aktuálního předjetí."
+#| fig-width: 6
+diagnostika |>
+  mutate(predchozi_reziduum = lag(.resid)) |>
+  filter(!is.na(predchozi_reziduum)) |>
+  ggplot(aes(x = predchozi_reziduum, y = .resid)) +
+  geom_point(alpha = 0.2, size = 0.8) +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  labs(x = "Reziduum předchozího předjetí", y = "Reziduum")
+```
+
+Mrak bodů je široký, ale přímka zřetelně stoupá. Vztah je slabý, jak odpovídá korelaci 0,20, ale týká se celého souboru, ne jen několika pozorování.
+
+**Co z toho plyne.** Autokorelace nezkresluje samotné odhady průměrů a jejich rozdílů. Ovlivňuje ale jejich **nejistotu**. Model počítá směrodatné chyby tak, jako by každé předjetí přinášelo zcela novou informaci. Předjetí v jednom úseku jízdy si však jsou podobná, a data proto obsahují méně nezávislé informace, než odpovídá 2355 pozorováním. Směrodatné chyby jsou tudíž **podhodnocené**, intervaly spolehlivosti příliš úzké a *p*-hodnoty příliš nízké. Výsledky, které jsou statisticky významné jen těsně, je proto třeba brát s rezervou; to se týká především efektu helmy při vzdálenosti 0,75 m, který byl nejistý už bez tohoto ohledu.
+
+### Nepovinně: směrodatné chyby odolné vůči autokorelaci {#sec-anova-nw}
+
+V deváté lekci jsme při heteroskedasticitě použili robustní směrodatné chyby typu HC3, které nepředpokládají shodu rozptylů (oddíl [-@sec-regrese-beta-hc]). Podobný nástroj existuje i pro autokorelaci: **Neweyho–Westův odhad** ([Newey & West, 1987](https://doi.org/10.2307/1913610)) počítá směrodatné chyby tak, aby zůstaly platné při heteroskedasticitě i při autokorelaci reziduí. Takovým odhadům se říká HAC (*heteroskedasticity and autocorrelation consistent*). Odhady koeficientů a průměrů se nemění, mění se jen jejich nejistota.
+
+Funkce `NeweyWest()` z balíčku sandwich ([Zeileis, 2004](https://doi.org/10.18637/jss.v011.i10)) vrátí kovarianční matici koeficientů, tedy tabulku, ze které se směrodatné chyby počítají. Funkcím balíčku emmeans ji předáme argumentem `vcov.` (s tečkou na konci):
+
+```{r}
+#| label: l11-newey-west
+vcov_nw <- sandwich::NeweyWest(model_helma)
+
+emmeans(model_helma, ~ helma | okraj, type = "response", vcov. = vcov_nw) |>
+  regrid() |>
+  pairs(reverse = TRUE) |>
+  summary(by = NULL, adjust = "holm", infer = TRUE)
+
+joint_tests(model_helma, vcov. = vcov_nw)
+```
+
+Odhady rozdílů jsou stejné jako v oddílu [-@sec-anova-efekt-helmy], ale směrodatné chyby vzrostly: například u okraje z 0,029 na 0,039 m, tedy asi o třetinu. Intervaly jsou proto širší a *p*-hodnoty vyšší. Závěry se přesto nemění:
+
+-   Efekt helmy při jízdě 0,25 m od okraje zůstává zřetelný (−0,18 m, 95% CI \[−0,28; −0,08\], *p* \< 0,001).
+-   Při 0,50 m zůstává statisticky významný (−0,12 m, 95% CI \[−0,22; −0,01\], *p* = 0,015), ale interval nyní sahá téměř k nule.
+-   Při 0,75 m je efekt nadále nejistý (*p* = 0,16) a při 1,00 a 1,25 m prakticky nulový.
+-   Interakce zůstává statisticky významná, *F*(4, 2339) = 4,12, *p* = 0,003.
+
+Hlavní závěr tedy obstál i při opatrnějším odhadu nejistoty, jen je méně jednoznačný, než naznačovala původní analýza. To je užitečnější zjištění než samotný výsledek Durbinova–Watsonova testu: víme nejen to, že předpoklad není splněn, ale i to, nakolik jeho porušení mění závěry. Důkladnějším řešením by byl model, který podobnost předjetí ze stejného úseku jízdy popisuje přímo (smíšený neboli víceúrovňový model); ten přesahuje rozsah tohoto kurzu.
+
+### Cvičení 8: Co když řádky zamícháme? {.exercise}
+
+Durbinův–Watsonův test závisí na pořadí řádků. Vyzkoušejte to: funkcí `slice_sample(prop = 1)` vytvořte tabulku se stejnými řádky v náhodném pořadí (před ní nastavte `set.seed(123)`), odhadněte na ní stejný faktoriální model a proveďte test znovu. Jak se změnila autokorelace a proč? Změnily by se zamícháním dat odhady modelu?
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+```{r}
+#| label: l11-reseni-zamichane
+set.seed(123)
+cykliste_zamichana <- cykliste |>
+  slice_sample(prop = 1)
+
+model_zamichany <- lm(sqrt(vzdalenost_predjeti) ~ helma * okraj + vozidlo,
+                      data = cykliste_zamichana)
+
+car::durbinWatsonTest(model_zamichany)
+
+all.equal(coef(model_zamichany), coef(model_helma))
+```
+
+`slice_sample(prop = 1)` náhodně vybere 100 % řádků, tedy všechny, jen v jiném pořadí. Po zamíchání je korelace sousedních reziduí téměř nulová (*r* = −0,02), statistika *DW* = 2,05 leží blízko dvou a test autokorelaci neukazuje. Sousedí teď spolu řádky, které k sobě v čase nepatřily, takže jejich rezidua spolu nesouvisejí.
+
+Model přitom zůstal stejný: `all.equal()` potvrzuje, že koeficienty obou modelů jsou totožné. Odhady modelu na pořadí řádků nezávisejí, a nezávisejí na něm ani směrodatné chyby, které model spočítal. Zamícháním jsme tedy závislost mezi pozorováními neodstranili, jen jsme znemožnili testu ji najít. Plyne z toho praktické poučení: Durbinův–Watsonův test vypovídá o datech pouze tehdy, když jsou řádky v pořadí, ve kterém pozorování vznikla. U dat seřazených jinak, například abecedně nebo podle skupiny, jeho výsledek nic neznamená.
+:::
+
+## Zápis výsledků a závěr {#sec-anova-zaver}
+
+Ve zprávě uvádíme postup, počet pozorování, testy efektů s velikostí účinku a především rozdíly v jednotkách závislé proměnné s nejistotou. Vzorový zápis v češtině podle stylu APA:
+
+> **Analýza.** Analyzovali jsme 2355 předjetí; žádné nebylo vyřazeno a v použitých proměnných nechyběly žádné hodnoty. Vzdálenost předjetí jsme kvůli pravostrannému zešikmení transformovali odmocninou; odhadnuté průměry a jejich rozdíly uvádíme po zpětném převodu v metrech. Rozdíly mezi typy vozidel jsme testovali jednofaktorovou analýzou rozptylu a kvůli velmi nestejně velkým skupinám také její Welchovou verzí. Vliv helmy a vzdálenosti od okraje jsme testovali faktoriální analýzou rozptylu s jejich interakcí a s typem vozidla jako kontrolní proměnnou; design byl nevyvážený, proto uvádíme testy typu III. Efekt helmy při jednotlivých vzdálenostech od okraje jsme odhadli jako rozdíly odhadnutých marginálních průměrů s Holmovou korekcí pro pět testů. Jako velikost účinku uvádíme neparciální η^2^.
+>
+> **Výsledky.** Vzdálenost předjetí se lišila podle typu vozidla, *F*(6, 2348) = 9,30, *p* \< 0,001, η^2^ = 0,023; Welchův test vedl ke stejnému závěru, *F*(6; 175,8) = 9,58, *p* \< 0,001. Nejtěsněji míjely cyklistu autobusy (*M* = 1,30 m, 95% CI \[1,20; 1,40\]) a nákladní vozidla (*M* = 1,37 m), nejvzdáleněji motocykly (*M* = 1,67 m) a osobní auta (*M* = 1,55 m). Ve faktoriálním modelu (*R*^2^ = 0,085) byly statisticky významné hlavní efekty helmy, *F*(1, 2339) = 20,30, *p* \< 0,001, η^2^ = 0,008, a vzdálenosti od okraje, *F*(4, 2339) = 18,89, *p* \< 0,001, η^2^ = 0,030, i jejich interakce, *F*(4, 2339) = 6,24, *p* \< 0,001, η^2^ = 0,010. S helmou míjeli řidiči cyklistu těsněji při jízdě 0,25 m od okraje (rozdíl −0,18 m, 95% CI \[−0,25; −0,10\], *p* \< 0,001) a 0,50 m od okraje (−0,12 m, 95% CI \[−0,19; −0,04\], *p* \< 0,001). Při 0,75 m byl rozdíl nejistý (−0,08 m, 95% CI \[−0,18; 0,02\], *p* = 0,12) a při 1,00 m a 1,25 m prakticky nulový (0,01 m a 0,02 m). Rezidua vykazovala kladnou autokorelaci (*r* = 0,20, Durbinův–Watsonův test *DW* = 1,60, *p* \< 0,001); se směrodatnými chybami podle Neweyho a Westa zůstala interakce i efekty helmy při 0,25 m a 0,50 m statisticky významné.
+
+**Závěr** odpovídá na výzkumné otázky, uvádí velikost rozdílů a omezení:
+
+> Vzdálenost, ve které řidiči míjeli cyklistu, souvisela s typem vozidla: autobusy a nákladní vozidla jej míjely asi o 18 až 25 cm těsněji než osobní auta. Řidiči míjeli cyklistu těsněji také tehdy, když jel dál od okraje silnice, a když měl helmu; efekt helmy ale závisel na tom, kde cyklista jel. U okraje silnice byl odstup s helmou asi o 18 cm menší, při jízdě metr a více od okraje se jízda s helmou a bez ní nelišila. Všechny zkoumané faktory dohromady vysvětlily jen asi 8 % variability vzdálenosti předjetí, která tedy závisí hlavně na okolnostech, jež analýza nezachycuje. Závěry omezuje několik skutečností: podmínky nebyly jednotlivým předjetím přidělovány náhodně a střídaly se po úsecích jízdy, takže se mohly lišit i ulicí či hustotou provozu; všechna data pocházejí od jediného cyklisty, který znal hypotézy studie; a po sobě jdoucí předjetí nebyla nezávislá, takže nejistota odhadů je větší, než udává základní analýza. Data byla navíc pro výuku upravena a výsledky nelze považovat za zjištění o chování řidičů.
+
+Závěr neopakuje celý výstup. Uvádí směr a velikost rozdílů v centimetrech, odlišuje spolehlivé výsledky od nejistých a jmenuje omezení plynoucí z dat i z plánu výzkumu. Výklad výsledků původní studie je ostatně předmětem odborné diskuse: pozdější reanalýza dospěla k závěru, že nošení helmy s těsným předjetím nesouvisí ([Olivier & Walter, 2013](https://doi.org/10.1371/journal.pone.0075424)), a autor studie na ni odpověděl s opačným závěrem ([Walker & Robinson, 2019](https://doi.org/10.1016/j.aap.2018.11.015)). Je to připomínka, že závěry závisejí i na analytických rozhodnutích, například na tom, zda se vzdálenost analyzuje jako spojitá proměnná, nebo se dělí na „těsná“ a „bezpečná“ předjetí.
+
+## Závěrečná úloha: jen osobní auta {#sec-anova-samostatne .exercise}
+
+V nové relaci R načtěte `data/clean/cykliste.rds` a ověřte, zda závěry o helmě a vzdálenosti od okraje platí i tehdy, když analýzu omezíte na **osobní auta**. Vyberte předjetí osobními auty, zkontrolujte počty pozorování v buňkách helma × okraj a odhadněte faktoriální model s odmocninou vzdálenosti předjetí, helmou, vzdáleností od okraje a jejich interakcí (typ vozidla už do modelu nepatří). Zobrazte testy efektů, odhadnuté marginální průměry v metrech a podmíněné efekty helmy s Holmovou korekcí. Proveďte také Durbinův–Watsonův test. Shodují se výsledky s analýzou všech vozidel? Odpověď shrňte několika větami.
+
+::: {.callout-note collapse="true" title="Ukázat řešení"}
+Následující řešení načítá balíčky i data samo a nepotřebuje objekty z předchozích oddílů.
+
+```{r}
+#| label: l11-reseni-samostatne
+library(tidyverse)
+library(emmeans)
+
+auta <- read_rds("data/clean/cykliste.rds") |>
+  filter(vozidlo == "osobní auto")
+
+auta |>
+  count(helma, okraj) |>
+  pivot_wider(names_from = okraj, values_from = n)
+
+model_auta <- lm(sqrt(vzdalenost_predjeti) ~ helma * okraj, data = auta)
+
+joint_tests(model_auta)
+
+emm_auta <- emmeans(model_auta, ~ helma | okraj, type = "response")
+emm_auta
+
+emm_auta |>
+  regrid() |>
+  pairs(reverse = TRUE) |>
+  summary(by = NULL, adjust = "holm", infer = TRUE)
+
+set.seed(123)
+car::durbinWatsonTest(model_auta)
+```
+
+Po výběru zůstává 1708 předjetí. Buňky mají 108 až 332 pozorování, design je tedy opět nevyvážený, ale všechny buňky jsou dostatečně velké. Protože model obsahuje jen helmu a vzdálenost od okraje, odhadnuté marginální průměry se už přes žádnou další proměnnou neprůměrují a od surových průměrů se liší jen vlivem odmocninové transformace.
+
+Výsledky se s analýzou všech vozidel shodují. Interakce helmy a vzdálenosti od okraje je statisticky významná, *F*(4, 1698) = 4,18, *p* = 0,002, stejně jako oba hlavní efekty. Podmíněné efekty helmy mají stejný vzorec: s helmou míjela osobní auta cyklistu těsněji o 16 cm při jízdě 0,25 m od okraje (95% CI \[−0,25; −0,08\] m, *p* \< 0,001), o 12 cm při 0,50 m (*p* = 0,007) a o 12 cm při 0,75 m (95% CI \[−0,24; −0,002\] m, *p* = 0,027), kdežto při 1,00 a 1,25 m se podmínky neliší (rozdíly 0,02 m a 0,01 m). Oproti hlavní analýze je efekt při 0,75 m o něco větší a po korekci těsně statisticky významný, jeho interval ale sahá až k nule, takže závěr o této vzdálenosti zůstává nejistý. Odhadnuté průměry jsou vyšší než v hlavní analýze (například 1,71 m oproti 1,65 m bez helmy u okraje), protože se už neprůměrují přes vozidla, která míjejí cyklistu těsněji.
+
+Durbinův–Watsonův test ukazuje kladnou autokorelaci i zde (*r* = 0,15, *DW* = 1,69, *p* \< 0,001). Je o něco slabší než v plných datech, možná proto, že po vyřazení ostatních vozidel už řádky, které spolu sousedí v tabulce, nenásledovaly vždy těsně po sobě. Závislost po sobě jdoucích předjetí ale trvá a směrodatné chyby jsou i v této analýze podhodnocené.
+
+Závěr: Efekt helmy při jízdě blízko okraje a jeho vymizení dál od okraje nejsou důsledkem skladby vozidel ani toho, jak model zachází s typem vozidla. Objevují se i u osobních aut samotných, která tvoří téměř tři čtvrtiny dat. Analýza na podskupině má menší sílu, a proto širší intervaly, ale vede ke stejným závěrům jako hlavní analýza.
+:::
+
+## Rozhodnutí a jejich důvody {#sec-anova-rozhodnuti}
+
+::: {.table-responsive tabindex="0" role="region" aria-label="Rozhodnutí v analýze rozptylu a jejich důvody"}
+| Rozhodnutí | Důvod |
+|:-----------------------------------|:-----------------------------------|
+| Vzdálenost od okraje jsme analyzovali jako faktor, ne jako číslo. | Má jen pět hodnot a nechceme předem předpokládat, že vzdálenost předjetí s ní klesá rovnoměrně. |
+| Vzdálenost předjetí jsme transformovali odmocninou. | Proměnná má dolní mez v nule a je pravostranně zešikmená; rozdíly u malých vzdáleností jsou pro bezpečnost důležitější než stejně velké rozdíly u velkých. |
+| Transformaci jsme zapsali do rovnice modelu, ne do nového sloupce. | Model si transformaci pamatuje a emmeans umí výsledky převést zpět na metry. |
+| Výsledky uvádíme v metrech po zpětném převodu. | Hodnoty na odmocninové škále nelze věcně interpretovat. |
+| U typu vozidla jsme klasický *F*-test doplnili Welchovým. | Skupiny jsou velmi nestejně velké, takže případná neshoda rozptylů by klasický test zkreslila. |
+| Typ vozidla je ve faktoriálním modelu jen jako hlavní efekt. | Slouží jako kontrolní proměnná; jeho interakce s helmou a vzdáleností od okraje nejsou předmětem výzkumné otázky. |
+| Efekty jsme testovali funkcí `joint_tests()`, ne `anova()`. | Design je nevyvážený a sekvenční testy z `anova()` závisejí na pořadí členů v rovnici. |
+| Uvádíme η^2^ i ω^2^, neparciální i parciální. | ω^2^ je méně zkreslený odhad; neparciální míry se čtou jako podíl celkové variability, parciální se často uvádějí v literatuře a ve výstupech programů. |
+| Interakci jsme rozložili na podmíněné efekty helmy. | Odpovídají přímo na výzkumnou otázku; hlavní efekt by zprůměroval rozdíly, které se mezi vzdálenostmi liší. |
+| *P*-hodnoty pěti podmíněných efektů jsme upravili Holmovou korekcí. | Při více testech roste pravděpodobnost falešně pozitivního výsledku; Holmova korekce má větší sílu než Bonferroniho. |
+| Odlehlá předjetí jsme nevyřadili. | Hodnoty jsou věcně možné, žádná nemá velký vliv a těsná předjetí jsou pro bezpečnost nejdůležitější. |
+| Nezávislost jsme ověřili Durbinovým–Watsonovým testem. | Předjetí následovala po sobě v čase a řádky jsou v tomto pořadí seřazené. |
+| Závěry jsme ověřili směrodatnými chybami podle Neweyho a Westa. | Autokorelace reziduí vede k podhodnoceným směrodatným chybám; ověření ukazuje, nakolik to mění závěry. |
+:::
+
+## Časté potíže {#sec-anova-potize}
+
+::: {.table-responsive tabindex="0" role="region" aria-label="Časté potíže při analýze rozptylu"}
+| Projev | Co ověřit |
+|:-----------------------------------|:-----------------------------------|
+| Model má pro vzdálenost od okraje jediný koeficient místo čtyř. | Zda je proměnná faktor (`is.factor()`); číselnou proměnnou `lm()` chápe jako spojitý prediktor a odhadne jedinou směrnici. |
+| `filter(okraj == 0.5)` nevrátí žádný řádek. | Úrovně faktoru jsou texty s desetinnou čárkou; pište `okraj == "0,50"`. Přesný zápis ukáže `levels(cykliste$okraj)`. |
+| Průměry z `emmeans()` vycházejí kolem 1,2 místo kolem 1,5. | Chybí `type = "response"`; hodnoty jsou na odmocninové škále. |
+| `emmeans()` neumí převést výsledky zpět na metry. | Zda je transformace zapsaná v rovnici modelu (`sqrt(vzdalenost_predjeti) ~ ...`); z předem vytvořeného sloupce ji emmeans nepozná. |
+| Pod výstupem je poznámka *contrasts are still on the sqrt scale*. | Rozdíly jsou na odmocninové škále; před `pairs()` nebo `contrast()` použijte `regrid()`. |
+| Pod výstupem je poznámka *Results may be misleading due to involvement in interactions*. | Průměrujete přes faktor, který je součástí interakce; podívejte se na průměry buněk a podmíněné efekty. |
+| `adjust = "holm"` *p*-hodnoty nezměnil. | Zda je v `summary()` uvedeno `by = NULL`; jinak se korekce počítá zvlášť v každé skupině určené svislou čarou. |
+| `anova()` dává pro hlavní efekt jinou hodnotu *F* než `joint_tests()`. | V nevyváženém designu jsou testy z `anova()` sekvenční a závisejí na pořadí členů; použijte `joint_tests()`. |
+| Výsledky se liší od programu JASP nebo SPSS. | Typ součtu čtverců (ty programy uvádějí typ III) a to, zda reportují parciální η^2^. |
+| `rename()` hlásí chybu u sloupce `model term`. | Název obsahuje mezeru; pište jej ve zpětných apostrofech. |
+| Váhy kontrastu dávají nesmyslný výsledek. | Pořadí úrovní faktoru (`levels()`) a to, zda je součet vah nula. |
+| Model má méně pozorování, než má tabulka řádků. | Chybějící hodnoty některé proměnné modelu; zkontrolujte `nobs()`. |
+| *P*-hodnota Durbinova–Watsonova testu se při každém spuštění mírně liší. | Počítá se simulací; před testem nastavte `set.seed()`. |
+| Durbinův–Watsonův test neukazuje nic, ačkoli pozorování následovala po sobě. | Zda jsou řádky seřazené v čase; případně je seřaďte pomocí `arrange()`. |
+:::
+
+## Co si odnést {#sec-anova-shrnuti}
+
+Analýza rozptylu je lineární model s kategoriálními prediktory a odhaduje se funkcí `lm()`; faktor do něj vstupuje jako sada indikátorových proměnných a *F*-test je srovnáním modelu s faktorem a modelu bez něj. Před modelováním zkontrolujte počty pozorování v buňkách designu: v nevyváženém designu spolu faktory souvisejí, sekvenční testy z `anova()` závisejí na pořadí členů a je třeba použít testy, které každý člen posuzují s ohledem na všechny ostatní, například `joint_tests()`. Transformaci závislé proměnné opřete o věcný důvod, zapište ji do rovnice modelu a výsledky převádějte zpět na původní jednotky. Statistickou významnost vždy doplňte velikostí účinku: η^2^ a ω^2^ udávají podíl vysvětlené variability (ω^2^ s menším zkreslením), ale o praktickém významu vypovídají hlavně rozdíly průměrů v jednotkách závislé proměnné. Odhadnuté marginální průměry z `emmeans()` jsou předpovědi modelu zprůměrované přes ostatní prediktory, a mohou se proto lišit od surových průměrů. Je-li přítomna interakce, hlavní efekty nestačí: efekt jednoho faktoru popište zvlášť pro úrovně druhého pomocí podmíněných efektů a *p*-hodnoty upravte podle počtu testů. Nevýznamný rozdíl není důkazem shody; o tom, jak velký rozdíl data připouštějí, vypovídá interval spolehlivosti. Předpoklady posuzujte hlavně graficky a u velkých vzorků nepřeceňujte statisticky významné testy předpokladů. U dat seřazených v čase ověřte nezávislost Durbinovým–Watsonovým testem; autokorelace nezkresluje odhady, ale podhodnocuje jejich nejistotu, a její dopad lze ověřit robustními směrodatnými chybami.
+
+## Zdroje a další procvičení {#sec-anova-zdroje}
+
+-   Walker, I. (2007). Drivers overtaking bicyclists: Objective data on the effects of riding position, helmet use, vehicle type and apparent gender. *Accident Analysis & Prevention, 39*(2), 417–425. <https://doi.org/10.1016/j.aap.2006.08.010>
+-   Olivier, J., & Walter, S. R. (2013). Bicycle helmet wearing is not associated with close motor vehicle passing: A re-analysis of Walker, 2007. *PLoS ONE, 8*(9), e75424. <https://doi.org/10.1371/journal.pone.0075424>
+-   Walker, I., & Robinson, D. L. (2019). Bicycle helmet wearing is associated with closer overtaking by drivers: A response to Olivier and Walter, 2013. *Accident Analysis & Prevention, 123*, 107–113. <https://doi.org/10.1016/j.aap.2018.11.015>
+-   Lakens, D. (2013). Calculating and reporting effect sizes to facilitate cumulative science: A practical primer for *t*-tests and ANOVAs. *Frontiers in Psychology, 4*, 863. <https://doi.org/10.3389/fpsyg.2013.00863>
+-   Searle, S. R., Speed, F. M., & Milliken, G. A. (1980). Population marginal means in the linear model: An alternative to least squares means. *The American Statistician, 34*(4), 216–221. <https://doi.org/10.1080/00031305.1980.10483031>
+-   Lenth, R. V. (2016). Least-squares means: The R package lsmeans. *Journal of Statistical Software, 69*(1), 1–33. <https://doi.org/10.18637/jss.v069.i01>. Balíček emmeans je nástupcem balíčku lsmeans.
+-   Allen, M., Poggiali, D., Whitaker, K., Marshall, T. R., van Langen, J., & Kievit, R. A. (2021). Raincloud plots: A multi-platform tool for robust data visualization (verze 2). *Wellcome Open Research, 4*, 63. <https://doi.org/10.12688/wellcomeopenres.15191.2>
+-   Durbin, J., & Watson, G. S. (1950). Testing for serial correlation in least squares regression: I. *Biometrika, 37*(3–4), 409–428. <https://doi.org/10.1093/biomet/37.3-4.409>
+-   Newey, W. K., & West, K. D. (1987). A simple, positive semi-definite, heteroskedasticity and autocorrelation consistent covariance matrix. *Econometrica, 55*(3), 703–708. <https://doi.org/10.2307/1913610>
+-   Zeileis, A. (2004). Econometric computing with HC and HAC covariance matrix estimators. *Journal of Statistical Software, 11*(10), 1–17. <https://doi.org/10.18637/jss.v011.i10>
+-   Fox, J., & Weisberg, S. (2019). *An R Companion to Applied Regression* (3. vydání). Sage. Kniha k balíčku car, mimo jiné o typech součtů čtverců a Durbinově–Watsonově testu: <https://www.john-fox.ca/Companion/>
+-   Dokumentace R: [lm](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/lm.html), [anova.lm](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/anova.lm.html), [oneway.test](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/oneway.test.html) a [p.adjust](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/p.adjust.html) (Holmova a další korekce).
+-   Dokumentace balíčků: emmeans [úvod](https://rvlenth.github.io/emmeans/articles/basics.html), [interakce](https://rvlenth.github.io/emmeans/articles/interactions.html), [transformace](https://rvlenth.github.io/emmeans/articles/transformations.html), [srovnání a kontrasty](https://rvlenth.github.io/emmeans/articles/comparisons.html) a [joint_tests](https://rvlenth.github.io/emmeans/reference/joint_tests.html); effectsize [eta_squared](https://easystats.github.io/effectsize/reference/eta_squared.html) a [F_to_eta2](https://easystats.github.io/effectsize/reference/F_to_eta2.html); car [durbinWatsonTest](https://www.rdocumentation.org/packages/car/topics/durbinWatsonTest); sandwich [NeweyWest](https://sandwich.r-forge.r-project.org/reference/NeweyWest.html); see [geom_violinhalf](https://easystats.github.io/see/reference/geom_violinhalf.html); dplyr [consecutive_id](https://dplyr.tidyverse.org/reference/consecutive_id.html) a [lag](https://dplyr.tidyverse.org/reference/lead-lag.html).
+-   Wickham, H., Çetinkaya-Rundel, M., & Grolemund, G. *R for Data Science* (2. vydání): [Pivoting](https://r4ds.hadley.nz/data-tidy.html#sec-pivoting) a [Facets](https://r4ds.hadley.nz/layers.html#facets). Kniha analýzu rozptylu neprobírá; všechna cvičení této lekce jsou vlastními úlohami.

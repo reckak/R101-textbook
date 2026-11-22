@@ -27,3 +27,7 @@ V [sedmé kapitole](quarto/lekce_07.qmd) projdete malou analýzu od kontroly dat
 [Osmý týden](quarto/lekce_08.qmd) je čtecí: nepřináší novou látku a slouží k opakování před regresí.
 
 V [deváté kapitole](quarto/lekce_09.qmd) vysvětlíte závazek v partnerském vztahu lineárním regresním modelem. Naučíte se číst výstup funkce `lm()`, interpretovat koeficienty v jednotkách proměnných i standardizovaně, posoudit předpoklady modelu z diagnostických grafů, ověřit výsledky bootstrapem a zjistit, jak přesně model předpovídá.
+
+[Desátý týden](quarto/lekce_10.qmd) patří dvěma kurzům na DataCampu o sloučení tabulek a změně struktury dat.
+
+V [jedenácté kapitole](quarto/lekce_11.qmd) porovnáte skupiny analýzou rozptylu na datech o tom, v jaké vzdálenosti řidiči předjíždějí cyklistu. Zdůvodníte transformaci závislé proměnné, odhadnete jednofaktorový a faktoriální model, spočítáte velikosti účinku a pomocí balíčku emmeans popíšete interakci: efekt helmy zvlášť pro různé vzdálenosti cyklisty od okraje silnice. Ověříte také, zda jsou po sobě jdoucí pozorování nezávislá.

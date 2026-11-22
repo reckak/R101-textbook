@@ -28,6 +28,8 @@ book:
     - quarto/lekce_07.qmd
     - quarto/lekce_08.qmd
     - quarto/lekce_09.qmd
+    - quarto/lekce_10.qmd
+    - quarto/lekce_11.qmd
 lang: cs
 language:
   code-copy-button-tooltip: "Zkopírovat"

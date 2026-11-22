@@ -5,5 +5,6 @@ install.packages(c("tidyverse", "palmerpenguins", "ggthemes", "nycflights13",
                    "readxl", "haven", "janitor", "labelled", "psych", "qqplotr",
                    "rstatix", "ggh4x", "fitdistrplus",
                    "broom", "car", "performance", "see", "betaDelta", "betaSandwich", "effectsize",
+                   "emmeans", "sandwich",
                    "knitr", "rmarkdown"))
 
