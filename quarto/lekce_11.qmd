@@ -148,7 +148,7 @@ cykliste |>
   count(helma)
 ```
 
-Téměř tři čtvrtiny předjetí (1708, tj. 72,5 %) připadají na osobní auta. Ostatní typy jsou mnohem vzácnější: autobusů je 46, taxíků 49 a motocyklů jen 34. Skupiny podle typu vozidla jsou tedy **velmi odlišné z hlediska zastoupení**, což budeme muset zohlednit při volbě testu (oddíl [-@sec-anova-welch]). Jízd bez helmy je 1206 a s helmou 1149, tyto dvě podmínky jsou vyrovnané.
+Téměř tři čtvrtiny předjetí (1708, tj. 72,5 %) připadají na osobní auta. Ostatní typy jsou mnohem vzácnější: autobusů je 46, taxíků 49 a motocyklů jen 34. Skupiny podle typu vozidla se tedy **velmi liší velikostí**, což budeme muset zohlednit při volbě testu (oddíl [-@sec-anova-welch]). Jízd bez helmy je 1206 a s helmou 1149, tyto dvě podmínky jsou vyrovnané.
 
 ### Vzdálenost předjetí {#sec-anova-deskriptivy}
 
@@ -421,14 +421,14 @@ Nejtěsněji míjejí cyklistu autobusy (1,30 m, 95% CI \[1,20; 1,40\]) a nákla
 
 ### Welchova ANOVA {#sec-anova-welch}
 
-Klasický *F*-test předpokládá, že všechny skupiny mají v populaci stejný rozptyl. Ze sedmé lekce víte, že při různých rozptylech a zároveň různě velkých skupinách může být Studentův *t*-test nepřesný, a proto jsme jako výchozí používali Welchův test (oddíl [-@sec-testy-ttest]). Totéž platí i v situaci, kdy pracujeme s více než dvěma skupinami. Naše skupiny jsou velmi rozdílné z hlediska velikosti (četnosti se pohybují od 34 až do 1708), takže na shodě rozptylů záleží. Welchovu obdobu jednofaktorové analýzy rozptylu počítá funkce `oneway.test()` ze základního R, která shodu rozptylů ve výchozím nastavení nepředpokládá:
+Klasický *F*-test předpokládá, že všechny skupiny mají v populaci stejný rozptyl. Ze sedmé lekce víte, že při různých rozptylech a zároveň různě velkých skupinách může být Studentův *t*-test nepřesný, a proto jsme jako výchozí používali Welchův test (oddíl [-@sec-testy-ttest]). Totéž platí i v situaci, kdy pracujeme s více než dvěma skupinami. Naše skupiny se velikostí velmi liší (četnosti se pohybují od 34 až do 1708), takže na shodě rozptylů záleží. Welchovu obdobu jednofaktorové analýzy rozptylu počítá funkce `oneway.test()` ze základního R, která shodu rozptylů ve výchozím nastavení nepředpokládá:
 
 ```{r}
 #| label: l11-welch
 oneway.test(sqrt(vzdalenost_predjeti) ~ vozidlo, data = cykliste)
 ```
 
-Welchova ANOVA dává *F*(6; 175,8) = 9,58, *p* \< 0,001. Stupně volnosti ve jmenovateli (`denom df`) nejsou celé číslo a jsou mnohem menší než 2348: test je upravuje podle toho, jak se liší rozptyly a velikosti skupin, a opírá se hlavně o malé skupiny. Závěr se nemění, statistika *F* je téměř stejná jako u klasického testu (9,30). Směrodatné odchylky odmocniny se totiž mezi typy vozidel liší jen málo, od 0,14 u autobusů a motocyklů po 0,17 u taxíků. Kdyby se oba testy rozcházely, byl by při takto nevyrovnaných skupinách důvěryhodnější Welchův.
+Welchova ANOVA dává *F*(6; 175,8) = 9,58, *p* \< 0,001. Stupně volnosti ve jmenovateli (`denom df`) nejsou celé číslo a jsou mnohem menší než 2348: test je upravuje podle toho, jak se liší rozptyly a velikosti skupin, a opírá se hlavně o malé skupiny. Závěr se nemění, statistika *F* je téměř stejná jako u klasického testu (9,30). Směrodatné odchylky odmocniny se totiž mezi typy vozidel liší jen málo, od 0,14 u autobusů a motocyklů po 0,17 u taxíků. Kdyby se oba testy rozcházely, byl by při tak rozdílných velikostech skupin důvěryhodnější Welchův.
 
 ### Co celkový *F*-test neříká {#sec-anova-omnibus}
 
@@ -988,7 +988,7 @@ Závěr: Efekt helmy při jízdě blízko okraje a jeho vymizení dál od okraje
 | Vzdálenost předjetí jsme transformovali odmocninou. | Proměnná má dolní mez v nule a je pravostranně zešikmená; rozdíly u malých vzdáleností jsou pro bezpečnost důležitější než stejně velké rozdíly u velkých. |
 | Transformaci jsme zapsali do rovnice modelu, ne do nového sloupce. | Model si transformaci pamatuje a emmeans umí výsledky převést zpět na metry. |
 | Výsledky uvádíme v metrech po zpětném převodu. | Hodnoty na odmocninové škále nelze věcně interpretovat. |
-| U typu vozidla jsme klasický *F*-test doplnili Welchovým. | Skupiny jsou velmi nestejně velké, takže případná neshoda rozptylů by klasický test zkreslila. |
+| U typu vozidla jsme klasický *F*-test doplnili Welchovým. | Skupiny se velikostí velmi liší, takže případná neshoda rozptylů by klasický test zkreslila. |
 | Typ vozidla je ve faktoriálním modelu jen jako hlavní efekt. | Slouží jako kontrolní proměnná; jeho interakce s helmou a vzdáleností od okraje nejsou předmětem výzkumné otázky. |
 | Efekty jsme testovali funkcí `joint_tests()`, ne `anova()`. | Design je nevyvážený a sekvenční testy z `anova()` závisejí na pořadí členů v rovnici. |
 | Uvádíme η^2^ i ω^2^, neparciální i parciální. | ω^2^ je méně zkreslený odhad; neparciální míry se čtou jako podíl celkové variability, parciální se často uvádějí v literatuře a ve výstupech programů. |

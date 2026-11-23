@@ -71,6 +71,7 @@ Výstup vzniká ve složce `_book/`, úvodní stránka je `_book/index.html`. Pr
 - `screenshots/`: zdrojové snímky RStudia.
 - `tests/`: otázky pro IS MUNI; nejde o automatické softwarové testy.
 - `opakovani/`: samostatný opakovací dokument k testům 1–7 s klíčem a řešeními; není součástí knihy a nepublikuje se (viz níže).
+- `podklady/`: zhuštěné podklady k semináři pro živou ukázku kódu (od lekce 11 v Quarto); nejsou součástí knihy a nepublikují se (viz níže).
 - `quarto/_verification/`: technické kontroly lekce.
 - `quarto/README.md`: autorská dokumentace a záznamy ověření.
 - `docs/provoz.md`: tento provozní návod pro instalaci, kontroly a publikování.
@@ -84,6 +85,16 @@ quarto render opakovani/opakovani_testy_01-07.qmd
 ```
 
 Výsledkem je jediný soubor `opakovani/opakovani_testy_01-07.html`, který má všechno vložené. Lze jej poslat nebo promítnout a do Gitu se neukládá. Shodu s testy (zadání, možnosti, klíč, sbalená řešení) ověří `Rscript --vanilla quarto/_verification/check-opakovani-01-07.R`. Po úpravě testů 1–7 spusťte kontrolu znovu a dokument znovu vykreslete.
+
+### Podklady k semináři
+
+`podklady/podklady_XX.qmd` jsou zhuštěné verze kapitol pro výuku: ke každému kroku odrážky a kód ke zkopírování, výstup R v zeleném boxu „Výstup“ a na konci test k lekci se sbalenými řešeními. Složka je samostatný projekt Quarto s vlastním `podklady/_quarto.yml` a společnými styly z `quarto/lesson.css` a `podklady/podklady.css`. Vykreslete je z kořene repozitáře se stejným UTF-8 locale jako knihu, vždy jeden soubor:
+
+```sh
+quarto render podklady/podklady_11.qmd
+```
+
+Výsledkem je jediný soubor `podklady/podklady_11.html` se vším vloženým. Do Gitu se neukládá stejně jako starší místní podklady `podklady/*.docx`. Kontrola `Rscript --vanilla quarto/_verification/check-podklady-11.R` ověří, že viditelný kód podkladů je shodný s kódem kapitoly 11, že každý blok má box s výstupem, časový rozpočet úvodní tabulky, shodu testu na konci s `tests/test_11.txt` (zadání, možnosti, klíč) a po vykreslení i to, že výstupy jsou zobrazené a řešení testu sbalená. Po změně kódu v `quarto/lekce_11.qmd` nebo testu kontrolu spusťte znovu, podklady upravte a znovu vykreslete.
 
 Novou kapitolu přidejte jako `.qmd` do `quarto/` a zapište ji do `book.chapters` v `_quarto.yml`. Řiďte se [AGENTS.md](../AGENTS.md); původní skripty uchovávejte beze změn. Každá kapitola musí běžet bez objektů vytvořených v jiné kapitole.
 

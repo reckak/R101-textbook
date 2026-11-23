@@ -1,0 +1,23 @@
+/* Step labels: help to find "what we do / new functions / in the output" quickly while teaching. */
+.pk-stitek {
+  display: inline-block;
+  margin-top: .6rem;
+  padding: .05rem .5rem;
+  border-radius: 4px;
+  font: 600 .8rem/1.5 system-ui, sans-serif;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.pk-krok { color: #174650; background: #e3f0f2; }
+.pk-nove { color: #5a3a7a; background: #efe7f6; }
+.pk-vystup { color: #2f5d2a; background: #e6f2e3; }
+/* Bullets directly under a label sit close to it. */
+p:has(> .pk-stitek) { margin-bottom: .25rem; }
+p:has(> .pk-stitek) + ul { margin-top: 0; }
+/* Bullets often quote whole calls as inline code; let them wrap on narrow screens. */
+main :not(pre) > code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* Collapsed output blocks: keep them visually separate from the copyable code above. */
+.callout.callout-style-default { margin-top: .6rem; }
