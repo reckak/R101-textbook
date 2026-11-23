@@ -1,5 +1,24 @@
 # Autorská dokumentace učebnice R101
 
+## Podklady 11: rozbalené výstupy, jazyková revize a test, 23. 11. 2026
+
+Po prohlédnutí první verze uživatel rozhodl:
+
+- **Výstupy** jsou předem rozbalené v pevném zeleném boxu `.callout-tip title="Výstup"`
+  bez sbalování (dříve sbalené „Ukázat výstup“). Odstavec níže o sbalených výstupech tím
+  přestává platit.
+- **Jazyková revize podkladů:** přirozenější formulace na zhruba 25 místech bez změny obsahu
+  a výsledků, například „velmi nestejně velké skupiny“ → „skupiny se velmi liší velikostí“.
+  Na pokyn uživatele byl tentýž obrat opraven i v `quarto/lekce_11.qmd` (ř. 151, 424, 431
+  a tabulka rozhodnutí) a v `tests/test_11.txt` (otázka o Welchově ANOVA: možnost B
+  „při nestejných skupinách“ → „při různě velkých skupinách“ a její zpětná vazba). Klíč testu
+  se nemění; změněný text testu nebyl znovu importován do IS MUNI.
+- **Test k lekci 11** je na konci podkladů ve formátu opakovacího dokumentu k testům 1–7:
+  zadání a možnosti shodné s `tests/test_11.txt`, sbalená řešení přepsaná ze zpětné vazby.
+  Kód s výstupem mají řešení otázek 11.3 (model se sloupcem `odmocnina`, emmeans vrací
+  `emmean` kolem 1,2) a 11.8 (Holmova korekce bez `by = NULL`, *p* = 0,039 při 0,75 m).
+  `check-podklady-11.R` nově ověřuje shodu testu s `test_11.txt` a klíč.
+
 ## Podklady k semináři v Quarto: lekce 11, 23. 11. 2026
 
 Na přání uživatele mají podklady k výuce od lekce 11 novou podobu. Místo místních

@@ -40,11 +40,11 @@
 --
 ::Welchova ANOVA::Skupiny podle typu vozidla mají od 34 do 1708 pozorování. Proč je vhodné klasickou analýzu rozptylu doplnit výsledkem oneway.test(sqrt(vzdalenost_predjeti) ~ vozidlo, data = cykliste)?
  :r1 Funkce oneway.test() je neparametrický test, který nepředpokládá normalitu reziduí.
- :r2 Welchova ANOVA nepředpokládá shodné rozptyly, na nichž při nestejných skupinách záleží.
+ :r2 Welchova ANOVA nepředpokládá shodné rozptyly, na nichž při různě velkých skupinách záleží.
  :r3 Funkce oneway.test() porovná všechny dvojice typů vozidel a upraví jejich p-hodnoty.
  :r4 Klasickou ANOVU nelze použít, pokud skupiny nemají stejný počet pozorování.
 :r1 0 Funkce oneway.test() počítá Welchovu analýzu rozptylu, která porovnává průměry a není neparametrická. Neparametrickou obdobou by byl například Kruskalův–Wallisův test.
-:r2 ok Klasický F-test předpokládá shodné rozptyly ve skupinách. Při velmi nestejně velkých skupinách jej neshoda rozptylů může zkreslit, Welchova verze ji nepředpokládá. Zde dávají oba testy téměř stejné F (9,30 a 9,58).
+:r2 ok Klasický F-test předpokládá shodné rozptyly ve skupinách. Když se skupiny velikostí velmi liší, může jej neshoda rozptylů zkreslit, Welchova verze ji nepředpokládá. Zde dávají oba testy téměř stejné F (9,30 a 9,58).
 :r3 0 Porovnání všech dvojic jsou post hoc testy. Funkce oneway.test() dává jediný souhrnný test, zda se průměry skupin liší.
 :r4 0 Klasická ANOVA nevyžaduje stejně velké skupiny. Nestejné velikosti jsou problémem hlavně ve spojení s nestejnými rozptyly, proto výsledek ověřujeme Welchovým testem.
 --

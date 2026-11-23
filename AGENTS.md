@@ -144,10 +144,16 @@ jen v této tabulce. Pokud uživatel neurčí jinak, má hlavní část trvat 30
 s krátkými odrážkami: co uděláme, k čemu slouží nové funkce, co výstup obsahuje
 a čeho si všimnout. Hodnoty v odrážkách ověř ve vykresleném výstupu.
 - Kód přebírej z kapitoly beze změny do bloku s `eval: false`. Výstup zobraz
-ve sbaleném `.callout-tip collapse="true" title="Ukázat výstup"` blokem s `ref.label`
-a `echo: false`. Cvičení do podkladů nezařazuj, pokud uživatel neurčí jinak.
+v pevném zeleném boxu `.callout-tip title="Výstup"` (bez sbalování) blokem
+s `ref.label` a `echo: false`. Cvičení do podkladů nezařazuj, pokud uživatel
+neurčí jinak.
+- Na konec zařaď oddíl „Test k lekci XX“ s otázkami z `tests/test_XX.txt`
+ve formátu `opakovani/opakovani_testy_01-07.qmd`: zadání a možnosti A–D shodné
+s testem, sbalené „Ukázat řešení“ se správnou odpovědí a vysvětlením ostatních
+možností; kód s výstupem jen tam, kde ukázka něco přidá.
 - Ověř render, kontrolu `quarto/_verification/check-podklady-XX.R` (vzor pro lekci 11)
-a HTML: sbalené výstupy, tlačítka „Zkopírovat“, lightbox a mobilní šířku.
+a HTML: zobrazené výstupy, sbalená řešení testu, tlačítka „Zkopírovat“, lightbox
+a mobilní šířku.
 
 ## Testy pro IS MUNI
 

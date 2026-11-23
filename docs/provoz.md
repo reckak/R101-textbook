@@ -88,13 +88,13 @@ Výsledkem je jediný soubor `opakovani/opakovani_testy_01-07.html`, který má 
 
 ### Podklady k semináři
 
-`podklady/podklady_XX.qmd` jsou zhuštěné verze kapitol pro výuku: ke každému kroku odrážky a kód ke zkopírování, výstup R ve sbaleném bloku „Ukázat výstup“. Složka je samostatný projekt Quarto s vlastním `podklady/_quarto.yml` a společnými styly z `quarto/lesson.css` a `podklady/podklady.css`. Vykreslete je z kořene repozitáře se stejným UTF-8 locale jako knihu, vždy jeden soubor:
+`podklady/podklady_XX.qmd` jsou zhuštěné verze kapitol pro výuku: ke každému kroku odrážky a kód ke zkopírování, výstup R v zeleném boxu „Výstup“ a na konci test k lekci se sbalenými řešeními. Složka je samostatný projekt Quarto s vlastním `podklady/_quarto.yml` a společnými styly z `quarto/lesson.css` a `podklady/podklady.css`. Vykreslete je z kořene repozitáře se stejným UTF-8 locale jako knihu, vždy jeden soubor:
 
 ```sh
 quarto render podklady/podklady_11.qmd
 ```
 
-Výsledkem je jediný soubor `podklady/podklady_11.html` se vším vloženým. Do Gitu se neukládá stejně jako starší místní podklady `podklady/*.docx`. Kontrola `Rscript --vanilla quarto/_verification/check-podklady-11.R` ověří, že viditelný kód podkladů je shodný s kódem kapitoly 11, že každý blok má sbalený výstup, časový rozpočet úvodní tabulky a po vykreslení i sbalení výstupů v HTML. Po změně kódu v `quarto/lekce_11.qmd` kontrolu spusťte znovu, podklady upravte a znovu vykreslete.
+Výsledkem je jediný soubor `podklady/podklady_11.html` se vším vloženým. Do Gitu se neukládá stejně jako starší místní podklady `podklady/*.docx`. Kontrola `Rscript --vanilla quarto/_verification/check-podklady-11.R` ověří, že viditelný kód podkladů je shodný s kódem kapitoly 11, že každý blok má box s výstupem, časový rozpočet úvodní tabulky, shodu testu na konci s `tests/test_11.txt` (zadání, možnosti, klíč) a po vykreslení i to, že výstupy jsou zobrazené a řešení testu sbalená. Po změně kódu v `quarto/lekce_11.qmd` nebo testu kontrolu spusťte znovu, podklady upravte a znovu vykreslete.
 
 Novou kapitolu přidejte jako `.qmd` do `quarto/` a zapište ji do `book.chapters` v `_quarto.yml`. Řiďte se [AGENTS.md](../AGENTS.md); původní skripty uchovávejte beze změn. Každá kapitola musí běžet bez objektů vytvořených v jiné kapitole.
 
