@@ -6,7 +6,11 @@
 # Generated Quarto output and local verification artifacts
 /.quarto/
 /_book/
-/podklady/
+# Teaching handouts: Quarto sources are tracked, rendered output and local Word files are not.
+/podklady/*.docx
+/podklady/*.html
+/podklady/*_files/
+/podklady/.quarto/
 /cheatsheets/
 /output/
 /quarto/*.html

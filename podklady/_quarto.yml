@@ -1,0 +1,46 @@
+# Condensed teaching handouts for live demonstration in the seminar: short bullet
+# comments around the lesson code, R output collapsed under "Ukázat výstup".
+# A standalone project, not part of the book; render one file at a time from the
+# repository root, for example: quarto render podklady/podklady_11.qmd
+project:
+  type: default
+lang: cs
+language:
+  code-copy-button-tooltip: "Zkopírovat"
+  code-copy-button-title: "Zkopírovat"
+  code-copy-button-success: "Zkopírováno"
+format:
+  html:
+    theme: cosmo
+    css:
+      - ../quarto/lesson.css
+      - podklady.css
+    embed-resources: true
+    toc: true
+    toc-location: left
+    toc-title: "Obsah"
+    toc-depth: 3
+    toc-expand: 1
+    number-sections: false
+    code-copy: true
+    code-fold: false
+    code-overflow: scroll
+    fig-width: 7
+    fig-height: 4.6
+    fig-dpi: 120
+    lightbox: auto
+execute:
+  echo: true
+  warning: true
+  message: false
+  error: false
+  cache: false
+knitr:
+  opts_knit:
+    # Run code from the repository root, so paths match the lessons (data/clean/...).
+    root.dir: ".."
+  opts_chunk:
+    # In a standalone project execute.message is not passed on to knitr, so set it here.
+    message: false
+    R.options:
+      width: 100

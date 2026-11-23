@@ -1,5 +1,39 @@
 # Autorská dokumentace učebnice R101
 
+## Podklady k semináři v Quarto: lekce 11, 23. 11. 2026
+
+Na přání uživatele mají podklady k výuce od lekce 11 novou podobu. Místo místních
+`podklady/podklady_01–04.docx` (lektorské plány s časy a odpověďmi, mimo Git) vzniká
+`podklady/podklady_11.qmd`: zhuštěná verze kapitoly 11, kterou vyučující čte během semináře,
+kód kopíruje do R a spouští. Rozhodnutí uživatele: výstupy R jsou ve sbalených blocích
+„Ukázat výstup“, podklady neobsahují cvičení, úvod představí zadání analýzy, data a hlavní
+metodu, celý průchod má trvat 30, nejvýše 40 minut a orientační časy jsou jen v úvodní tabulce.
+
+- **Formát kroku:** štítky „Co uděláme“, „Nové funkce“ (jen u nové funkce nebo argumentu)
+  a „Ve výstupu“, pod nimi krátké odrážky. Viditelný blok kódu má `eval: false`; výstup počítá
+  druhý blok uvnitř sbaleného `callout-tip`, který kód přebírá přes knitr `ref.label`, takže kód
+  není zdvojený. Štítky jsou spany `.pk-stitek` stylované v `podklady/podklady.css`.
+- **Kód:** všech 30 viditelných bloků je beze změny převzato z `quarto/lekce_11.qmd`
+  (kontroluje `check-podklady-11.R`). Hlavní část má 20 bloků s výstupem (rozpočet ≈ 36 min).
+- **Vynecháno z hlavní linie** (oddíl „Pokud zbude čas“, 9 bloků): popisné statistiky celé
+  vzdálenosti, histogramy transformace, *F*-test jako srovnání modelů, průměry typů vozidel
+  v metrech, sekvenční `anova()`, graf reziduí proti predikci, odlehlá pozorování, úseky jízdy
+  a Neweyho–Westovy chyby. **Zcela vynecháno:** všechna cvičení a závěrečná úloha, alternativa
+  načtení dat z URL, ilustrační `sqrt(c(0.2, 0.5, 1.5, 1.8))`, Shapirův–Wilkův test, graf
+  sousedních reziduí, tabulky rozhodnutí a častých potíží.
+- **Odkazy:** data a kapitola se odkazují na publikovanou učebnici
+  (`https://reckak.github.io/R101-textbook/…`, ověřeno HTTP 200 dne 23. 11. 2026).
+- **Výstupy a interpretace:** všechny hodnoty v odrážkách „Ve výstupu“ byly porovnány
+  s výstupy vykresleného `podklady_11.html` (shodují se s kapitolou 11). Místní R 4.5.1 vypisuje
+  u `library()` upozornění „package … was built under R version 4.5.x“ (stejně jako v místně
+  vykreslené knize); nejsou potlačena a odrážka u načtení balíčků vysvětluje, co znamenají.
+- **Ověření:** `quarto render podklady/podklady_11.qmd` (Quarto 1.10.19 z RStudia) bez chyb;
+  `check-podklady-11.R` prošel; Playwright s Chrome ověřil 29 sbalených výstupů (všechny
+  zpočátku skryté, po rozbalení s výstupem nebo grafem), 30 tlačítek „Zkopírovat“ na 30 blocích
+  kódu se shodou obsahu schránky, 5 načtených grafů, lightbox a šířku 375 px bez vodorovného
+  přetečení (po doplnění zalamování inline kódu v `podklady.css`). Kontrola není součástí
+  `check-r.R` ani CI, stejně jako kontrola `opakovani/`.
+
 ## Desátá kapitola (kurzy DataCamp) a jedenáctá kapitola: analýza rozptylu, 22. 11. 2026
 
 Na pokyn uživatele je desátá kapitola jen stránkou „Sloučení a změna struktury dat“

@@ -129,6 +129,26 @@ a rozbalí se až po kliknutí na „Ukázat řešení“.
 Pouhé skrytí kódu pomocí `code-fold` nestačí, protože by zůstaly viditelné
 ostatní části řešení. Viz [dokumentace rozbalovacích bloků Quarto](https://quarto.org/docs/authoring/callouts.html).
 
+## Podklady k semináři
+
+- Podklady pro výuku jsou zhuštěné verze kapitol v `podklady/podklady_XX.qmd`
+(samostatný projekt Quarto, viz `docs/provoz.md`). Slouží k živé ukázce: vyučující
+čte odrážky, kopíruje kód do R, spouští jej a vysvětluje výstup.
+- Začni úvodem „Co dnes budeme dělat“: zadání analýzy, data, hlavní metoda,
+návaznost na předchozí lekce a tabulka průběhu s orientačními minutami. Časy uváděj
+jen v této tabulce. Pokud uživatel neurčí jinak, má hlavní část trvat 30, nejvýše
+40 minut (přibližně 1,5 minuty na blok kódu); další kroky přesuň do závěrečného oddílu
+„Pokud zbude čas“.
+- Každý krok má štítky `[Co uděláme]{.pk-stitek .pk-krok}`, podle potřeby
+`[Nové funkce]{.pk-stitek .pk-nove}` a po výstupu `[Ve výstupu]{.pk-stitek .pk-vystup}`
+s krátkými odrážkami: co uděláme, k čemu slouží nové funkce, co výstup obsahuje
+a čeho si všimnout. Hodnoty v odrážkách ověř ve vykresleném výstupu.
+- Kód přebírej z kapitoly beze změny do bloku s `eval: false`. Výstup zobraz
+ve sbaleném `.callout-tip collapse="true" title="Ukázat výstup"` blokem s `ref.label`
+a `echo: false`. Cvičení do podkladů nezařazuj, pokud uživatel neurčí jinak.
+- Ověř render, kontrolu `quarto/_verification/check-podklady-XX.R` (vzor pro lekci 11)
+a HTML: sbalené výstupy, tlačítka „Zkopírovat“, lightbox a mobilní šířku.
+
 ## Testy pro IS MUNI
 
 ### Obsah a obtížnost
