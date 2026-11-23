@@ -1,0 +1,99 @@
+::F-test jako srovnání modelů::Model model_nulovy <- lm(sqrt(vzdalenost_predjeti) ~ 1, data = cykliste) obsahuje jen konstantu, model_vozidlo navíc typ vozidla se sedmi úrovněmi. Na jakou otázku odpovídá anova(model_nulovy, model_vozidlo)?
+ :r1 Zda se rozptyly odmocniny vzdálenosti předjetí mezi typy vozidel navzájem liší.
+ :r2 Zda model s vlastním průměrem pro každý typ vozidla popisuje data lépe než jediná konstanta.
+ :r3 Zda se každý z ostatních typů vozidel liší od referenční kategorie, tedy od osobních aut.
+ :r4 Zda mají rezidua obou modelů přibližně normální rozdělení a lze je spolu porovnat.
+:r1 0 Shodu rozptylů mezi skupinami posuzuje například Levenův test. F-test analýzy rozptylu se týká průměrů skupin, nikoli jejich rozptylů.
+:r2 ok Srovnání vnořených modelů je F-test analýzy rozptylu. Ověřuje nulovou hypotézu, že všechny typy vozidel mají v populaci stejný průměr, takže by stačila jediná konstanta.
+:r3 0 Srovnání s referenční kategorií ukazují jednotlivé koeficienty modelu. F-test se ptá souhrnně, zda se typy vozidel vůbec liší, a neříká, které z nich.
+:r4 0 Normalitu reziduí posuzujeme diagnostickými grafy, například Q-Q grafem. Funkce anova() se dvěma modely porovnává jejich reziduální součty čtverců.
+--
+::Konstanta v modelu s odmocninou::Model lm(sqrt(vzdalenost_predjeti) ~ vozidlo, data = cykliste) má referenční kategorii osobní auto a konstantu 1,246. Vzdálenost předjetí je v metrech. Co konstanta vyjadřuje?
+ :r1 Osobní auta míjejí cyklistu v průměru ve vzdálenosti 1,246 m.
+ :r2 Osobní auta míjejí cyklistu v průměru o 1,246 m dál než ostatní vozidla.
+ :r3 Průměrná odmocnina vzdálenosti je u osobních aut 1,246, tedy asi 1,55 m.
+ :r4 Všechna vozidla míjejí cyklistu v průměru ve vzdálenosti 1,246 m.
+:r1 0 Model vysvětluje odmocninu vzdálenosti, takže i konstanta je na odmocninové škále. V metrech ji dostaneme umocněním na druhou, 1,246² ≈ 1,55 m.
+:r2 0 Konstanta není rozdíl, ale průměr referenční kategorie. Rozdíly oproti osobním autům vyjadřují ostatní koeficienty, a to rovněž na odmocninové škále.
+:r3 ok Konstanta je průměr závislé proměnné v referenční kategorii. Protože je závislou proměnnou odmocnina, po umocnění 1,246² ≈ 1,55 dostaneme typickou vzdálenost předjetí osobním autem v metrech.
+:r4 0 Průměr všech předjetí bez ohledu na typ vozidla by odhadl model s jedinou konstantou. Zde konstanta patří jen referenční kategorii a je na odmocninové škále.
+--
+::Zpětný převod v emmeans::Studentka nejprve vytvoří sloupec odmocnina = sqrt(vzdalenost_predjeti), odhadne model lm(odmocnina ~ vozidlo, data = cykliste) a zavolá emmeans(model, ~ vozidlo, type = "response"). Průměry vycházejí kolem 1,2 místo kolem 1,5 m. Co je příčinou?
+ :r1 Transformace není v rovnici modelu, takže ji emmeans nezná a průměry nechá na odmocninové škále.
+ :r2 Argument type = "response" převádí výsledky na podíly, a proto je třeba jej z volání vynechat.
+ :r3 Před emmeans() chybí funkce regrid(), bez které se průměry na metry nikdy nepřevedou.
+ :r4 Odhadnuté marginální průměry jsou vždy nižší než surové průměry, takže výsledek je správný.
+:r1 ok Funkce emmeans pozná transformaci jen z rovnice modelu, například sqrt(vzdalenost_predjeti) ~ vozidlo. Z předem vytvořeného sloupce ji nepozná, a argument type = "response" proto nemá co převést.
+:r2 0 Argument type = "response" převádí výsledky na škálu závislé proměnné, zde na metry. Jeho vynechání by problém nevyřešilo, protože emmeans transformaci vůbec nezná.
+:r3 0 Funkce regrid() převádí průměry na původní škálu před výpočtem rozdílů. I ona však potřebuje vědět, jaká transformace byla použita, takže by zde nepomohla.
+:r4 0 Odhadnuté marginální průměry se od surových liší jen o několik centimetrů, protože průměrují přes typy vozidel se stejnou vahou. Hodnoty kolem 1,2 jsou odmocniny metrů, nikoli metry.
+--
+::Éta a omega kvadrát::Pro typ vozidla vyšlo η² = 0,023 a ω² = 0,021. Které tvrzení o těchto mírách velikosti účinku je správné?
+ :r1 ω² bývá vyšší než η², protože opravuje podhodnocení populační velikosti účinku.
+ :r2 Rozdíl mezi η² a ω² ukazuje, že model nesplňuje předpoklad shody rozptylů.
+ :r3 η² = 0,023 znamená, že typ vozidla vysvětluje 23 % variability vzdálenosti.
+ :r4 ω² opravuje nadhodnocení η², bývá proto nižší a může vyjít i záporné.
+:r1 0 Je to naopak. η² populační hodnotu nadhodnocuje, protože se výběrové průměry liší i tehdy, když se populační průměry neliší. Korigovaná ω² je proto nižší.
+:r2 0 Rozdíl mezi mírami nevypovídá o předpokladech modelu. Vzniká korekcí ω², která odečítá část součtu čtverců očekávanou jen v důsledku výběrové variability.
+:r3 0 η² je podíl, takže hodnota 0,023 odpovídá 2,3 % variability odmocniny vzdálenosti předjetí. Jde o malý efekt.
+:r4 ok ω² od součtu čtverců faktoru odečítá část, kterou lze čekat jen v důsledku výběrové variability. Je-li F menší než 1, vyjde záporné; takovou hodnotu čteme jako nulový efekt.
+--
+::Welchova ANOVA::Skupiny podle typu vozidla mají od 34 do 1708 pozorování. Proč je vhodné klasickou analýzu rozptylu doplnit výsledkem oneway.test(sqrt(vzdalenost_predjeti) ~ vozidlo, data = cykliste)?
+ :r1 Funkce oneway.test() je neparametrický test, který nepředpokládá normalitu reziduí.
+ :r2 Welchova ANOVA nepředpokládá shodné rozptyly, na nichž při nestejných skupinách záleží.
+ :r3 Funkce oneway.test() porovná všechny dvojice typů vozidel a upraví jejich p-hodnoty.
+ :r4 Klasickou ANOVU nelze použít, pokud skupiny nemají stejný počet pozorování.
+:r1 0 Funkce oneway.test() počítá Welchovu analýzu rozptylu, která porovnává průměry a není neparametrická. Neparametrickou obdobou by byl například Kruskalův–Wallisův test.
+:r2 ok Klasický F-test předpokládá shodné rozptyly ve skupinách. Při velmi nestejně velkých skupinách jej neshoda rozptylů může zkreslit, Welchova verze ji nepředpokládá. Zde dávají oba testy téměř stejné F (9,30 a 9,58).
+:r3 0 Porovnání všech dvojic jsou post hoc testy. Funkce oneway.test() dává jediný souhrnný test, zda se průměry skupin liší.
+:r4 0 Klasická ANOVA nevyžaduje stejně velké skupiny. Nestejné velikosti jsou problémem hlavně ve spojení s nestejnými rozptyly, proto výsledek ověřujeme Welchovým testem.
+--
+::Pořadí členů v anova()::V nevyváženém designu vyšel test helmy z funkce anova() s F = 49,0, když byla helma v rovnici modelu první, a s F = 30,7, když byla až za vzdáleností od okraje. Jak to vysvětlit?
+ :r1 Jiné pořadí členů vytváří jiný model s jinými predikcemi, a proto i jiné testy.
+ :r2 Statistika F se počítá simulací, takže se při každém spuštění mírně liší.
+ :r3 Funkce anova() počítá sekvenční testy a výsledek proto závisí na pořadí členů.
+ :r4 Rozdíl ukazuje na interakci helmy se vzdáleností od okraje, ne na pořadí.
+:r1 0 Oba zápisy popisují tentýž model se stejnými koeficienty a predikcemi. Liší se jen způsob, jakým anova() rozděluje vysvětlenou variabilitu mezi členy.
+:r2 0 Statistika F se počítá ze součtů čtverců bez simulace a při opakování vyjde stejně. Simulací se počítá například p-hodnota Durbinova–Watsonova testu.
+:r3 ok Sekvenční testy posuzují každý člen jen s ohledem na členy před ním. Helma na prvním místě dostane připsánu i variabilitu sdílenou se vzdáleností od okraje. Testy nezávislé na pořadí dává například joint_tests().
+:r4 0 Interakce se testuje samostatným členem a její test je v obou pořadích stejný. Rozdíl u helmy vzniká tím, že helma a vzdálenost od okraje spolu v nevyváženém designu souvisejí.
+--
+::Čtení interakce::Odhadnuté průměry vzdálenosti předjetí jsou při jízdě 0,25 m od okraje 1,65 m bez helmy a 1,47 m s helmou, při jízdě 1,25 m od okraje 1,36 m bez helmy a 1,38 m s helmou. Co tento vzorec ukazuje?
+ :r1 Hlavní efekt helmy je nulový, protože se rozdíly při různých vzdálenostech od okraje vyruší.
+ :r2 Vzdálenost od okraje nemá žádný efekt, protože se průměry s helmou mění jen málo.
+ :r3 Helma zvětšuje odstup, který řidiči cyklistovi nechávají, hlavně při jízdě u okraje.
+ :r4 Rozdíl mezi jízdou s helmou a bez ní závisí na tom, jak daleko od okraje cyklista jede.
+:r1 0 Rozdíly −0,18 m a +0,02 m se nevyruší; hlavní efekt helmy je jejich průměrem přes všechny vzdálenosti a je záporný. Hlavní efekt však vzorec nevystihuje, proto popisujeme podmíněné efekty.
+:r2 0 Bez helmy klesá průměr z 1,65 na 1,36 m, takže vzdálenost od okraje s odstupem souvisí. Malá změna při jízdě s helmou je právě projevem interakce.
+:r3 0 Směr je opačný. U okraje míjeli řidiči cyklistu s helmou asi o 18 cm těsněji než bez helmy.
+:r4 ok Jde o interakci. U okraje je odstup s helmou asi o 18 cm menší, při jízdě 1,25 m od okraje se podmínky prakticky neliší. Efekt helmy tedy závisí na úrovni druhého faktoru.
+--
+::Holmova korekce podmíněných efektů::Podmíněné efekty helmy pro pět vzdáleností od okraje vznikly z emmeans(model, ~ helma | okraj). Po summary(efekty_helmy, adjust = "holm", infer = TRUE) zůstane p-hodnota při 0,75 m stejná jako bez korekce (p = 0,039). Proč?
+ :r1 Bez by = NULL tvoří každá vzdálenost od okraje samostatnou skupinu s jediným testem.
+ :r2 Holmova korekce upravuje jen intervaly spolehlivosti, p-hodnoty ponechává beze změny.
+ :r3 Korekce není potřeba, protože všech pět testů pochází z jednoho společného modelu.
+ :r4 Holmova korekce se uplatní jen u dvou testů, pro pět testů je nutná Bonferroniho.
+:r1 ok Svislá čára v ~ helma | okraj rozdělí výsledky do pěti skupin a korekce se počítá v každé zvlášť. V jednom testu není co korigovat. S by = NULL tvoří všech pět testů jednu rodinu a p-hodnota při 0,75 m vzroste na 0,117.
+:r2 0 Holmova korekce upravuje právě p-hodnoty. Intervaly spolehlivosti upravuje emmeans Bonferroniho metodou, protože Holmova korekce je definována jen pro p-hodnoty.
+:r3 0 Pět testů z jednoho modelu je stále pět testů. Pravděpodobnost, že aspoň jeden vyjde významně jen náhodou, s počtem testů roste, proto se p-hodnoty upravují.
+:r4 0 Holmova korekce funguje pro libovolný počet testů. Nejmenší p-hodnotu násobí počtem testů, druhou nejmenší o jedna menším číslem a tak dále, a má větší sílu než Bonferroniho korekce.
+--
+::Durbinův–Watsonův test::U faktoriálního modelu dal Durbinův–Watsonův test DW = 1,60, korelaci sousedních reziduí r = 0,20 a p < 0,001. Řádky dat jsou seřazené v pořadí, v jakém předjetí nastala. Co z toho plyne?
+ :r1 Odhady průměrů a jejich rozdílů jsou zkreslené, a proto je třeba model odhadnout znovu.
+ :r2 Rezidua sousedních předjetí jsou si podobná, takže směrodatné chyby jsou podhodnocené.
+ :r3 Hodnota pod 2 ukazuje zápornou autokorelaci, sousední předjetí se tedy navzájem střídají.
+ :r4 Problém vyřeší, když řádky před odhadem modelu náhodně zamícháme a test zopakujeme.
+:r1 0 Autokorelace samotné odhady průměrů a rozdílů nezkresluje. Ovlivňuje jejich nejistotu, kterou model počítá, jako by každé předjetí přinášelo zcela novou informaci.
+:r2 ok Jde o kladnou autokorelaci, platí DW ≈ 2 × (1 − r). Data obsahují méně nezávislé informace, než odpovídá počtu řádků, takže intervaly spolehlivosti jsou příliš úzké a p-hodnoty příliš nízké.
+:r3 0 Hodnoty pod 2 ukazují kladnou autokorelaci, tedy podobnost sousedních reziduí. Zápornou autokorelaci by naznačovaly hodnoty nad 2.
+:r4 0 Zamícháním řádků závislost nezmizí, jen ji test přestane vidět. Koeficienty i směrodatné chyby modelu zůstanou stejné. Dopad autokorelace lze ověřit například Neweyho–Westovými směrodatnými chybami.
+--
+::Parciální éta kvadrát::Ve faktoriálním modelu vyšlo pro vzdálenost od okraje neparciální η² = 0,030 a parciální η² = 0,031. Co vyjadřuje parciální η² na rozdíl od neparciálního?
+ :r1 Podíl celkové variability, který efekt vysvětluje společně s ostatními členy modelu.
+ :r2 Korigovaný odhad, který odstraňuje nadhodnocení populační velikosti účinku.
+ :r3 Podíl z variability, kterou ostatní efekty modelu nevysvětlily, připadající na daný efekt.
+ :r4 Podíl variability, který efekt vysvětluje jen u jedné úrovně jiného faktoru modelu.
+:r1 0 Podíl celkové variability vyjadřuje neparciální η², a to jen jedinečnou část, kterou nevysvětlují ostatní členy. Variabilitu vysvětlenou společně s ostatními členy nepopisuje ani jedna z měr.
+:r2 0 Korekci nadhodnocení provádí ω², respektive parciální ω². Parciální η² se od neparciálního liší jmenovatelem, nikoli korekcí.
+:r3 ok Parciální η² dělí součet čtverců efektu součtem efektu a reziduí, takže ze jmenovatele vynechává variabilitu vysvětlenou ostatními členy. Je proto stejné nebo vyšší než neparciální η².
+:r4 0 Efekt při jedné úrovni jiného faktoru je podmíněný efekt. Parciální míry se týkají celého efektu, liší se jen tím, s jakou variabilitou jeho součet čtverců porovnáváme.

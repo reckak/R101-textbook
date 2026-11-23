@@ -92,7 +92,15 @@ schválil v plánu.
   s poznámkou „česky též standardní chyba“ při prvním výskytu. Jedenáctá kapitola to
   dodržuje; sjednocení deváté kapitoly je samostatná změna v jiné větvi.
 - **Závěrečná úloha** (analýza jen osobních aut) je vlastní úloha, v zadání nebyla.
-- Test pro IS MUNI k lekci podle rozhodnutí uživatele zatím nevznikl.
+- **Test pro IS MUNI** (`tests/test_11.txt`, 23. 11. 2026): 10 otázek s jednou správnou
+  odpovědí napříč lekcí (F-test jako srovnání modelů, konstanta na odmocninové škále,
+  zpětný převod v emmeans, η² a ω², Welchova ANOVA, sekvenční testy, čtení interakce,
+  Holmova korekce s `by = NULL`, Durbinův–Watsonův test, parciální η²). Čísla v otázkách
+  ověřena v čisté relaci R; mimo jiné, že bez `by = NULL` zůstane *p* při 0,75 m 0,039
+  a s ním je 0,117. Formát zkontrolován skriptem (10 bloků po 9 řádcích, 9 oddělovačů,
+  jedno `ok` v každé otázce, dvojtečky jen se mezerou, UTF-8 bez BOM). Ukázky kódu
+  s `::` (např. `car::`) a interakce zapsaná dvojtečkou se v testu záměrně nevyskytují.
+  Import do IS MUNI ověřen není.
 
 ### Co kapitola ze zadání nepřevzala
 
